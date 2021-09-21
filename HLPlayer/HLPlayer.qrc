@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/HLPlayer">
+    <file>res/play.png</file>
+    <file>res/forward.png</file>
+  </qresource>
+  <qresource prefix="新前缀"/>
+</RCC>
