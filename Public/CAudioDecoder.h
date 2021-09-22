@@ -11,12 +11,20 @@ public:
 
 	void Start();
 
+	void SendPacket(AVPacket* pkt);
+
 private:
 	void OnDecodeFunction();
 
 private:
+	bool m_bRun = false;
 	AVCodecContext* AudioCodecCtx = nullptr;
+
+	AVFrame* SrcFrame = nullptr;
+
 	
+	SafeQueue<AVPacket*> AudioPacketQueue;
+
 	std::thread m_decodeThread;
 };
 

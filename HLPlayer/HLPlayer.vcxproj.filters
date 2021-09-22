@@ -66,5 +66,8 @@
     <ClInclude Include="..\Public\CVideoDecoder.h">
       <Filter>Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\SafeQueue.h">
+      <Filter>Public</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

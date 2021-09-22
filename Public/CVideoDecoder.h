@@ -11,7 +11,20 @@ public:
 
 	void Start();
 
+	void SendPacket(AVPacket* pkt);
+
 private:
+	void OnDecodeFunction();
+
+private:
+	bool m_bRun = false;
+
 	AVCodecContext* VideoCodecCtx = nullptr;
+	AVFrame* SrcFrame = nullptr;
+
+
+	std::thread m_decodeThread;
+
+	SafeQueue<AVPacket*> VideoPacketQueue;
 };
 

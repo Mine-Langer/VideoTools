@@ -19,6 +19,8 @@ private:
 	bool m_bRun = false;
 	AVFormatContext* FormatCtx = nullptr;
 
+	AVPacket* SrcPacket = nullptr;
+
 	int VideoIndex = -1;
 	int AudioIndex = -1;
 

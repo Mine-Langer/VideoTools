@@ -70,3 +70,10 @@ HLPlayer/x64/Release/uic/ui_HLPlayer.h
 *.exe
 x64/Debug/HLPlayer.ilk
 x64/Debug/HLPlayer.pdb
+.vs/VideoTools/v16/ipch/AutoPCH/d6f88ef75a511c4c/CVIDEODECODER.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/a4701483ce9674ec/DECODER.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/a1046255b6d4ffb0/CPLAYER.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/64255e0086abe8cf/CAUDIODECODER.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/4c097c1d2d0d09d0/DECODER.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/350249e9720bb481/SAFEQUEUE.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/22c30fdb92ec4903/HLPLAYER.ipch
