@@ -14,6 +14,10 @@ class CDecoder
 public:
 	CDecoder();
 
+	double GetTimebase();
+	double GetRate();
+	double GetDuration();
+
 public:
 	virtual bool SendPacket(AVPacket* pkt) = 0;
 	virtual void OnDecodeFunction() = 0;

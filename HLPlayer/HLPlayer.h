@@ -12,6 +12,10 @@ public:
     HLPlayer(QWidget *parent = Q_NULLPTR);
 
 private:
+    void showEvent(QShowEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
+
+private:
     Ui::HLPlayerClass ui;
 
     CPlayer m_player;

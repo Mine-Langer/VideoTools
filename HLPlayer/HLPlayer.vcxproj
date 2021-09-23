@@ -98,6 +98,7 @@
     <QtMoc Include="HLPlayer.h" />
     <ClCompile Include="..\Public\CAudioDecoder.cpp" />
     <ClCompile Include="..\Public\CVideoDecoder.cpp" />
+    <ClCompile Include="..\Public\decoder.cpp" />
     <ClCompile Include="CPlayer.cpp" />
     <ClCompile Include="HLPlayer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -106,6 +107,7 @@
     <ClInclude Include="..\Public\CAudioDecoder.h" />
     <ClInclude Include="..\Public\Common.h" />
     <ClInclude Include="..\Public\CVideoDecoder.h" />
+    <ClInclude Include="..\Public\decoder.h" />
     <ClInclude Include="..\Public\SafeQueue.h" />
     <ClInclude Include="CPlayer.h" />
   </ItemGroup>

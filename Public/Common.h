@@ -46,3 +46,6 @@ extern "C"
 #include <iostream>
 #include <string>
 #include <tchar.h>
+
+#include <windows.h>
+#define HL_PRINT(...) { char szText[1024]={0}; sprintf_s(szText, 1024, __VA_ARGS__); OutputDebugStringA(szText); }

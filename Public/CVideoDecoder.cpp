@@ -10,37 +10,59 @@ CVideoDecoder::~CVideoDecoder()
 
 }
 
-bool CVideoDecoder::Open(AVStream* pStream, enum AVCodecID codecId)
+bool CVideoDecoder::Open(AVStream* pStream)
 {
-	AVCodec* codec = avcodec_find_decoder(codecId);
-	if (codec == nullptr)
-		return false;
-
-	VideoCodecCtx = avcodec_alloc_context3(codec);
+	VideoCodecCtx = avcodec_alloc_context3(nullptr);
 	if (VideoCodecCtx == nullptr)
 		return false;
 
 	if (0 > avcodec_parameters_to_context(VideoCodecCtx, pStream->codecpar))
 		return false;
-	
+
+	AVCodec* codec = avcodec_find_decoder(VideoCodecCtx->codec_id);
+	if (codec == nullptr)
+		return false;
+
 	if (0 > avcodec_open2(VideoCodecCtx, codec, nullptr))
 		return false;
 
+	m_timebase = av_q2d(pStream->time_base);
+	m_duration = m_timebase * (pStream->duration * 1.0);
+	m_rate = av_q2d(pStream->avg_frame_rate);
+
 	SrcFrame = av_frame_alloc();
+	DstFrame = av_frame_alloc();
 
 	return true;
 }
 
-void CVideoDecoder::Start()
+void CVideoDecoder::Start(IDecoderEvent* evt)
 {
+	m_event = evt;
 	m_bRun = true;
 	m_decodeThread = std::thread(&CVideoDecoder::OnDecodeFunction, this);
 }
 
-void CVideoDecoder::SendPacket(AVPacket* pkt)
+bool CVideoDecoder::SetConfig(int width, int height, AVPixelFormat iformat, int iflags)
+{
+	SwsCtx = sws_getContext(VideoCodecCtx->width, VideoCodecCtx->height, VideoCodecCtx->pix_fmt, width, height, iformat, iflags, nullptr, nullptr, nullptr);
+	if (SwsCtx == nullptr)
+		return false;
+
+	DstFrame->width = width;
+	DstFrame->height = height;
+	DstFrame->format = iformat;
+	av_frame_get_buffer(DstFrame, 0);
+
+	return true;
+}
+
+bool CVideoDecoder::SendPacket(AVPacket* pkt)
 {
 	AVPacket* vpkt = av_packet_clone(pkt);
-	VideoPacketQueue.MaxSizePush(vpkt);
+	m_packetQueue.MaxSizePush(vpkt);
+
+	return true;
 }
 
 void CVideoDecoder::OnDecodeFunction()
@@ -49,7 +71,7 @@ void CVideoDecoder::OnDecodeFunction()
 	AVPacket* vpkt = nullptr;
 	while (m_bRun)
 	{
-		if (!VideoPacketQueue.Pop(vpkt))
+		if (!m_packetQueue.Pop(vpkt))
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 		else
 		{
@@ -64,10 +86,18 @@ void CVideoDecoder::OnDecodeFunction()
 			}
 			else if (error == 0)
 			{
-
+				sws_scale(SwsCtx, SrcFrame->data, SrcFrame->linesize, 0, VideoCodecCtx->height, DstFrame->data, DstFrame->linesize);
+				DstFrame->pts = SrcFrame->pts;
+				DstFrame->best_effort_timestamp = SrcFrame->best_effort_timestamp;
+				m_event->VideoEvent(DstFrame);
 			}
 			av_frame_unref(SrcFrame);
 		}
 		av_packet_free(&vpkt);
 	}
+}
+
+void CVideoDecoder::Close()
+{
+
 }

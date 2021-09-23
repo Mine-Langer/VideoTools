@@ -10,17 +10,17 @@ CAudioDecoder::~CAudioDecoder()
 
 }
 
-bool CAudioDecoder::Open(AVStream* pStream, enum AVCodecID codecId)
+bool CAudioDecoder::Open(AVStream* pStream)
 {
-	AVCodec* codec = avcodec_find_decoder(codecId);
-	if (codec == nullptr)
-		return false;
-
-	AudioCodecCtx = avcodec_alloc_context3(codec);
+	AudioCodecCtx = avcodec_alloc_context3(nullptr);
 	if (AudioCodecCtx == nullptr)
 		return false;
 
 	if (0 > avcodec_parameters_to_context(AudioCodecCtx, pStream->codecpar))
+		return false;
+
+	AVCodec* codec = avcodec_find_decoder(AudioCodecCtx->codec_id);
+	if (codec == nullptr)
 		return false;
 
 	if (0 > avcodec_open2(AudioCodecCtx, codec, nullptr))
@@ -31,16 +31,59 @@ bool CAudioDecoder::Open(AVStream* pStream, enum AVCodecID codecId)
 	return true;
 }
 
-void CAudioDecoder::Start()
+void CAudioDecoder::Start(IDecoderEvent* evt)
 {
+	m_event = evt;
 	m_bRun = true;
 	m_decodeThread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
 }
 
-void CAudioDecoder::SendPacket(AVPacket* pkt)
+bool CAudioDecoder::SendPacket(AVPacket* pkt)
 {
 	AVPacket* apkt = av_packet_clone(pkt);
-	AudioPacketQueue.MaxSizePush(apkt);
+	m_packetQueue.MaxSizePush(apkt);
+	
+	return true;
+}
+
+bool CAudioDecoder::SetConfig()
+{
+	m_channel_layout = AudioCodecCtx->channel_layout;
+	m_sample_fmt = AV_SAMPLE_FMT_S16;
+	m_sample_rate = AudioCodecCtx->sample_rate;
+
+	SwrCtx = swr_alloc_set_opts(nullptr, m_channel_layout, m_sample_fmt, m_sample_rate,
+		AudioCodecCtx->channel_layout, AudioCodecCtx->sample_fmt, AudioCodecCtx->sample_rate, 0, nullptr);
+	if (SwrCtx == nullptr)
+		return false;
+
+	if (0 > swr_init(SwrCtx))
+		return false;
+
+	m_nb_samples = av_rescale_rnd(swr_get_delay(SwrCtx, AudioCodecCtx->sample_rate) + AudioCodecCtx->frame_size,
+		m_sample_rate, AudioCodecCtx->sample_rate, AV_ROUND_INF);
+
+	return true;
+}
+
+void CAudioDecoder::Close()
+{
+
+}
+
+int CAudioDecoder::GetSampleRate()
+{
+	return m_sample_rate;
+}
+
+int CAudioDecoder::GetChannels()
+{
+	return av_get_channel_layout_nb_channels(m_channel_layout);
+}
+
+int CAudioDecoder::GetSamples()
+{
+	return m_nb_samples;
 }
 
 void CAudioDecoder::OnDecodeFunction()
@@ -50,7 +93,7 @@ void CAudioDecoder::OnDecodeFunction()
 
 	while (m_bRun)
 	{
-		if (!AudioPacketQueue.Pop(apkt))
+		if (!m_packetQueue.Pop(apkt))
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 		else
 		{
@@ -65,7 +108,15 @@ void CAudioDecoder::OnDecodeFunction()
 			}
 			else if (error == 0)
 			{
+				AVFrame* dstFrame = av_frame_alloc();
+				if (0 > av_samples_alloc(dstFrame->data, &dstFrame->linesize[0], av_get_channel_layout_nb_channels(m_channel_layout), m_nb_samples, m_sample_fmt, 1))
+					break;
 
+				swr_convert(SwrCtx, dstFrame->data, m_nb_samples, (const uint8_t**)SrcFrame->data, SrcFrame->nb_samples);
+				dstFrame->pts = SrcFrame->best_effort_timestamp;
+				m_event->AudioEvent(dstFrame);
+				
+				av_frame_free(&dstFrame);
 			}
 			av_frame_unref(SrcFrame);
 		}

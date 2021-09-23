@@ -52,6 +52,9 @@
     <ClCompile Include="..\Public\CVideoDecoder.cpp">
       <Filter>Public</Filter>
     </ClCompile>
+    <ClCompile Include="..\Public\decoder.cpp">
+      <Filter>Public</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPlayer.h">
@@ -67,6 +70,9 @@
       <Filter>Public</Filter>
     </ClInclude>
     <ClInclude Include="..\Public\SafeQueue.h">
+      <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\decoder.h">
       <Filter>Public</Filter>
     </ClInclude>
   </ItemGroup>

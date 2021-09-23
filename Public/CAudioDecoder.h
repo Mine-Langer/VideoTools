@@ -1,30 +1,39 @@
 #pragma once
-#include "Common.h"
+#include "decoder.h"
 
-class CAudioDecoder
+class CAudioDecoder :public CDecoder
 {
 public:
 	CAudioDecoder();
 	~CAudioDecoder();
 
-	bool Open(AVStream* pStream, enum AVCodecID codecId);
+	bool Open(AVStream* pStream);
 
-	void Start();
+	void Start(IDecoderEvent* evt);
 
-	void SendPacket(AVPacket* pkt);
+	bool SendPacket(AVPacket* pkt) override;
+
+	bool SetConfig();
+
+	void Close() override;
+
+public:
+	int GetSampleRate();
+	int GetChannels();
+	int GetSamples();
 
 private:
-	void OnDecodeFunction();
+	void OnDecodeFunction() override;
 
 private:
-	bool m_bRun = false;
 	AVCodecContext* AudioCodecCtx = nullptr;
 
 	AVFrame* SrcFrame = nullptr;
+	SwrContext* SwrCtx = nullptr;
 
-	
-	SafeQueue<AVPacket*> AudioPacketQueue;
-
-	std::thread m_decodeThread;
+	int64_t m_channel_layout = 0; // 声道布局
+	AVSampleFormat m_sample_fmt = AV_SAMPLE_FMT_NONE; // 采样格式
+	int m_sample_rate = 0; // 采样率
+	int m_nb_samples = 0; // 采样数
 };
 

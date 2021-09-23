@@ -77,3 +77,4 @@ x64/Debug/HLPlayer.pdb
 .vs/VideoTools/v16/ipch/AutoPCH/4c097c1d2d0d09d0/DECODER.ipch
 .vs/VideoTools/v16/ipch/AutoPCH/350249e9720bb481/SAFEQUEUE.ipch
 .vs/VideoTools/v16/ipch/AutoPCH/22c30fdb92ec4903/HLPLAYER.ipch
+HLPlayer/x64/Debug/decoder.obj

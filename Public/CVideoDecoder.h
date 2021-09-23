@@ -1,30 +1,33 @@
 #pragma once
-#include "Common.h"
+#include "decoder.h"
 
-class CVideoDecoder
+class CVideoDecoder :public CDecoder
 {
 public:
 	CVideoDecoder();
 	~CVideoDecoder();
 
-	bool Open(AVStream* pStream, enum AVCodecID codecId);
+	bool Open(AVStream* pStream);
 
-	void Start();
+	void Start(IDecoderEvent* evt);
 
-	void SendPacket(AVPacket* pkt);
+	bool SetConfig(int width, int height, AVPixelFormat iformat, int iflags);
+
+	bool SendPacket(AVPacket* pkt) override;
+	void Close() override;
+protected:
 
 private:
-	void OnDecodeFunction();
+	void OnDecodeFunction() override;
 
 private:
 	bool m_bRun = false;
 
 	AVCodecContext* VideoCodecCtx = nullptr;
 	AVFrame* SrcFrame = nullptr;
+	AVFrame* DstFrame = nullptr;
 
+	SwsContext* SwsCtx = nullptr;
 
-	std::thread m_decodeThread;
-
-	SafeQueue<AVPacket*> VideoPacketQueue;
 };
 
