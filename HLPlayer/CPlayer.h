@@ -20,7 +20,7 @@ private:
 
 	void VideoEvent(AVFrame* vdata) override;
 
-	void AudioEvent(AVFrame* adata) override;
+	void AudioEvent(STAudioBuffer* adata) override;
 
 	static void OnAudioCallback(void* userdata, Uint8* stream, int len);
 
@@ -34,7 +34,7 @@ private:
 	int AudioIndex = -1;
 
 	SafeQueue<AVFrame*> VideoFrameData;
-	SafeQueue<AVFrame*> AudioFrameData;
+	SafeQueue<STAudioBuffer*> AudioFrameData;
 
 	std::thread m_ReadThread;
 	std::thread m_PlayThread;

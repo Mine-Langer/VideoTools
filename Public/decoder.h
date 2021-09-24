@@ -1,12 +1,26 @@
 #pragma once
 #include "Common.h"
 
+
+class STAudioBuffer
+{
+public:
+	~STAudioBuffer() { if (buffer) { av_free(buffer); buffer = nullptr; } }
+
+	uint8_t* buffer = nullptr;
+	int size = 0;
+	int64_t pts = 0;
+	double dpts = 0;
+	double duration = 0;
+};
+
+
 class IDecoderEvent
 {
 public:
 	virtual void VideoEvent(AVFrame* vdata) = 0;
 
-	virtual void AudioEvent(AVFrame* adata) = 0;
+	virtual void AudioEvent(STAudioBuffer* adata) = 0;
 };
 
 class CDecoder

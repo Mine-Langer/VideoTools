@@ -26,6 +26,10 @@ bool CAudioDecoder::Open(AVStream* pStream)
 	if (0 > avcodec_open2(AudioCodecCtx, codec, nullptr))
 		return false;
 
+	m_timebase = av_q2d(pStream->time_base);
+	m_duration = m_timebase * (pStream->duration * 1.0);
+	m_rate = AudioCodecCtx->sample_rate;
+
 	SrcFrame = av_frame_alloc();
 
 	return true;
@@ -108,15 +112,17 @@ void CAudioDecoder::OnDecodeFunction()
 			}
 			else if (error == 0)
 			{
-				AVFrame* dstFrame = av_frame_alloc();
-				if (0 > av_samples_alloc(dstFrame->data, &dstFrame->linesize[0], av_get_channel_layout_nb_channels(m_channel_layout), m_nb_samples, m_sample_fmt, 1))
+				STAudioBuffer* audioBuf = new STAudioBuffer();
+				if (0 > av_samples_alloc(&audioBuf->buffer, &audioBuf->size, av_get_channel_layout_nb_channels(m_channel_layout), m_nb_samples, m_sample_fmt, 1))
 					break;
 
-				swr_convert(SwrCtx, dstFrame->data, m_nb_samples, (const uint8_t**)SrcFrame->data, SrcFrame->nb_samples);
-				dstFrame->pts = SrcFrame->best_effort_timestamp;
-				m_event->AudioEvent(dstFrame);
+				swr_convert(SwrCtx, &audioBuf->buffer, m_nb_samples, (const uint8_t**)SrcFrame->data, SrcFrame->nb_samples);
+				audioBuf->pts = SrcFrame->best_effort_timestamp;
+				audioBuf->dpts = audioBuf->pts * m_timebase;
+				audioBuf->duration = 1.0 / m_rate;
+				m_event->AudioEvent(audioBuf);
 				
-				av_frame_free(&dstFrame);
+				//av_frame_free(&dstFrame);
 			}
 			av_frame_unref(SrcFrame);
 		}

@@ -78,3 +78,6 @@ x64/Debug/HLPlayer.pdb
 .vs/VideoTools/v16/ipch/AutoPCH/350249e9720bb481/SAFEQUEUE.ipch
 .vs/VideoTools/v16/ipch/AutoPCH/22c30fdb92ec4903/HLPLAYER.ipch
 HLPlayer/x64/Debug/decoder.obj
+.vs/VideoTools/v16/ipch/AutoPCH/a7e60bcad3dc428b/AVSYNC.ipch
+HLPlayer/x64/Debug/HLPlayer.Build.CppClean.log
+HLPlayer/x64/Debug/HLPlayer.vcxproj.FileListAbsolute.txt

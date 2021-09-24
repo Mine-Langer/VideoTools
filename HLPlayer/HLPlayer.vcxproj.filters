@@ -75,5 +75,8 @@
     <ClInclude Include="..\Public\decoder.h">
       <Filter>Public</Filter>
     </ClInclude>
+    <ClInclude Include="..\Public\avsync.h">
+      <Filter>Public</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

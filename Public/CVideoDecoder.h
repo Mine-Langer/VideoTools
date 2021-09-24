@@ -22,7 +22,8 @@ private:
 
 private:
 	bool m_bRun = false;
-
+	int VideoWidth = 0, VideoHeight = 0;
+	AVPixelFormat VideoFormat = AV_PIX_FMT_NONE;
 	AVCodecContext* VideoCodecCtx = nullptr;
 	AVFrame* SrcFrame = nullptr;
 	AVFrame* DstFrame = nullptr;

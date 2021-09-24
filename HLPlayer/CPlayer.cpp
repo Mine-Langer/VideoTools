@@ -23,12 +23,10 @@ bool CPlayer::Open(const char* szFile)
 
 	if (VideoIndex != -1) {
 		m_videoDecoder.Open(FormatCtx->streams[VideoIndex]);
-		m_videoDecoder.SetConfig(m_rect.w, m_rect.h, AV_PIX_FMT_YUV420P, SWS_BICUBIC);
 	}
 
 	if (AudioIndex != -1) {
 		m_audioDecoder.Open(FormatCtx->streams[AudioIndex]);
-		m_audioDecoder.SetConfig();
 	}
 
 	SrcPacket = av_packet_alloc();
@@ -68,6 +66,15 @@ bool CPlayer::InitWindow(const void* pwnd, int width, int height)
 	m_rect.y = 0;
 	m_rect.w = width;
 	m_rect.h = height;
+
+
+	if (VideoIndex != -1) {
+		m_videoDecoder.SetConfig(m_rect.w, m_rect.h, AV_PIX_FMT_YUV420P, SWS_BICUBIC);
+	}
+
+	if (AudioIndex != -1) {
+		m_audioDecoder.SetConfig();
+	}
 
 	m_render = SDL_CreateRenderer(m_window, -1, 0);
 	if (m_render == nullptr)
@@ -128,7 +135,6 @@ void CPlayer::OnPlayFunction()
 			SDL_RenderClear(m_render);
 			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(66));
 			SDL_RenderPresent(m_render);		
 			HL_PRINT("[VideoFrame] pts:%lld, dts:%lld \r\n", vFrame->pts, vFrame->pkt_dts);
 			av_frame_free(&vFrame);
@@ -142,13 +148,25 @@ void CPlayer::VideoEvent(AVFrame* vdata)
 	VideoFrameData.MaxSizePush(vframe);
 }
 
-void CPlayer::AudioEvent(AVFrame* adata)
+void CPlayer::AudioEvent(STAudioBuffer* adata)
 {
-	AVFrame* aframe = av_frame_clone(adata);
-	AudioFrameData.MaxSizePush(aframe);
+	AudioFrameData.MaxSizePush(adata);
 }
 
 void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 {
-
+	CPlayer* pThis = (CPlayer*)userdata;
+	STAudioBuffer* aframe = nullptr;
+	if (pThis->AudioFrameData.Pop(aframe))
+	{
+		int wlen = len < aframe->size ? len : aframe->size;
+		SDL_memset(stream, 0, wlen);
+		SDL_MixAudio(stream, aframe->buffer, wlen, SDL_MIX_MAXVOLUME);
+		HL_PRINT("	[AudioFrame] pts:%lld, dts:%lld \r\n", aframe->pts, aframe->dpts);
+		delete aframe;
+	}
+	else
+	{
+		SDL_memset(stream, 0, len);
+	}
 }
