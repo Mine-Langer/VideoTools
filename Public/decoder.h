@@ -15,6 +15,14 @@ public:
 };
 
 
+class IPlayEvent
+{
+public:
+	virtual void UpdateDuration(double duration) = 0; // 更新总时长
+
+	virtual void UpdatePlayPosition(double postion) = 0; // 更新播放位置
+};
+
 class IDecoderEvent
 {
 public:

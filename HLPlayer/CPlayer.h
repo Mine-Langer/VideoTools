@@ -1,6 +1,7 @@
 #pragma once
 #include "CVideoDecoder.h"
 #include "CAudioDecoder.h"
+#include "avsync.h"
 
 class CPlayer :public IDecoderEvent
 {
@@ -10,7 +11,7 @@ public:
 
 	bool Open(const char* szFile);
 
-	void Start();
+	void Start(IPlayEvent* pEvt);
 
 	bool InitWindow(const void* pwnd, int width, int height);
 
@@ -38,9 +39,11 @@ private:
 
 	std::thread m_ReadThread;
 	std::thread m_PlayThread;
+	IPlayEvent* m_playEvent = nullptr;
 
 	CVideoDecoder m_videoDecoder;
 	CAudioDecoder m_audioDecoder;
+	CAVSync	m_sync;
 
 	SDL_Window* m_window = nullptr;
 	SDL_Texture* m_texture = nullptr;

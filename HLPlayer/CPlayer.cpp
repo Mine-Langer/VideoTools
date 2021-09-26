@@ -34,8 +34,9 @@ bool CPlayer::Open(const char* szFile)
 	return true;
 }
 
-void CPlayer::Start()
+void CPlayer::Start(IPlayEvent* pEvt)
 {
+	m_playEvent = pEvt;
 	if (VideoIndex != -1)
 	{
 		m_videoDecoder.Start(this);
@@ -46,6 +47,7 @@ void CPlayer::Start()
 		m_audioDecoder.Start(this);
 	}
 
+	m_playEvent->UpdateDuration(m_videoDecoder.GetDuration());
 	m_bRun = true;
 	m_ReadThread = std::thread(&CPlayer::OnReadFunction, this); // ½âÂë
 
@@ -135,9 +137,14 @@ void CPlayer::OnPlayFunction()
 			SDL_RenderClear(m_render);
 			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
 
+			int64_t delay = m_sync.CalcDelay(vFrame->pts * m_videoDecoder.GetTimebase());
+			if (delay > 0)
+				std::this_thread::sleep_for(std::chrono::microseconds(delay));
+			
 			SDL_RenderPresent(m_render);		
 			HL_PRINT("[VideoFrame] pts:%lld, dts:%lld \r\n", vFrame->pts, vFrame->pkt_dts);
 			av_frame_free(&vFrame);
+			m_sync.SetShowTime();
 		}
 	}
 }
@@ -162,7 +169,9 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 		int wlen = len < aframe->size ? len : aframe->size;
 		SDL_memset(stream, 0, wlen);
 		SDL_MixAudio(stream, aframe->buffer, wlen, SDL_MIX_MAXVOLUME);
-		HL_PRINT("	[AudioFrame] pts:%lld, dts:%lld \r\n", aframe->pts, aframe->dpts);
+		pThis->m_sync.SetAudioClock(aframe->dpts);
+		pThis->m_playEvent->UpdatePlayPosition(aframe->dpts);
+		HL_PRINT("	[AudioFrame] pts:%lld, dts:%f \r\n", aframe->pts, aframe->dpts);
 		delete aframe;
 	}
 	else

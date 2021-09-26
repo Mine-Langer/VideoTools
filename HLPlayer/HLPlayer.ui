@@ -53,7 +53,7 @@
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color: rgb(70, 70, 70);</string>
+      <string notr="true">background-color: rgb(10, 10, 10);</string>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="topMargin">
@@ -63,7 +63,7 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="labelStart">
         <property name="styleSheet">
          <string notr="true">color: rgb(255, 255, 255);</string>
         </property>
@@ -73,7 +73,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="btnSlow">
         <property name="styleSheet">
          <string notr="true">background-image: url(:/HLPlayer/res/forward.png);
 </string>
@@ -84,7 +84,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="horizontalSlider">
+       <widget class="QSlider" name="sliderPlay">
         <property name="styleSheet">
          <string notr="true">	/* 以下是槽 */
 QSlider::groove:horizontal{
@@ -121,14 +121,14 @@ QSlider::sub-page:horizontal{
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="btnFast">
         <property name="text">
          <string/>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="labelEnd">
         <property name="styleSheet">
          <string notr="true">color: rgb(255, 255, 255);</string>
         </property>
@@ -151,10 +151,19 @@ QSlider::sub-page:horizontal{
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>60</height>
+       <height>50</height>
       </size>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(70, 70, 70);</string>
+     </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <property name="topMargin">
+       <number>2</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -169,9 +178,32 @@ QSlider::sub-page:horizontal{
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="btnPlay">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>35</width>
+          <height>35</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+ border-image: url(:/HLPlayer/res/play_normal.png);
+}
+QPushButton:hover {
+	border-image: url(:/HLPlayer/res/play_hover.png);
+}
+QPushButton:pressed {
+	border-image: url(:/HLPlayer/res/play_clicked.png);
+}</string>
+        </property>
         <property name="text">
-         <string>PushButton</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -189,19 +221,55 @@ QSlider::sub-page:horizontal{
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QSlider" name="horizontalSlider_2">
+       <widget class="QPushButton" name="btnMute">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSlider" name="sliderVolumn">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">	/* 以下是槽 */
+QSlider::groove:horizontal{
+    background:#aaaaaa;
+    height:8px;
+}
+/* 设置中间的那个滑动的键 */
+QSlider::handle:horizontal{
+    border-radius: 6px;
+    width: 12px;
+	margin-top: -2px;
+    margin-bottom:-2px;
+	margin-right:-5;
+	background：transparent;
+}
+
+/* 已经划过的从地方 */
+QSlider::sub-page:horizontal{
+    /*border-radius:10px;*/
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #5599FF, stop:1 #498ff8);
+}
+	
+	</string>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>

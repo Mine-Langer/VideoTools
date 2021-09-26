@@ -91,6 +91,7 @@ void CVideoDecoder::OnDecodeFunction()
 				sws_scale(SwsCtx, SrcFrame->data, SrcFrame->linesize, 0, VideoCodecCtx->height, DstFrame->data, DstFrame->linesize);
 				DstFrame->pts = SrcFrame->pts;
 				DstFrame->best_effort_timestamp = SrcFrame->best_effort_timestamp;
+				DstFrame->pkt_dts = DstFrame->pts * m_timebase;
 				m_event->VideoEvent(DstFrame);
 				av_frame_free(&DstFrame);
 			}

@@ -1,7 +1,11 @@
 <RCC>
-  <qresource prefix="/HLPlayer">
-    <file>res/play.png</file>
-    <file>res/forward.png</file>
-  </qresource>
-  <qresource prefix="新前缀"/>
+    <qresource prefix="/HLPlayer">
+        <file>res/play_clicked.png</file>
+        <file>res/play_hover.png</file>
+        <file>res/play_normal.png</file>
+        <file>res/forward.png</file>
+        <file>res/pause_clicked.png</file>
+        <file>res/pause_hover.png</file>
+        <file>res/pause_normal.png</file>
+    </qresource>
 </RCC>
