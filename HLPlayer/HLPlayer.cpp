@@ -1,5 +1,6 @@
 #include "HLPlayer.h"
 #include <QMouseEvent>
+#include <QSlider>
 
 HLPlayer::HLPlayer(QWidget *parent)
     : QWidget(parent)
@@ -10,6 +11,7 @@ HLPlayer::HLPlayer(QWidget *parent)
 	ui.sliderPlay->installEventFilter(this);
 	ui.sliderVolumn->installEventFilter(this);
 	connect(ui.btnPlay, SIGNAL(clicked()), this, SLOT(OnBtnPlayClicked()));
+	connect(ui.sliderPlay, SIGNAL(sliderMoved(int)), this, SLOT(OnSliderPlayMoved(int)));
 }
 
 void HLPlayer::showEvent(QShowEvent* event)
@@ -88,4 +90,10 @@ void HLPlayer::OnBtnPlayClicked()
 								  QPushButton:hover { border-image: url(:/HLPlayer/res/pause_hover.png); }\
 								  QPushButton:pressed { border-image: url(:/HLPlayer/res/pause_clicked.png);}"));
 	}
+}
+
+void HLPlayer::OnSliderPlayMoved(int value)
+{
+
+	return;
 }

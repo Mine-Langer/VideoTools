@@ -22,6 +22,7 @@ private:
 
 private slots:
     void OnBtnPlayClicked();
+    void OnSliderPlayMoved(int);
 
 private:
     Ui::HLPlayerClass ui;
