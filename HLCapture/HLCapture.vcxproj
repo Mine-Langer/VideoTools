@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{F0125A0E-E933-491F-A224-E52651F6430D}</ProjectGuid>
+    <ProjectGuid>{5824E04B-7395-43AA-800B-DF19E9A46E99}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.19041.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.19041.0</WindowsTargetPlatformVersion>
@@ -93,14 +93,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <QtRcc Include="HLPlayer.qrc" />
-    <QtUic Include="HLPlayer.ui" />
-    <QtMoc Include="HLPlayer.h" />
+    <QtRcc Include="hlcapture.qrc" />
+    <QtUic Include="hlcapture.ui" />
+    <QtMoc Include="hlcapture.h" />
     <ClCompile Include="..\Public\CAudioDecoder.cpp" />
     <ClCompile Include="..\Public\CVideoDecoder.cpp" />
     <ClCompile Include="..\Public\decoder.cpp" />
-    <ClCompile Include="CPlayer.cpp" />
-    <ClCompile Include="HLPlayer.cpp" />
+    <ClCompile Include="hlcapture.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -110,7 +109,6 @@
     <ClInclude Include="..\Public\CVideoDecoder.h" />
     <ClInclude Include="..\Public\decoder.h" />
     <ClInclude Include="..\Public\SafeQueue.h" />
-    <ClInclude Include="CPlayer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
