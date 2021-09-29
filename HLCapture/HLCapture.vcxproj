@@ -60,7 +60,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../public;../library/FFmpeg/include;../library/SDL2-2.0.12/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../public;../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../library/FFmpeg/lib/win64;../library/SDL2-2.0.12/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -99,6 +99,7 @@
     <ClCompile Include="..\Public\CAudioDecoder.cpp" />
     <ClCompile Include="..\Public\CVideoDecoder.cpp" />
     <ClCompile Include="..\Public\decoder.cpp" />
+    <ClCompile Include="CaptureViewWidget.cpp" />
     <ClCompile Include="hlcapture.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -109,6 +110,7 @@
     <ClInclude Include="..\Public\CVideoDecoder.h" />
     <ClInclude Include="..\Public\decoder.h" />
     <ClInclude Include="..\Public\SafeQueue.h" />
+    <QtMoc Include="CaptureViewWidget.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

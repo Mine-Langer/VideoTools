@@ -52,6 +52,9 @@
     <ClCompile Include="..\Public\decoder.cpp">
       <Filter>public</Filter>
     </ClCompile>
+    <ClCompile Include="CaptureViewWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\avsync.h">
@@ -72,5 +75,10 @@
     <ClInclude Include="..\Public\SafeQueue.h">
       <Filter>public</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="CaptureViewWidget.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>
