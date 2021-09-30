@@ -105,3 +105,8 @@ HLCapture/x64/Debug/moc/moc_hlcapture.cpp
 HLCapture/x64/Release/rcc/qrc_hlcapture.cpp
 HLCapture/x64/Release/uic/ui_hlcapture.h
 .vs/VideoTools/v16/ipch/AutoPCH/a5c125226c78458c/CAPTUREVIEWWIDGET.ipch
+.vs/VideoTools/v16/Solution.VC.db-wal
+.vs/VideoTools/v16/Solution.VC.db-shm
+.vs/VideoTools/v16/ipch/AutoPCH/718e8d3e8086b97c/MOC_CAPTUREVIEWWIDGET.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/57e30b7e9dacf82b/HLCAPTURE.ipch
+.vs/VideoTools/v16/ipch/AutoPCH/2e81ab9ecdf3a816/CAPTUREVIEWWIDGET.ipch

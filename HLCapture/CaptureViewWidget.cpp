@@ -34,7 +34,8 @@ void CaptureViewWidget::region(const QPoint& cursorGlobalPoint)
 
 	int x = cursorGlobalPoint.x();
 	int y = cursorGlobalPoint.y();
-
+	printf("mouse pos(%d,%d) rect tl(%d,%d) rb(%d,%d) \r\n", 
+		x, y, tl.x(),tl.y(), rb.x(), rb.y());
 	if (tl.x() + PADDING >= x && tl.x() <= x && tl.y() + PADDING >= y && tl.y() <= y) {
 		// ×óÉÏ½Ç
 		dir = LEFTTOP;
