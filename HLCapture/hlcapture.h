@@ -2,8 +2,9 @@
 
 #include <QtWidgets/QWidget>
 #include "ui_hlcapture.h"
+#include "CRecorder.h"
 
-class CaptureViewWidget;
+class CapturingDialog;
 class HLCapture : public QWidget
 {
     Q_OBJECT
@@ -16,9 +17,11 @@ private:
 
 private slots:
     void OnRadioVideoClicked(bool);
+    void OnBtnStartCaptureClicked();
 
 private:
     Ui::HLCaptureClass ui;
 
-    CaptureViewWidget* m_pCapWidget = nullptr;
+    CapturingDialog* m_pCapWidget = nullptr;
+    CRecorder m_recoder;
 };

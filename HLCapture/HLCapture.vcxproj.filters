@@ -55,6 +55,9 @@
     <ClCompile Include="CaptureViewWidget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\avsync.h">
@@ -74,6 +77,9 @@
     </ClInclude>
     <ClInclude Include="..\Public\SafeQueue.h">
       <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="CRecorder.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

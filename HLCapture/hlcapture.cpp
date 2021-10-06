@@ -17,6 +17,7 @@ HLCapture::HLCapture(QWidget *parent)
 
     connect(ui.radioAreaCap, SIGNAL(clicked(bool)), this, SLOT(OnRadioVideoClicked(bool)));
     connect(ui.radioScreenCap, SIGNAL(clicked(bool)), this, SLOT(OnRadioVideoClicked(bool)));
+    connect(ui.btnStartCap, SIGNAL(clicked()), this, SLOT(OnBtnStartCaptureClicked()));
 }
 
 void HLCapture::CreateCapWidget()
@@ -37,9 +38,15 @@ void HLCapture::OnRadioVideoClicked(bool bCheck)
         {
             if (!m_pCapWidget)
             {
-                m_pCapWidget = new CaptureViewWidget;
+                m_pCapWidget = new CapturingDialog;
                 m_pCapWidget->show();
             }
         }
     }
+}
+
+void HLCapture::OnBtnStartCaptureClicked()
+{
+    m_recoder.Run();
+
 }
