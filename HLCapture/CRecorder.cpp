@@ -15,6 +15,8 @@ bool CRecorder::Run()
 	if (!InitVideo())
 		return false;
 
+	Start();
+
 	return true;
 }
 
@@ -39,5 +41,47 @@ bool CRecorder::InitVideo()
 	if (!m_videoDecoder.Open(VideoFormatCtx->streams[VideoIndex]))
 		return false;
 
+	if (!m_videoDecoder.SetConfig(-1, -1, AV_PIX_FMT_YUV420P))
+		return false;
+
+	m_videoDecoder.Start(this);
+
 	return true;
+}
+
+void CRecorder::Start()
+{
+	m_bRun = true;
+	m_demuxThread = std::thread(&CRecorder::OnDemuxThread, this);
+}
+
+void CRecorder::OnDemuxThread()
+{
+	AVPacket packet;
+	while (m_bRun)
+	{
+		if (0 > av_read_frame(VideoFormatCtx, &packet))
+			break;
+		
+		if (packet.stream_index == VideoIndex)
+		{
+			m_videoDecoder.SendPacket(&packet);
+		}
+
+		if (packet.stream_index == AudioIndex)
+		{
+
+		}
+	}
+}
+
+void CRecorder::VideoEvent(AVFrame* vdata)
+{
+	AVFrame* vframe = av_frame_clone(vdata);
+	VideoFrameData.Push(vframe);
+}
+
+void CRecorder::AudioEvent(STAudioBuffer* adata)
+{
+
 }

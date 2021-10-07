@@ -44,10 +44,11 @@ void CVideoDecoder::Start(IDecoderEvent* evt)
 
 bool CVideoDecoder::SetConfig(int width, int height, AVPixelFormat iformat, int iflags)
 {
-	VideoWidth = width;
-	VideoHeight = height;
-	VideoFormat = iformat;
-	SwsCtx = sws_getContext(VideoCodecCtx->width, VideoCodecCtx->height, VideoCodecCtx->pix_fmt, width, height, iformat, iflags, nullptr, nullptr, nullptr);
+	VideoWidth = width == -1 ? VideoCodecCtx->width : width;
+	VideoHeight = height == -1 ? VideoCodecCtx->height : height;
+	VideoFormat = iformat == AV_PIX_FMT_NONE ? VideoCodecCtx->pix_fmt: iformat;
+	SwsCtx = sws_getContext(VideoCodecCtx->width, VideoCodecCtx->height, VideoCodecCtx->pix_fmt,
+		VideoWidth, VideoHeight, VideoFormat, iflags, nullptr, nullptr, nullptr);
 	if (SwsCtx == nullptr)
 		return false;
 

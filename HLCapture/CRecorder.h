@@ -1,7 +1,7 @@
 #pragma once
 #include "CVideoDecoder.h"
 
-class CRecorder
+class CRecorder : public IDecoderEvent
 {
 public:
 	CRecorder();
@@ -13,10 +13,27 @@ public:
 	bool InitVideo();
 
 private:
+	void Start();
+
+	void OnDemuxThread();
+
+private:
+	void VideoEvent(AVFrame* vdata) override;
+
+	void AudioEvent(STAudioBuffer* adata) override;
+
+private:
+	bool m_bRun = false;
 	AVFormatContext* VideoFormatCtx = nullptr;
 
+
 	int VideoIndex = -1;
+	int AudioIndex = -1;
 
 	CVideoDecoder m_videoDecoder;
+
+	std::thread m_demuxThread;
+
+	SafeQueue<AVFrame*> VideoFrameData;
 };
 
