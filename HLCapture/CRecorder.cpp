@@ -23,6 +23,7 @@ bool CRecorder::Run()
 bool CRecorder::InitVideo()
 {
 	AVDictionary* options = nullptr;
+	StreamFrameRate = 25;
 	av_dict_set(&options, "framerate", "25", 0);
 	av_dict_set(&options, "offset_x", "0", 0);
 	av_dict_set(&options, "offset_y", "0", 0);
@@ -49,9 +50,26 @@ bool CRecorder::InitVideo()
 	return true;
 }
 
+bool CRecorder::InitOutput(const char* szOutput)
+{
+	if (0 > avformat_alloc_output_context2(&OutputFormatCtx, nullptr, nullptr, szOutput))
+		return false;
+
+	OutputFormat = OutputFormatCtx->oformat;
+
+	if (OutputFormat->video_codec != AV_CODEC_ID_NONE)
+		InitVideoOutput();
+
+	if (OutputFormat->audio_codec != AV_CODEC_ID_NONE)
+		InitAudioOutput();
+
+	return true;
+}
+
 void CRecorder::Start()
 {
 	m_bRun = true;
+	// 解复用线程
 	m_demuxThread = std::thread(&CRecorder::OnDemuxThread, this);
 }
 
@@ -73,6 +91,30 @@ void CRecorder::OnDemuxThread()
 
 		}
 	}
+}
+
+bool CRecorder::InitVideoOutput()
+{
+	AVCodec* codec = avcodec_find_encoder(OutputFormat->video_codec);
+	if (codec == nullptr)
+		return false;
+
+	AVStream* pStream = avformat_new_stream(OutputFormatCtx, nullptr);
+	pStream->id = OutputFormatCtx->nb_streams - 1;
+	pStream->time_base = { 1, StreamFrameRate };
+
+	AVCodecContext* outputVideoCodecCtx = avcodec_alloc_context3(codec);
+	outputVideoCodecCtx->codec_id = OutputFormat->video_codec;
+	outputVideoCodecCtx->bit_rate = 400000;
+
+
+	return true;
+}
+
+bool CRecorder::InitAudioOutput()
+{
+
+	return true;
 }
 
 void CRecorder::VideoEvent(AVFrame* vdata)

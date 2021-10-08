@@ -12,10 +12,14 @@ public:
 	// 初始化录制视频
 	bool InitVideo();
 
-private:
-	void Start();
+	bool InitOutput(const char* szOutput);
 
-	void OnDemuxThread();
+private:
+	void Start(); // 开启解复用
+	void OnDemuxThread(); // 解复用线程
+
+	bool InitVideoOutput();
+	bool InitAudioOutput();
 
 private:
 	void VideoEvent(AVFrame* vdata) override;
@@ -24,11 +28,15 @@ private:
 
 private:
 	bool m_bRun = false;
+	AVFormatContext* OutputFormatCtx = nullptr;
 	AVFormatContext* VideoFormatCtx = nullptr;
+	AVFormatContext* AudioFormatCtx = nullptr;
 
+	AVOutputFormat* OutputFormat = nullptr;
 
 	int VideoIndex = -1;
 	int AudioIndex = -1;
+	int StreamFrameRate = 0; // 刷新频率
 
 	CVideoDecoder m_videoDecoder;
 
