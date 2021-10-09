@@ -12,6 +12,7 @@ public:
 	void Start(IDecoderEvent* evt);
 
 	bool SetConfig(int width = -1, int height = -1, AVPixelFormat iformat = AV_PIX_FMT_NONE, int iflags = SWS_BICUBIC);
+	void GetParameter(int& width, int& height, AVPixelFormat& iformat);
 
 	bool SendPacket(AVPacket* pkt) override;
 	void Close() override;

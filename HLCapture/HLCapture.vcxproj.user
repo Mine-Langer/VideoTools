@@ -5,6 +5,6 @@
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <QtLastBackgroundBuild>2021-10-08T10:11:36.3267476Z</QtLastBackgroundBuild>
+    <QtLastBackgroundBuild>2021-10-09T09:37:35.0812975Z</QtLastBackgroundBuild>
   </PropertyGroup>
 </Project>

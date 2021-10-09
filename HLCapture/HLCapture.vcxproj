@@ -98,6 +98,7 @@
     <QtMoc Include="hlcapture.h" />
     <ClCompile Include="..\Public\CAudioDecoder.cpp" />
     <ClCompile Include="..\Public\CVideoDecoder.cpp" />
+    <ClCompile Include="..\Public\CVideoEncoder.cpp" />
     <ClCompile Include="..\Public\decoder.cpp" />
     <ClCompile Include="CaptureViewWidget.cpp" />
     <ClCompile Include="CRecorder.cpp" />
@@ -109,6 +110,7 @@
     <ClInclude Include="..\Public\CAudioDecoder.h" />
     <ClInclude Include="..\Public\Common.h" />
     <ClInclude Include="..\Public\CVideoDecoder.h" />
+    <ClInclude Include="..\Public\CVideoEncoder.h" />
     <ClInclude Include="..\Public\decoder.h" />
     <ClInclude Include="..\Public\SafeQueue.h" />
     <ClInclude Include="CRecorder.h" />

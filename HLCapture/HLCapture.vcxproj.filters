@@ -58,6 +58,9 @@
     <ClCompile Include="CRecorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Public\CVideoEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\avsync.h">
@@ -79,6 +82,9 @@
       <Filter>public</Filter>
     </ClInclude>
     <ClInclude Include="CRecorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\CVideoEncoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -103,10 +103,32 @@ bool CRecorder::InitVideoOutput()
 	pStream->id = OutputFormatCtx->nb_streams - 1;
 	pStream->time_base = { 1, StreamFrameRate };
 
+	int VideoWidth, VideoHeight; 
+	AVPixelFormat VideoFormat;
+	m_videoDecoder.GetParameter(VideoWidth, VideoHeight, VideoFormat);
 	AVCodecContext* outputVideoCodecCtx = avcodec_alloc_context3(codec);
 	outputVideoCodecCtx->codec_id = OutputFormat->video_codec;
 	outputVideoCodecCtx->bit_rate = 400000;
+	outputVideoCodecCtx->width = VideoWidth;
+	outputVideoCodecCtx->height = VideoHeight;
+	outputVideoCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+	outputVideoCodecCtx->time_base = pStream->time_base;
+	outputVideoCodecCtx->gop_size = 12;
 
+	if (OutputFormat->flags & AVFMT_GLOBALHEADER)
+		outputVideoCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+	AVDictionary* param = nullptr;
+	if (outputVideoCodecCtx->codec_id == AV_CODEC_ID_H264)
+	{
+		av_dict_set(&param, "preset", "slow", 0);
+		av_dict_set(&param, "tune", "zerolatency", 0);
+	}
+
+	if (0 > avcodec_open2(outputVideoCodecCtx, codec, &param))
+		return false;
+
+	avcodec_parameters_from_context(pStream->codecpar, outputVideoCodecCtx);
 
 	return true;
 }

@@ -55,6 +55,13 @@ bool CVideoDecoder::SetConfig(int width, int height, AVPixelFormat iformat, int 
 	return true;
 }
 
+void CVideoDecoder::GetParameter(int& width, int& height, AVPixelFormat& iformat)
+{
+	width = VideoWidth;
+	height = VideoHeight;
+	iformat = VideoFormat;
+}
+
 bool CVideoDecoder::SendPacket(AVPacket* pkt)
 {
 	AVPacket* vpkt = av_packet_clone(pkt);
