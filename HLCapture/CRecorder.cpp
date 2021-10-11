@@ -10,11 +10,21 @@ CRecorder::~CRecorder()
 
 }
 
-bool CRecorder::Run()
+bool CRecorder::Run(const char* szFile)
 {
+	// 设置视频参数
 	if (!InitVideo())
 		return false;
 
+	// 设置音频参数
+	if (!InitAudio())
+		return false;
+
+	// 设置输出参数
+	if (!InitOutput(szFile))
+		return false;
+
+	// 开始录制
 	Start();
 
 	return true;
@@ -50,6 +60,11 @@ bool CRecorder::InitVideo()
 	return true;
 }
 
+bool CRecorder::InitAudio()
+{
+	return true;
+}
+
 bool CRecorder::InitOutput(const char* szOutput)
 {
 	if (0 > avformat_alloc_output_context2(&OutputFormatCtx, nullptr, nullptr, szOutput))
@@ -63,6 +78,15 @@ bool CRecorder::InitOutput(const char* szOutput)
 	if (OutputFormat->audio_codec != AV_CODEC_ID_NONE)
 		InitAudioOutput();
 
+	av_dump_format(OutputFormatCtx, 0, szOutput, 1);
+
+	if (!(OutputFormat->flags & AVFMT_NOFILE))
+		if (0 > avio_open(&OutputFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
+			return false;
+
+	if (0 > avformat_write_header(OutputFormatCtx, nullptr))
+		return false;
+
 	return true;
 }
 
@@ -71,6 +95,9 @@ void CRecorder::Start()
 	m_bRun = true;
 	// 解复用线程
 	m_demuxThread = std::thread(&CRecorder::OnDemuxThread, this);
+
+	// 保存数据帧线程
+	m_saveThread = std::thread(&CRecorder::OnSaveThread, this);
 }
 
 void CRecorder::OnDemuxThread()
@@ -90,6 +117,22 @@ void CRecorder::OnDemuxThread()
 		{
 
 		}
+		av_packet_unref(&packet);
+	}
+}
+
+void CRecorder::OnSaveThread()
+{
+	AVPacket* vdata = nullptr;
+	while (m_bRun)
+	{	
+		if (!VideoPacketData.Pop(vdata))
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+		else
+		{
+			av_write_frame(OutputFormatCtx, vdata);
+			av_packet_free(&vdata);
+		}
 	}
 }
 
@@ -106,30 +149,10 @@ bool CRecorder::InitVideoOutput()
 	int VideoWidth, VideoHeight; 
 	AVPixelFormat VideoFormat;
 	m_videoDecoder.GetParameter(VideoWidth, VideoHeight, VideoFormat);
-	AVCodecContext* outputVideoCodecCtx = avcodec_alloc_context3(codec);
-	outputVideoCodecCtx->codec_id = OutputFormat->video_codec;
-	outputVideoCodecCtx->bit_rate = 400000;
-	outputVideoCodecCtx->width = VideoWidth;
-	outputVideoCodecCtx->height = VideoHeight;
-	outputVideoCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
-	outputVideoCodecCtx->time_base = pStream->time_base;
-	outputVideoCodecCtx->gop_size = 12;
 
-	if (OutputFormat->flags & AVFMT_GLOBALHEADER)
-		outputVideoCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-
-	AVDictionary* param = nullptr;
-	if (outputVideoCodecCtx->codec_id == AV_CODEC_ID_H264)
-	{
-		av_dict_set(&param, "preset", "slow", 0);
-		av_dict_set(&param, "tune", "zerolatency", 0);
-	}
-
-	if (0 > avcodec_open2(outputVideoCodecCtx, codec, &param))
-		return false;
-
-	avcodec_parameters_from_context(pStream->codecpar, outputVideoCodecCtx);
-
+	m_videoEncoder.InitConfig(OutputFormatCtx, VideoWidth, VideoHeight);
+	m_videoEncoder.Start(this);
+	
 	return true;
 }
 
@@ -141,8 +164,14 @@ bool CRecorder::InitAudioOutput()
 
 void CRecorder::VideoEvent(AVFrame* vdata)
 {
-	AVFrame* vframe = av_frame_clone(vdata);
-	VideoFrameData.Push(vframe);
+	//AVFrame* vframe = av_frame_clone(vdata);
+	m_videoEncoder.Encode(vdata);
+}
+
+void CRecorder::VideoEvent(AVPacket* vdata)
+{
+	AVPacket* vpkt = av_packet_clone(vdata);
+	VideoPacketData.Push(vpkt);
 }
 
 void CRecorder::AudioEvent(STAudioBuffer* adata)

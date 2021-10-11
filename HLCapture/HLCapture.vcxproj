@@ -100,6 +100,7 @@
     <ClCompile Include="..\Public\CVideoDecoder.cpp" />
     <ClCompile Include="..\Public\CVideoEncoder.cpp" />
     <ClCompile Include="..\Public\decoder.cpp" />
+    <ClCompile Include="..\Public\Encoder.cpp" />
     <ClCompile Include="CaptureViewWidget.cpp" />
     <ClCompile Include="CRecorder.cpp" />
     <ClCompile Include="hlcapture.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="..\Public\CVideoDecoder.h" />
     <ClInclude Include="..\Public\CVideoEncoder.h" />
     <ClInclude Include="..\Public\decoder.h" />
+    <ClInclude Include="..\Public\Encoder.h" />
     <ClInclude Include="..\Public\SafeQueue.h" />
     <ClInclude Include="CRecorder.h" />
     <QtMoc Include="CaptureViewWidget.h" />

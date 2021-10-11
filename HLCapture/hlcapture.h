@@ -1,5 +1,5 @@
 #pragma once
-
+#pragma execution_character_set("utf-8")
 #include <QtWidgets/QWidget>
 #include "ui_hlcapture.h"
 #include "CRecorder.h"

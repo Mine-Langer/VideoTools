@@ -2,6 +2,7 @@
 #include "CaptureViewWidget.h"
 #include <QStandardPaths>
 #include <QBitmap>
+#include <QDateTime>
 
 HLCapture::HLCapture(QWidget *parent)
     : QWidget(parent)
@@ -47,6 +48,12 @@ void HLCapture::OnRadioVideoClicked(bool bCheck)
 
 void HLCapture::OnBtnStartCaptureClicked()
 {
-    m_recoder.Run();
+    QDateTime currTime = QDateTime::currentDateTime();
+    QString fileName = currTime.toString("yyyy-mm-dd hh:mm:ss");
+    QString szPath = ui.editOutputPath->text();
+    QString szFilePath = szPath + "/" + fileName + ".mp4";
+    QByteArray baName = szFilePath.toLocal8Bit();
+    const char* pszName = baName.data();
+    m_recoder.Run(pszName);
 
 }
