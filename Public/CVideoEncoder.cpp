@@ -27,7 +27,7 @@ bool CVideoEncoder::InitConfig(AVFormatContext* outputFmtCtx, int width, int hei
 		return false;
 
 	VideoCodecCtx->codec_id = outputFmtCtx->oformat->video_codec;
-	VideoCodecCtx->bit_rate = 400000;
+	VideoCodecCtx->bit_rate = 4000000;
 	VideoCodecCtx->width = width;
 	VideoCodecCtx->height = height;
 	VideoCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;

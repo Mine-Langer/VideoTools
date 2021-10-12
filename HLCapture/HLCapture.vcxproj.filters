@@ -64,6 +64,9 @@
     <ClCompile Include="..\Public\Encoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CAudioEncoder.cpp">
+      <Filter>public</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\avsync.h">
@@ -92,6 +95,9 @@
     </ClInclude>
     <ClInclude Include="..\Public\Encoder.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\CAudioEncoder.h">
+      <Filter>public</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

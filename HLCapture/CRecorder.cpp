@@ -12,6 +12,15 @@ CRecorder::~CRecorder()
 
 bool CRecorder::Run(const char* szFile)
 {
+	/*{
+		AVFormatContext* fmtctx = avformat_alloc_context();
+		AVDictionary* options = nullptr;
+		av_dict_set(&options, "list_devices", "true", 0);
+		AVInputFormat* ifmt = av_find_input_format("dshow");
+		int ret = avformat_open_input(&fmtctx, "video=dummy", ifmt, &options);
+		if (avformat_open_input(&fmtctx, "1", ifmt, NULL) != 0)
+			return false;
+	}*/
 	// 设置视频参数
 	if (!InitVideo())
 		return false;
@@ -62,6 +71,28 @@ bool CRecorder::InitVideo()
 
 bool CRecorder::InitAudio()
 {
+	AVInputFormat* ifmt = av_find_input_format("dshow");
+	if (ifmt == nullptr)
+		return false;
+
+	const char* pszDevName[] = { "audio=麦克风 (Realtek High Definition Au)", "audio=Stereo Mix (Realtek High Defini", "audio=virtual-audio-capturer" };
+	
+	if (0 != avformat_open_input(&AudioFormatCtx, pszDevName[1], ifmt, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(AudioFormatCtx, nullptr))
+		return false;
+
+	AVCodec* codec = nullptr;
+	AudioIndex = av_find_best_stream(AudioFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, &codec, 0);
+	if (AudioIndex == -1)
+		return false;
+
+	if (!m_audioDecoder.Open(AudioFormatCtx->streams[AudioIndex]))
+		return false;
+
+	m_audioDecoder.Start(this);
+
 	return true;
 }
 
@@ -86,8 +117,13 @@ bool CRecorder::InitOutput(const char* szOutput)
 
 	if (0 > avformat_write_header(OutputFormatCtx, nullptr))
 		return false;
-
+	
 	return true;
+}
+
+void CRecorder::Stop()
+{
+
 }
 
 void CRecorder::Start()
@@ -134,18 +170,11 @@ void CRecorder::OnSaveThread()
 			av_packet_free(&vdata);
 		}
 	}
+	av_write_trailer(OutputFormatCtx);
 }
 
 bool CRecorder::InitVideoOutput()
 {
-	AVCodec* codec = avcodec_find_encoder(OutputFormat->video_codec);
-	if (codec == nullptr)
-		return false;
-
-	AVStream* pStream = avformat_new_stream(OutputFormatCtx, nullptr);
-	pStream->id = OutputFormatCtx->nb_streams - 1;
-	pStream->time_base = { 1, StreamFrameRate };
-
 	int VideoWidth, VideoHeight; 
 	AVPixelFormat VideoFormat;
 	m_videoDecoder.GetParameter(VideoWidth, VideoHeight, VideoFormat);
@@ -164,7 +193,6 @@ bool CRecorder::InitAudioOutput()
 
 void CRecorder::VideoEvent(AVFrame* vdata)
 {
-	//AVFrame* vframe = av_frame_clone(vdata);
 	m_videoEncoder.Encode(vdata);
 }
 

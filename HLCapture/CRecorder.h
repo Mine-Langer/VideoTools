@@ -1,6 +1,8 @@
 #pragma once
 #include "CVideoDecoder.h"
 #include "CVideoEncoder.h"
+#include "CAudioDecoder.h"
+#include "CAudioEncoder.h"
 
 class CRecorder : public IDecoderEvent, public IEncoderEvent
 {
@@ -16,6 +18,12 @@ public:
 	bool InitAudio();
 
 	bool InitOutput(const char* szOutput);
+
+	void Pause(); // ÔÝÍ£
+
+	void Resume(); // ¼ÌÐø
+
+	void Stop(); // ÖÕÖ¹
 
 private:
 	void Start(); // ¿ªÆô½â¸´ÓÃ
@@ -45,6 +53,8 @@ private:
 
 	CVideoDecoder m_videoDecoder;
 	CVideoEncoder m_videoEncoder;
+	CAudioDecoder m_audioDecoder;
+	CAudioEncoder m_audioEncoder;
 
 	std::thread m_demuxThread;
 	std::thread m_saveThread;

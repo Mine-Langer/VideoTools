@@ -102,6 +102,7 @@
     <ClCompile Include="..\Public\decoder.cpp" />
     <ClCompile Include="..\Public\Encoder.cpp" />
     <ClCompile Include="CaptureViewWidget.cpp" />
+    <ClCompile Include="CAudioEncoder.cpp" />
     <ClCompile Include="CRecorder.cpp" />
     <ClCompile Include="hlcapture.cpp" />
     <ClCompile Include="main.cpp" />
@@ -109,6 +110,7 @@
   <ItemGroup>
     <ClInclude Include="..\Public\avsync.h" />
     <ClInclude Include="..\Public\CAudioDecoder.h" />
+    <ClInclude Include="..\Public\CAudioEncoder.h" />
     <ClInclude Include="..\Public\Common.h" />
     <ClInclude Include="..\Public\CVideoDecoder.h" />
     <ClInclude Include="..\Public\CVideoEncoder.h" />

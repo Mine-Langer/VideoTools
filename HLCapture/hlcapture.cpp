@@ -49,9 +49,9 @@ void HLCapture::OnRadioVideoClicked(bool bCheck)
 void HLCapture::OnBtnStartCaptureClicked()
 {
     QDateTime currTime = QDateTime::currentDateTime();
-    QString fileName = currTime.toString("yyyy-mm-dd hh:mm:ss");
+    QString fileName = currTime.toString("yyyy-mm-dd hhmmsszzz");
     QString szPath = ui.editOutputPath->text();
-    QString szFilePath = szPath + "/" + fileName + ".mp4";
+    QString szFilePath = szPath + "\\" + fileName + ".mp4";
     QByteArray baName = szFilePath.toLocal8Bit();
     const char* pszName = baName.data();
     m_recoder.Run(pszName);
