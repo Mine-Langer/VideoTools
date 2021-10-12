@@ -12,7 +12,7 @@ CRecorder::~CRecorder()
 
 bool CRecorder::Run(const char* szFile)
 {
-	/*{
+	/*{ https://blog.csdn.net/Fandes_F/article/details/105127542
 		AVFormatContext* fmtctx = avformat_alloc_context();
 		AVDictionary* options = nullptr;
 		av_dict_set(&options, "list_devices", "true", 0);
@@ -38,7 +38,15 @@ bool CRecorder::Run(const char* szFile)
 
 	return true;
 }
-
+static char* dup_wchar_to_utf8(const wchar_t* w)
+{
+	char* s = NULL;
+	int l = WideCharToMultiByte(CP_UTF8, 0, w, -1, 0, 0, 0, 0);
+	s = (char*)av_malloc(l);
+	if (s)
+		WideCharToMultiByte(CP_UTF8, 0, w, -1, s, l, 0, 0);
+	return s;
+}
 bool CRecorder::InitVideo()
 {
 	AVDictionary* options = nullptr;
@@ -75,9 +83,10 @@ bool CRecorder::InitAudio()
 	if (ifmt == nullptr)
 		return false;
 
-	const char* pszDevName[] = { "audio=麦克风 (Realtek High Definition Au)", "audio=Stereo Mix (Realtek High Defini", "audio=virtual-audio-capturer" };
-	
-	if (0 != avformat_open_input(&AudioFormatCtx, pszDevName[1], ifmt, nullptr))
+	const WCHAR* pszDevName[] = { L"audio=麦克风 (Realtek High Definition Audio)", L"audio=Stereo Mix (Realtek High Defini", L"audio=virtual-audio-capturer" };
+	AudioFormatCtx = avformat_alloc_context();
+	char* szDevName = dup_wchar_to_utf8(pszDevName[2]);
+	if (0 != avformat_open_input(&AudioFormatCtx, szDevName, ifmt, nullptr))
 		return false;
 
 	if (0 > avformat_find_stream_info(AudioFormatCtx, nullptr))
