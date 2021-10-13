@@ -12,7 +12,7 @@ CRecorder::~CRecorder()
 
 bool CRecorder::Run(const char* szFile)
 {
-	/*{ https://blog.csdn.net/Fandes_F/article/details/105127542
+	/*{ 
 		AVFormatContext* fmtctx = avformat_alloc_context();
 		AVDictionary* options = nullptr;
 		av_dict_set(&options, "list_devices", "true", 0);
@@ -83,9 +83,9 @@ bool CRecorder::InitAudio()
 	if (ifmt == nullptr)
 		return false;
 
-	const WCHAR* pszDevName[] = { L"audio=麦克风 (Realtek High Definition Audio)", L"audio=Stereo Mix (Realtek High Defini", L"audio=virtual-audio-capturer" };
+	const WCHAR* pszDevName[] = { L"audio=立体声混音 (Realtek(R) Audio)", L"audio=麦克风 (Realtek High Definition Audio)", L"audio=Stereo Mix (Realtek High Defini", L"audio=virtual-audio-capturer"};
 	AudioFormatCtx = avformat_alloc_context();
-	char* szDevName = dup_wchar_to_utf8(pszDevName[2]);
+	char* szDevName = dup_wchar_to_utf8(pszDevName[0]);
 	if (0 != avformat_open_input(&AudioFormatCtx, szDevName, ifmt, nullptr))
 		return false;
 
@@ -138,14 +138,15 @@ void CRecorder::Stop()
 void CRecorder::Start()
 {
 	m_bRun = true;
-	// 解复用线程
-	m_demuxThread = std::thread(&CRecorder::OnDemuxThread, this);
-
+	// 录像解复用线程
+	m_demuxVThread = std::thread(&CRecorder::OnDemuxVideoThread, this);
+	// 录音解复用线程
+	m_demuxAThread = std::thread(&CRecorder::OnDemuxAudioThread, this);
 	// 保存数据帧线程
 	m_saveThread = std::thread(&CRecorder::OnSaveThread, this);
 }
 
-void CRecorder::OnDemuxThread()
+void CRecorder::OnDemuxVideoThread()
 {
 	AVPacket packet;
 	while (m_bRun)
@@ -158,10 +159,21 @@ void CRecorder::OnDemuxThread()
 			m_videoDecoder.SendPacket(&packet);
 		}
 
-		if (packet.stream_index == AudioIndex)
-		{
+		av_packet_unref(&packet);
+	}
+}
 
-		}
+void CRecorder::OnDemuxAudioThread()
+{
+	AVPacket packet = { 0 };
+	while (m_bRun)
+	{
+		if (0 > av_read_frame(AudioFormatCtx, &packet))
+			break;
+		
+		if (packet.stream_index == AudioIndex)
+			m_audioDecoder.SendPacket(&packet);
+
 		av_packet_unref(&packet);
 	}
 }

@@ -67,6 +67,9 @@
     <ClCompile Include="CAudioEncoder.cpp">
       <Filter>public</Filter>
     </ClCompile>
+    <ClCompile Include="AVMainWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Public\avsync.h">
@@ -104,5 +107,13 @@
     <QtMoc Include="CaptureViewWidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="AVMainWnd.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="AVMainWnd.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
 </Project>

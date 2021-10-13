@@ -16,6 +16,7 @@
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0.19041.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0.19041.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+    <ProjectName>HLAVTools</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -94,6 +95,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtRcc Include="hlcapture.qrc" />
+    <QtUic Include="AVMainWnd.ui" />
     <QtUic Include="hlcapture.ui" />
     <QtMoc Include="hlcapture.h" />
     <ClCompile Include="..\Public\CAudioDecoder.cpp" />
@@ -101,6 +103,7 @@
     <ClCompile Include="..\Public\CVideoEncoder.cpp" />
     <ClCompile Include="..\Public\decoder.cpp" />
     <ClCompile Include="..\Public\Encoder.cpp" />
+    <ClCompile Include="AVMainWnd.cpp" />
     <ClCompile Include="CaptureViewWidget.cpp" />
     <ClCompile Include="CAudioEncoder.cpp" />
     <ClCompile Include="CRecorder.cpp" />
@@ -117,6 +120,7 @@
     <ClInclude Include="..\Public\decoder.h" />
     <ClInclude Include="..\Public\Encoder.h" />
     <ClInclude Include="..\Public\SafeQueue.h" />
+    <QtMoc Include="AVMainWnd.h" />
     <ClInclude Include="CRecorder.h" />
     <QtMoc Include="CaptureViewWidget.h" />
   </ItemGroup>

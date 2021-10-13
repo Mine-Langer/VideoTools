@@ -27,7 +27,8 @@ public:
 
 private:
 	void Start(); // 开启解复用
-	void OnDemuxThread(); // 解复用线程
+	void OnDemuxVideoThread(); // 图像解复用线程
+	void OnDemuxAudioThread(); // 录音解复用线程
 	void OnSaveThread(); // 保存视频帧线程
 
 	bool InitVideoOutput();
@@ -56,7 +57,8 @@ private:
 	CAudioDecoder m_audioDecoder;
 	CAudioEncoder m_audioEncoder;
 
-	std::thread m_demuxThread;
+	std::thread m_demuxVThread;
+	std::thread m_demuxAThread;
 	std::thread m_saveThread;
 
 	SafeQueue<AVFrame*> VideoFrameData;
