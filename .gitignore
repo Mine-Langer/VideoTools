@@ -111,3 +111,11 @@ HLCapture/x64/Release/uic/ui_hlcapture.h
 .vs/VideoTools/v16/ipch/AutoPCH/57e30b7e9dacf82b/HLCAPTURE.ipch
 .vs/VideoTools/v16/ipch/AutoPCH/2e81ab9ecdf3a816/CAPTUREVIEWWIDGET.ipch
 *.ipch
+x64/Debug/HLAVTools.pdb
+x64/Debug/HLAVTools.ilk
+HLPlayer/HLPlayer.vcxproj.user
+HLCapture/x64/Release/uic/ui_AVMainWnd.h
+HLCapture/x64/Release/moc/moc_CaptureViewWidget.cpp
+HLCapture/x64/Release/moc/moc_AVMainWnd.cpp
+HLCapture/x64/Debug/uic/ui_AVMainWnd.h
+HLCapture/x64/Debug/moc/moc_AVMainWnd.cpp
