@@ -21,6 +21,8 @@ public:
 	int GetSampleRate();
 	int GetChannels();
 	int GetSamples();
+	int GetChannelLayouts();
+	AVSampleFormat GetSampleFormat();
 
 private:
 	void OnDecodeFunction() override;

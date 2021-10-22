@@ -90,6 +90,16 @@ int CAudioDecoder::GetSamples()
 	return m_nb_samples;
 }
 
+int CAudioDecoder::GetChannelLayouts()
+{
+	return m_channel_layout;
+}
+
+AVSampleFormat CAudioDecoder::GetSampleFormat()
+{
+	return AudioCodecCtx->sample_fmt;
+}
+
 void CAudioDecoder::OnDecodeFunction()
 {
 	int error = 0;

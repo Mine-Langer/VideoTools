@@ -61,14 +61,14 @@
     <ClCompile Include="..\Public\CVideoEncoder.cpp">
       <Filter>public</Filter>
     </ClCompile>
-    <ClCompile Include="..\Public\Encoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CAudioEncoder.cpp">
       <Filter>public</Filter>
     </ClCompile>
     <ClCompile Include="AVMainWnd.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Public\Encoder.cpp">
+      <Filter>public</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -96,10 +96,10 @@
     <ClInclude Include="..\Public\CVideoEncoder.h">
       <Filter>public</Filter>
     </ClInclude>
-    <ClInclude Include="..\Public\Encoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\Public\CAudioEncoder.h">
+      <Filter>public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Public\Encoder.h">
       <Filter>public</Filter>
     </ClInclude>
   </ItemGroup>
