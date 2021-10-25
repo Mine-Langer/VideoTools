@@ -119,3 +119,7 @@ HLCapture/x64/Release/moc/moc_CaptureViewWidget.cpp
 HLCapture/x64/Release/moc/moc_AVMainWnd.cpp
 HLCapture/x64/Debug/uic/ui_AVMainWnd.h
 HLCapture/x64/Debug/moc/moc_AVMainWnd.cpp
+audioRecoder/x64/Debug/audioRecoder.ilk
+audioRecoder/x64/Debug/vc142.idb
+audioRecoder/x64/Debug/vc142.pdb
+x64/Debug/audioRecoder.pdb

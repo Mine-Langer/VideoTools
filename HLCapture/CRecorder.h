@@ -39,6 +39,7 @@ private:
 	void AudioEvent(STAudioBuffer* adata) override;
 
 	void VideoEvent(AVPacket* vdata) override;
+	void AudioEvent(AVPacket* adata) override;
 
 private:
 	bool m_bRun = false;
