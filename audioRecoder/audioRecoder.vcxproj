@@ -140,6 +140,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="audioRecoder.cpp" />
+    <ClCompile Include="recoder.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="recoder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
