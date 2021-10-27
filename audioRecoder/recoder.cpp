@@ -12,79 +12,81 @@ CRecoder::~CRecoder()
 
 void CRecoder::SetConfig(int nSamples, int nBit, int nChannel)
 {
-	// 设备数量
-	int count = waveInGetNumDevs();
-
-	// 设备名称
-	WAVEINCAPS waveInCaps = { 0 };
-	MMRESULT mmResult = waveInGetDevCaps(0, &waveInCaps, sizeof(WAVEINCAPS));
-
-	// 设置音频流格式
-	waveFormat.cbSize = sizeof(WAVEFORMATEX);
-	waveFormat.nSamplesPerSec = nSamples;  // 采样率
-	waveFormat.wBitsPerSample = nBit;     // 采样精度
-	waveFormat.nChannels = nChannel;           // 声道数
-	waveFormat.wFormatTag = WAVE_FORMAT_PCM; // 音频格式
-	waveFormat.nBlockAlign = (waveFormat.wBitsPerSample * waveFormat.nChannels) / 8; // 块对齐
-	waveFormat.nAvgBytesPerSec = waveFormat.nBlockAlign * waveFormat.nSamplesPerSec; // 传输速率
-
-	// 分配内存
-	BYTE* pBuffer1 = new BYTE[BUFFER_LEN]();
-	BYTE* pBuffer2 = new BYTE[BUFFER_LEN]();
-	file = new BYTE[512]();
-
-	// 设置音频头
-	whdr_i1.lpData = (LPSTR)pBuffer1;
-	whdr_i1.dwBufferLength = BUFFER_LEN;
-	whdr_i1.dwBytesRecorded = 0;
-	whdr_i1.dwUser = 0;
-	whdr_i1.dwFlags = 0;
-	whdr_i1.dwLoops = 1;
-	whdr_i2.lpData = (LPSTR)pBuffer2;
-	whdr_i2.dwBufferLength = BUFFER_LEN;
-	whdr_i2.dwBytesRecorded = 0;
-	whdr_i2.dwUser = 0;
-	whdr_i2.dwFlags = 0;
-	whdr_i2.dwLoops = 1;
+	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+	waveFormat.nChannels = nChannel;
+	waveFormat.nSamplesPerSec = nSamples;
+	waveFormat.nAvgBytesPerSec = nSamples * nChannel * nBit / 8;
+	waveFormat.nBlockAlign = nChannel * nBit / 8;
+	waveFormat.wBitsPerSample = nBit;
+	waveFormat.cbSize = 0;
 }
 
-bool CRecoder::Start()
+bool CRecoder::Init()
 {
-	// 开启录音
-	MMRESULT mmResult = waveInOpen(&hWaveIn, WAVE_MAPPER, &waveFormat, (DWORD_PTR)RecoderFunction, (DWORD_PTR)this, CALLBACK_FUNCTION);
-	mmResult = waveInPrepareHeader(hWaveIn, &whdr_i1, sizeof(WAVEHDR));
-	mmResult = waveInPrepareHeader(hWaveIn, &whdr_i2, sizeof(WAVEHDR));
-	mmResult = waveInAddBuffer(hWaveIn, &whdr_i1, sizeof(WAVEHDR));
-	mmResult = waveInAddBuffer(hWaveIn, &whdr_i2, sizeof(WAVEHDR));
-
-	mmResult = waveInStart(hWaveIn);
-
-	//////////////////////////////////////////////////////////////////////////
-	waveInReset(hWaveIn);
-	Sleep(50000);
-	waveInClose(hWaveIn);
-
-	HANDLE hWait = CreateEvent(nullptr, false, false, nullptr);
-	waveOutOpen(&hWaveOut, WAVE_MAPPER, &waveFormat, (DWORD_PTR)hWait, 0, CALLBACK_EVENT);
-
-	// 播放录音
-	whdr_o.lpData = (LPSTR)file;
-	whdr_o.dwBufferLength = hasRecorded;
-	whdr_o.dwBytesRecorded = hasRecorded;
-	whdr_o.dwFlags = 0;
-	whdr_o.dwLoops = 1;
-
-	ResetEvent(hWait);
-	waveOutPrepareHeader(hWaveOut, &whdr_o, sizeof(WAVEHDR));
-	waveOutWrite(hWaveOut, &whdr_o, sizeof(WAVEHDR));
-
-	DWORD dw = WaitForSingleObject(hWait, INFINITE);
-	if (dw == WAIT_OBJECT_0)
+	if (GetMicrophone())
 	{
-		printf("over! \r\n");
-		return true;
+		SetConfig(44100, 16, 2);
+		
+		// 初始化设备缓冲区
+		for (int i = 0; i < 2; i++)
+		{
+			whdr[i].lpData = (LPSTR)malloc(4096);
+			whdr[i].dwBufferLength = 4096;
+			whdr[i].dwBytesRecorded = 0;
+			whdr[i].dwUser = 0;
+			whdr[i].dwFlags = 0;
+			whdr[i].dwLoops = 0;
+		}
 	}
-	return false;
+	return true;
+}
+
+void CRecoder::Start()
+{
+	try
+	{
+		MMRESULT mr = waveInOpen(&hWaveIn, WAVE_MAPPER, &waveFormat, (DWORD_PTR)RecoderFunction, (DWORD_PTR)this, CALLBACK_FUNCTION);
+		if (mr != MMSYSERR_NOERROR)
+		{
+			return;
+		}
+
+		waveInPrepareHeader(hWaveIn, &whdr[0], sizeof(WAVEHDR));	//配置数据块
+		waveInPrepareHeader(hWaveIn, &whdr[1], sizeof(WAVEHDR));
+
+
+		//部署缓存
+		waveInAddBuffer(hWaveIn, &whdr[0], sizeof(WAVEHDR));		//压入缓冲区
+		waveInAddBuffer(hWaveIn, &whdr[1], sizeof(WAVEHDR));
+
+		//发送录音开始消息
+		waveInStart(hWaveIn);
+		IsStop = FALSE;
+
+		printf("开始录音\n");
+	}
+	catch (...)
+	{
+
+	}
+}
+
+bool CRecoder::GetMicrophone()
+{
+	int nCount = waveInGetNumDevs();
+	if (nCount == 0)
+	{
+		return false;
+	}
+
+	WAVEINCAPS waveCaps = { 0 };
+	MMRESULT mr = waveInGetDevCaps(0, &waveCaps, sizeof(WAVEINCAPS));
+	if (mr != MMSYSERR_NOERROR)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void CALLBACK CRecoder::RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
@@ -102,21 +104,7 @@ void CALLBACK CRecoder::RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst
 	case WIM_DATA:
 	{
 		printf("Buffer has Complete!\r\n");
-		DWORD bufLen = pwhdr->dwBufferLength;
-		DWORD byteRecd = pwhdr->dwBytesRecorded;
-		pThis->hasRecorded += byteRecd;
-
-		pThis->file = (BYTE*)realloc(pThis->file, pThis->hasRecorded);
-		if (pThis->file)
-		{
-			memcpy(&pThis->file[pThis->hasRecorded - byteRecd], pwhdr->lpData, byteRecd);
-			printf("have save %d bytes.\r\n", pThis->hasRecorded);
-		}
-		if (pThis->recurr)
-		{
-			// 加入缓存
-			waveInAddBuffer(hwi, pwhdr, sizeof(WAVEHDR));
-		}
+		
 		break;
 	}
 	case WIM_CLOSE:

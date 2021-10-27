@@ -13,11 +13,15 @@ public:
 	CRecoder();
 	~CRecoder();
 
-	void SetConfig(int nSamples, int nBit, int nChannel);
-
-	bool Start();
+	bool Init();
+	
+	void Start();
 
 private:
+	void SetConfig(int nSamples, int nBit, int nChannel);
+
+	bool GetMicrophone();
+
 	static void CALLBACK RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 
@@ -25,11 +29,11 @@ private:
 	HWAVEIN hWaveIn; // 输入设备
 	HWAVEOUT hWaveOut; // 输出设备
 	WAVEFORMATEX waveFormat = { 0 }; // 音频流格式
-	WAVEHDR whdr_i1, whdr_i2; // 输入音频头
+	WAVEHDR whdr[2]; // 输入音频头
 	WAVEHDR whdr_o; // 输出音频头
 
 	BYTE* file = nullptr;
 	DWORD hasRecorded = 0;
-	BOOL recurr = FALSE;
+	BOOL IsStop = FALSE;
 };
 
