@@ -17,13 +17,17 @@ public:
 	
 	void Start();
 
+	void Stop();
+
+	void Play();
+
 private:
 	void SetConfig(int nSamples, int nBit, int nChannel);
 
 	bool GetMicrophone();
 
 	static void CALLBACK RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
-
+	static void CALLBACK PlayFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 private:
 	HWAVEIN hWaveIn; //  ‰»Î…Ë±∏

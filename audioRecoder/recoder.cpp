@@ -71,6 +71,54 @@ void CRecoder::Start()
 	}
 }
 
+void CRecoder::Stop()
+{
+	try
+	{
+		IsStop = TRUE;
+		waveInStop(hWaveIn);
+		waveInReset(hWaveIn);
+
+		waveInUnprepareHeader(hWaveIn, &whdr[0], sizeof(WAVEHDR));
+		waveInUnprepareHeader(hWaveIn, &whdr[1], sizeof(WAVEHDR));
+
+		waveInClose(hWaveIn);
+	}
+	catch (...)
+	{
+
+	}
+}
+
+void CRecoder::Play()
+{
+	try
+	{
+		MMRESULT mr = waveOutOpen(&hWaveOut, WAVE_MAPPER, &waveFormat, (DWORD_PTR)PlayFunction, (DWORD_PTR)this, CALLBACK_FUNCTION);
+		if (mr != MMSYSERR_NOERROR)
+			return;
+
+		while (true)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				if (whdr[i].dwUser != 1)
+				{
+					char szBuffer[4096] = { 0 };
+					
+
+					waveOutPrepareHeader(hWaveOut, &whdr[i], sizeof(WAVEHDR));
+					waveOutWrite(hWaveOut, &whdr[i], sizeof(WAVEHDR));
+				}
+			}
+		}
+	}
+	catch (...)
+	{
+
+	}
+}
+
 bool CRecoder::GetMicrophone()
 {
 	int nCount = waveInGetNumDevs();
@@ -94,7 +142,7 @@ void CALLBACK CRecoder::RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst
 	CRecoder* pThis = (CRecoder*)dwInst;
 	// 获取音频头
 	PWAVEHDR pwhdr = (PWAVEHDR)dwParam1;
-
+	char buf[4096] = { 0 };
 	// 处理消息
 	switch (uMsg)
 	{
@@ -104,7 +152,16 @@ void CALLBACK CRecoder::RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst
 	case WIM_DATA:
 	{
 		printf("Buffer has Complete!\r\n");
-		
+		LPWAVEHDR pwhdr = (LPWAVEHDR)dwParam1;
+		memcpy(buf, pwhdr->lpData, 4096);
+
+		if (!pThis->IsStop)
+		{
+			memset(pwhdr->lpData, 0, 4096);
+			pwhdr->dwBytesRecorded = 0;
+
+			waveInAddBuffer(hwi, (PWAVEHDR)dwParam1, sizeof(WAVEHDR));
+		}
 		break;
 	}
 	case WIM_CLOSE:
@@ -113,4 +170,9 @@ void CALLBACK CRecoder::RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst
 	default:
 		break;
 	}
+}
+
+void CALLBACK CRecoder::PlayFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+{
+
 }
