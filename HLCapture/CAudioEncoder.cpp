@@ -72,3 +72,8 @@ void CAudioEncoder::Release()
 		AudioCodecCtx = nullptr;
 	}
 }
+
+void CAudioEncoder::OnEncodeThread()
+{
+
+}

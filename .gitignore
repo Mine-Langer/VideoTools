@@ -119,3 +119,6 @@ HLCapture/x64/Release/moc/moc_CaptureViewWidget.cpp
 HLCapture/x64/Release/moc/moc_AVMainWnd.cpp
 HLCapture/x64/Debug/uic/ui_AVMainWnd.h
 HLCapture/x64/Debug/moc/moc_AVMainWnd.cpp
+HLCapture/x64/Debug/moc/moc_CaptureViewWidget.cpp
+HLCapture/x64/Debug/moc/moc_CaptureViewWidget.cpp
+HLCapture/x64/Debug/moc/moc_CaptureViewWidget.cpp
