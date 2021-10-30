@@ -99,7 +99,7 @@ bool CRecorder::InitAudio()
 
 	if (!m_audioDecoder.Open(AudioFormatCtx->streams[AudioIndex]))
 		return false;
-
+	m_audioDecoder.SetConfig();
 	m_audioDecoder.Start(this);
 
 	return true;
@@ -208,6 +208,8 @@ bool CRecorder::InitVideoOutput()
 
 bool CRecorder::InitAudioOutput()
 {
+	m_audioEncoder.InitAudio(OutputFormatCtx, OutputFormat->audio_codec, &m_audioDecoder);
+	m_audioEncoder.Start(this);
 
 	return true;
 }
@@ -224,6 +226,12 @@ void CRecorder::VideoEvent(AVPacket* vdata)
 }
 
 void CRecorder::AudioEvent(STAudioBuffer* adata)
+{
+	AVFrame* frame = av_frame_alloc();
+	m_audioEncoder.PushFrame(frame);
+}
+
+void CRecorder::AudioEvent(AVPacket* adata)
 {
 
 }

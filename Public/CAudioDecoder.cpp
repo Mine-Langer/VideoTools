@@ -30,6 +30,9 @@ bool CAudioDecoder::Open(AVStream* pStream)
 	m_duration = m_timebase * (pStream->duration * 1.0);
 	m_rate = AudioCodecCtx->sample_rate;
 
+	AudioCodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
+	AudioCodecCtx->channels = av_get_channel_layout_nb_channels(AudioCodecCtx->channel_layout);
+
 	SrcFrame = av_frame_alloc();
 
 	return true;

@@ -12,10 +12,18 @@ public:
 
 	void Start(IEncoderEvent* pEvt);
 
+	void PushFrame(AVFrame* frame);
+
 	void Release();
 
 private:
 	void OnEncodeThread();
+
+	void ConvertAudioBuffer();
+
+	void GetConvertBuffer();
+
+	void EncodeFrame(AVFrame* frame);
 
 private:
 	bool m_bRun = false;
@@ -27,6 +35,8 @@ private:
 
 	IEncoderEvent* m_event = nullptr;
 
+	SafeQueue<AVFrame*> m_audioFrameQueue;
 	std::thread m_encodeThread;
+	int m_pts = 0;
 };
 
