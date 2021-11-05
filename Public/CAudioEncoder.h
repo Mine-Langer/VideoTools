@@ -38,5 +38,6 @@ private:
 	SafeQueue<AVFrame*> m_audioFrameQueue;
 	std::thread m_encodeThread;
 	int m_pts = 0;
+	int m_nbSamples = 0;
 };
 

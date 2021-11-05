@@ -54,6 +54,11 @@ void HLCapture::OnBtnStartCaptureClicked()
     QString szFilePath = szPath + "\\" + fileName + ".mp4";
     QByteArray baName = szFilePath.toLocal8Bit();
     const char* pszName = baName.data();
+    QDesktopWidget* screen = QApplication::desktop();
+	QRect mm = screen->screenGeometry();
+	int screen_width = mm.width();
+	int screen_height = mm.height();
+    m_recoder.Init(0,0, screen_width, screen_height);
     m_recoder.Run(pszName);
 
 }

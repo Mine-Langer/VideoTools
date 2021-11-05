@@ -29,6 +29,8 @@ public:
 	virtual void VideoEvent(AVFrame* vdata) = 0;
 
 	virtual void AudioEvent(STAudioBuffer* adata) = 0;
+
+	virtual void AudioEvent(AVFrame* adata) { }
 };
 
 class CDecoder
