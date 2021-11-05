@@ -126,3 +126,7 @@ x64/Debug/audioRecoder.pdb
 HLCapture/x64/Debug/moc/moc_CaptureViewWidget.cpp
 HLCapture/x64/Debug/moc/moc_CaptureViewWidget.cpp
 HLCapture/x64/Debug/moc/moc_CaptureViewWidget.cpp
+HLCapture/HLCapture.vcxproj.user
+HLPlayer/HLPlayer.vcxproj.user
+x64/Debug/audioRecoder.ilk
+HLCapture/HLCapture.vcxproj.user
