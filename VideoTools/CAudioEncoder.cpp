@@ -23,7 +23,7 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, CAu
 	AudioCodecCtx->codec_id = codecId;
 	AudioCodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
 	AudioCodecCtx->channels = av_get_channel_layout_nb_channels(AudioCodecCtx->channel_layout);
-	AudioCodecCtx->sample_fmt = pCodec->sample_fmts[0];
+	AudioCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
 	AudioCodecCtx->sample_rate = 44100;
 	AudioCodecCtx->bit_rate = 96000;
 	AudioCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
@@ -48,7 +48,11 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, CAu
 	if (0 > swr_init(SwrCtx))
 		return false;
 
-	AudioFIFO = av_audio_fifo_alloc(AudioCodecCtx->sample_fmt, AudioCodecCtx->channels, 1);
+	m_nbSamples = AudioCodecCtx->frame_size;
+	if (!m_nbSamples)
+		m_nbSamples = 1024;
+
+	AudioFIFO = av_audio_fifo_alloc(AudioCodecCtx->sample_fmt, AudioCodecCtx->channels, m_nbSamples);
 	if (AudioFIFO == nullptr)
 		return false;
 

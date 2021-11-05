@@ -61,7 +61,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../public;../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../library/FFmpeg/lib/win64;../library/SDL2-2.0.12/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -94,35 +94,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <QtRcc Include="hlcapture.qrc" />
+    <QtRcc Include="avtools.qrc" />
     <QtUic Include="AVMainWnd.ui" />
-    <QtUic Include="hlcapture.ui" />
-    <QtMoc Include="hlcapture.h" />
-    <ClCompile Include="..\Public\CAudioDecoder.cpp" />
-    <ClCompile Include="..\Public\CVideoDecoder.cpp" />
-    <ClCompile Include="..\Public\CVideoEncoder.cpp" />
-    <ClCompile Include="..\Public\decoder.cpp" />
-    <ClCompile Include="..\Public\Encoder.cpp" />
     <ClCompile Include="AVMainWnd.cpp" />
-    <ClCompile Include="CaptureViewWidget.cpp" />
-    <ClCompile Include="CAudioEncoder.cpp" />
-    <ClCompile Include="CRecorder.cpp" />
-    <ClCompile Include="hlcapture.cpp" />
+    <ClCompile Include="capture\audioDecoder.cpp" />
+    <ClCompile Include="capture\CaptureViewWidget.cpp" />
+    <ClCompile Include="capture\CRecorder.cpp" />
+    <ClCompile Include="capture\hlcapture.cpp" />
+    <ClCompile Include="capture\videoDecoder.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="capture\hlcapture.ui" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Public\avsync.h" />
-    <ClInclude Include="..\Public\CAudioDecoder.h" />
-    <ClInclude Include="..\Public\CAudioEncoder.h" />
-    <ClInclude Include="..\Public\Common.h" />
-    <ClInclude Include="..\Public\CVideoDecoder.h" />
-    <ClInclude Include="..\Public\CVideoEncoder.h" />
-    <ClInclude Include="..\Public\decoder.h" />
-    <ClInclude Include="..\Public\Encoder.h" />
-    <ClInclude Include="..\Public\SafeQueue.h" />
     <QtMoc Include="AVMainWnd.h" />
-    <ClInclude Include="CRecorder.h" />
-    <QtMoc Include="CaptureViewWidget.h" />
+    <QtMoc Include="capture\CaptureViewWidget.h" />
+    <ClInclude Include="capture\audioDecoder.h" />
+    <ClInclude Include="capture\CRecorder.h" />
+    <QtMoc Include="capture\hlcapture.h" />
+    <ClInclude Include="capture\videoDecoder.h" />
+    <ClInclude Include="Common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

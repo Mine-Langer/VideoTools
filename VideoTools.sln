@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HLPlayer", "HLPlayer\HLPlayer.vcxproj", "{F0125A0E-E933-491F-A224-E52651F6430D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HLAVTools", "HLCapture\HLCapture.vcxproj", "{5824E04B-7395-43AA-800B-DF19E9A46E99}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HLAVTools", "VideoTools\VideoTools.vcxproj", "{5824E04B-7395-43AA-800B-DF19E9A46E99}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "audioRecoder", "audioRecoder\audioRecoder.vcxproj", "{5331579B-795B-44F8-B6D6-B46DD5FACC3E}"
 EndProject

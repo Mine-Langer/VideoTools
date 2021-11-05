@@ -80,7 +80,7 @@ void CAudioDecoder::Close()
 
 int CAudioDecoder::GetSampleRate()
 {
-	return m_sample_rate;
+	return AudioCodecCtx->sample_rate;
 }
 
 int CAudioDecoder::GetChannels()
@@ -95,7 +95,7 @@ int CAudioDecoder::GetSamples()
 
 int CAudioDecoder::GetChannelLayouts()
 {
-	return m_channel_layout;
+	return AudioCodecCtx->channel_layout;
 }
 
 AVSampleFormat CAudioDecoder::GetSampleFormat()
@@ -125,7 +125,9 @@ void CAudioDecoder::OnDecodeFunction()
 			}
 			else if (error == 0)
 			{
-				STAudioBuffer* audioBuf = new STAudioBuffer();
+				m_event->AudioEvent(SrcFrame);
+
+				/*STAudioBuffer* audioBuf = new STAudioBuffer();
 				if (0 > av_samples_alloc(&audioBuf->buffer, &audioBuf->size, av_get_channel_layout_nb_channels(m_channel_layout), m_nb_samples, m_sample_fmt, 1))
 					break;
 
@@ -133,7 +135,7 @@ void CAudioDecoder::OnDecodeFunction()
 				audioBuf->pts = SrcFrame->best_effort_timestamp;
 				audioBuf->dpts = audioBuf->pts * m_timebase;
 				audioBuf->duration = 1.0 / m_rate;
-				m_event->AudioEvent(audioBuf);
+				m_event->AudioEvent(audioBuf);*/
 				
 				//av_frame_free(&dstFrame);
 			}

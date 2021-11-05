@@ -2,7 +2,7 @@
 
 #include <QWidget>
 #include "ui_AVMainWnd.h"
-#include "hlcapture.h"
+#include "capture/hlcapture.h"
 
 class AVMainWnd : public QWidget
 {
