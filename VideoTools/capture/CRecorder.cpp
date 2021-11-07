@@ -32,6 +32,10 @@ void CRecorder::Init(int posX, int posY, int sWidth, int sHeight)
 
 bool CRecorder::Run(const char* szFile)
 {
+	// 设置输出参数
+	if (!InitOutput(szFile))
+		return false;
+
 	// 设置视频参数
 	if (!m_videoDecoder.Init(CapX, CapY, capWidth, capHeight))
 		return false;
@@ -40,44 +44,33 @@ bool CRecorder::Run(const char* szFile)
 		return false;
 
  	// 设置音频参数
-	if (!m_audioDecoder.Init())
+	if (!m_audioDecoder.Init(AudioEncCodecCtx->sample_fmt, AudioEncCodecCtx->channels, 
+		AudioEncCodecCtx->channel_layout, AudioEncCodecCtx->sample_rate, AudioEncCodecCtx->frame_size))
 		return false;
 	
 	if (!m_audioDecoder.Start(this))
 		return false;
 
- 	// 设置输出参数
- 	if (!InitOutput(szFile))
- 		return false;
- 
  	// 开始录制
-	Start();
+	//Start();
 
 	return true;
 }
 
 bool CRecorder::InitOutput(const char* szOutput)
 {
+	m_szFilename = szOutput;
 	if (0 > avformat_alloc_output_context2(&OutputFormatCtx, nullptr, nullptr, szOutput))
 		return false;
 
-	 AVOutputFormat* OutputFormat = OutputFormatCtx->oformat;
-
-	if (OutputFormat->video_codec != AV_CODEC_ID_NONE)
+	if (OutputFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE)
 		InitVideoOutput();
 
-	if (OutputFormat->audio_codec != AV_CODEC_ID_NONE)
+	if (OutputFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE)
 		InitAudioOutput();
 
 	av_dump_format(OutputFormatCtx, 0, szOutput, 1);
 
-	if (!(OutputFormat->flags & AVFMT_NOFILE))
-		if (0 > avio_open(&OutputFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
-			return false;
-
-	if (0 > avformat_write_header(OutputFormatCtx, nullptr))
-		return false;
-	
 	return true;
 }
 
@@ -108,14 +101,25 @@ bool CRecorder::AudioEvent(AVFrame* frame)
 	return true;
 }
 
-void CRecorder::Start()
+bool CRecorder::Start()
 {
 	m_bRun = true;
 	m_state = Started;
+
+	if (!(OutputFormatCtx->oformat->flags & AVFMT_NOFILE))
+		if (0 > avio_open(&OutputFormatCtx->pb, m_szFilename.c_str(), AVIO_FLAG_WRITE))
+			return false;
+
+	if (0 > avformat_write_header(OutputFormatCtx, nullptr))
+		return false;
+
 	// 录音解复用线程
-	m_demuxAThread = std::thread(&CRecorder::OnDemuxAudioThread, this);
+	//m_demuxAThread = std::thread(&CRecorder::OnDemuxAudioThread, this);
+
 	// 保存数据帧线程
 	m_saveThread = std::thread(&CRecorder::OnSaveThread, this);
+
+	return true;
 }
 
 void CRecorder::OnDemuxAudioThread()
@@ -267,7 +271,7 @@ bool CRecorder::InitVideoOutput()
 		VideoEncCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
 	AVDictionary* options = nullptr;
-	if (VideoCodecCtx->codec_id == AV_CODEC_ID_H264)
+	if (VideoEncCodecCtx->codec_id == AV_CODEC_ID_H264)
 	{
 		av_dict_set(&options, "preset", "slow", 0);
 		av_dict_set(&options, "tune", "zerolatency", 0);
@@ -279,7 +283,7 @@ bool CRecorder::InitVideoOutput()
 	if (0 > avcodec_parameters_from_context(pVideoStream->codecpar, VideoEncCodecCtx))
 		return false;
 
-	m_nImageSize = av_image_get_buffer_size(VideoEncCodecCtx->pix_fmt, capWidth, capHeight, 1);
+	/*m_nImageSize = av_image_get_buffer_size(VideoEncCodecCtx->pix_fmt, capWidth, capHeight, 1);
 	VideoBuffer = (uint8_t*)av_malloc(m_nImageSize);
 	VideoFrame = av_frame_alloc();
 	av_image_fill_arrays(VideoFrame->data, VideoFrame->linesize, VideoBuffer, VideoEncCodecCtx->pix_fmt, capWidth, capHeight, 1);
@@ -287,7 +291,7 @@ bool CRecorder::InitVideoOutput()
 	// 申请30帧缓存
 	VideoFifo = av_fifo_alloc_array(30, m_nImageSize);
 	if (VideoFifo == nullptr)
-		return false;
+		return false;*/
 
 	return true;
 }
@@ -323,7 +327,7 @@ bool CRecorder::InitAudioOutput()
 	if (0 > avcodec_parameters_from_context(pAudioStream->codecpar, AudioEncCodecCtx))
 		return false;
 
-	SwrCtx = swr_alloc_set_opts(nullptr, AudioEncCodecCtx->channel_layout, AudioEncCodecCtx->sample_fmt, AudioEncCodecCtx->sample_fmt,
+	/*SwrCtx = swr_alloc_set_opts(nullptr, AudioEncCodecCtx->channel_layout, AudioEncCodecCtx->sample_fmt, AudioEncCodecCtx->sample_fmt,
 		AudioCodecCtx->channel_layout, AudioCodecCtx->sample_fmt, AudioCodecCtx->sample_rate, 0, nullptr);
 	if (SwrCtx == nullptr)
 		return false;
@@ -341,7 +345,7 @@ bool CRecorder::InitAudioOutput()
 
 	AudioFifo = av_audio_fifo_alloc(AudioEncCodecCtx->sample_fmt, AudioEncCodecCtx->channels, 30 * m_nbSamples);
 	if (!AudioFifo)
-		return false;
+		return false;*/
 
 	return true;
 }

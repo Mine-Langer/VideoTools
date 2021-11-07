@@ -14,11 +14,16 @@ namespace capture
 
 	}
 
-	bool CAudioDecoder::Init()
+	bool CAudioDecoder::Init(enum AVSampleFormat sample_fmt, int nChannels, int channel_layout, int sample_rate, int frame_size)
 	{
 		wchar_t pszDevName[MAX_PATH] = { L"audio=" };// L"audio = virtual-audio-capturer"};
 		wcscat_s(pszDevName, MAX_PATH, GetMicrophoneName());
 		char* szDevName = dup_wchar_to_utf8(pszDevName);
+		m_frameSize = frame_size;
+		m_outSampleRate = sample_rate;
+		m_outChannels = nChannels;
+		m_outChannelLayout = channel_layout;
+		m_outSampleFmt = sample_fmt;
 
 		AVInputFormat* ifmt = av_find_input_format("dshow");
 		if (ifmt == nullptr)
@@ -45,6 +50,20 @@ namespace capture
 		if (0 > avcodec_open2(m_pCodecCtx, audioCodec, nullptr))
 			return false;
 
+		m_swrCtx = swr_alloc_set_opts(nullptr, channel_layout, sample_fmt, sample_rate,
+			m_pCodecCtx->channel_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr);
+		if (m_swrCtx == nullptr)
+			return false;
+		av_opt_set_int(m_swrCtx, "in_channel_count", m_pCodecCtx->channels, 0);
+		av_opt_set_int(m_swrCtx, "out_channel_count", nChannels, 0);
+
+		if (0 > swr_init(m_swrCtx))
+			return false;
+
+		m_audioFifo = av_audio_fifo_alloc(sample_fmt, nChannels, 1);
+		if (m_audioFifo == nullptr)
+			return false;
+
 		return true;
 	}
 
@@ -56,6 +75,7 @@ namespace capture
 
 		m_state = Started;
 		m_thread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
+		m_tConvert = std::thread(&CAudioDecoder::OnConvertFunction, this);
 
 		return true;
 	}
@@ -64,6 +84,7 @@ namespace capture
 	{
 		AVPacket packet = { 0 };
 		AVFrame* srcFrame = av_frame_alloc();
+		AVFrame* dstFrame = av_frame_alloc();
 
 		while (m_state != Stopped)
 		{
@@ -87,9 +108,62 @@ namespace capture
 						av_packet_unref(&packet);
 						continue;
 					}
+
+					PushFrame(srcFrame);
+
+					/*int dstNbSamples = av_rescale_rnd(swr_get_delay(m_swrCtx, m_pCodecCtx->sample_rate)+srcFrame->nb_samples,
+						m_outSampleRate, m_pCodecCtx->sample_rate, AV_ROUND_UP);
+				
+					if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize, m_outChannels, dstNbSamples, m_outSampleFmt, 1))
+						return;
+
+					if (0 > swr_convert(m_swrCtx, dstFrame->data, dstNbSamples, (const uint8_t**)srcFrame->data, srcFrame->nb_samples))
+						return;
+
+					if (srcFrame->nb_samples > av_audio_fifo_write(m_audioFifo, (void**)dstFrame->data, dstFrame->nb_samples))
+						return;*/
+
+					av_frame_unref(srcFrame);
 				}
 			}
 		}
+	}
+
+	void CAudioDecoder::OnConvertFunction()
+	{
+		while (m_state != Stopped)
+		{
+			if (m_audioQueue.empty())
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			else
+			{
+				AVFrame* dstFrame = av_frame_alloc();
+				while (av_audio_fifo_size(m_audioFifo) < m_frameSize)
+				{
+					AVFrame* aFrame = m_audioQueue.front();
+					int dstNbSamples = av_rescale_rnd(swr_get_delay(m_swrCtx, m_pCodecCtx->sample_rate) + aFrame->nb_samples,
+						m_outSampleRate, m_pCodecCtx->sample_rate, AV_ROUND_UP);
+
+					if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize, m_outChannels, dstNbSamples, m_outSampleFmt, 1))
+						return;
+
+					m_nbSamples = dstFrame->nb_samples;
+
+					dstFrame->nb_samples = swr_convert(m_swrCtx, dstFrame->data, dstNbSamples, (const uint8_t**)aFrame->data, aFrame->nb_samples);
+					if (dstFrame->nb_samples < 0)
+						return;
+
+					int wSize = av_audio_fifo_write(m_audioFifo, (void**)dstFrame->data, dstFrame->nb_samples);
+					if (wSize < dstFrame->nb_samples)
+						return;
+				}
+
+				ReadFifoFrame();
+				
+				m_audioQueue.pop();
+
+			}
+		}	
 	}
 
 	wchar_t* CAudioDecoder::GetMicrophoneName()
@@ -130,6 +204,25 @@ namespace capture
 		}
 		CoUninitialize();
 		return szName;
+	}
+
+	void CAudioDecoder::PushFrame(AVFrame* frame)
+	{
+		AVFrame* audioFrame = av_frame_clone(frame);
+		m_audioQueue.push(audioFrame);
+	}
+
+	void CAudioDecoder::ReadFifoFrame()
+	{
+		AVFrame* frame = av_frame_alloc();
+		frame->nb_samples = m_nbSamples;
+		frame->channel_layout = m_outChannelLayout;
+		frame->format = m_outSampleFmt;
+		frame->sample_rate = m_outSampleRate;
+		frame->pts = m_nbSamples * m_frameIndex++;
+		av_frame_get_buffer(frame, 0);
+
+		av_audio_fifo_read(m_audioFifo, (void**)frame->data, m_nbSamples);
 	}
 
 };

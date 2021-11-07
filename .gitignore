@@ -142,3 +142,4 @@ VideoTools/x64/Release/rcc/qrc_avtools.cpp
 VideoTools/x64/Release/rcc/qrc_hlcapture.cpp
 VideoTools/x64/Release/uic/ui_AVMainWnd.h
 VideoTools/x64/Release/uic/ui_hlcapture.h
+x64/Debug/audioRecoder.ilk
