@@ -7,7 +7,10 @@ int main()
 {
     std::cout << "Hello World!\n";
     CRecoder recoder;
-    recoder.Init();
+    if (recoder.Init())
+    {
+        recoder.Start();
+    }
 
     while (1)
     {

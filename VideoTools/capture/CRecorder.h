@@ -25,7 +25,7 @@ protected:
 private:
 	bool InitOutput(const char* szOutput);
 
-	void Start(); // 开启解复用
+	bool Start(); // 开启解复用
 	void OnDemuxAudioThread(); // 录音解复用线程
 	void OnSaveThread(); // 保存视频帧线程
 
@@ -73,6 +73,7 @@ private:
 	RecordState m_state; // 
 
 	int CapX, CapY, capWidth, capHeight;
+	std::string m_szFilename;
 
 	std::queue<AVFrame*> m_videoQueue;
 	std::queue<AVFrame*> m_audioQueue;

@@ -19,6 +19,9 @@ namespace capture
 		av_dict_set(&options, "framerate", "25", 0);
 		av_dict_set(&options, "offset_x", itoa(posX, szTemp, 10), 0);
 		av_dict_set(&options, "offset_y", itoa(posY, szTemp, 10), 0);
+		sprintf(szTemp, "%dx%d", sWidth, sHeight);
+		av_dict_set(&options, "video_size", szTemp, 0);
+
 		m_imageWidth = sWidth;
 		m_imageHeight = sHeight;
 
