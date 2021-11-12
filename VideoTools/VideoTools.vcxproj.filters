@@ -24,6 +24,9 @@
     <Filter Include="capture">
       <UniqueIdentifier>{46f9104b-822f-4507-8dbc-73871e442811}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Composition">
+      <UniqueIdentifier>{bd7b2baf-419c-4af5-8a36-c77c3172a8d7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="avtools.qrc">
@@ -46,11 +49,29 @@
     <ClCompile Include="capture\CaptureViewWidget.cpp">
       <Filter>capture</Filter>
     </ClCompile>
-    <ClCompile Include="capture\videoDecoder.cpp">
+    <ClCompile Include="capture\CapVideo.cpp">
       <Filter>capture</Filter>
     </ClCompile>
-    <ClCompile Include="capture\audioDecoder.cpp">
+    <ClCompile Include="capture\CapAudio.cpp">
       <Filter>capture</Filter>
+    </ClCompile>
+    <ClCompile Include="Composition\CompositeView.cpp">
+      <Filter>Composition</Filter>
+    </ClCompile>
+    <ClCompile Include="Composition\Composite.cpp">
+      <Filter>Composition</Filter>
+    </ClCompile>
+    <ClCompile Include="Composition\CompositeVideo.cpp">
+      <Filter>Composition</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Composition\CompositeAudio.cpp">
+      <Filter>Composition</Filter>
+    </ClCompile>
+    <ClCompile Include="Demultiplexer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -60,11 +81,26 @@
     <ClInclude Include="capture\CRecorder.h">
       <Filter>capture</Filter>
     </ClInclude>
-    <ClInclude Include="capture\videoDecoder.h">
+    <ClInclude Include="capture\CapVideo.h">
       <Filter>capture</Filter>
     </ClInclude>
-    <ClInclude Include="capture\audioDecoder.h">
+    <ClInclude Include="capture\CapAudio.h">
       <Filter>capture</Filter>
+    </ClInclude>
+    <ClInclude Include="Composition\Composite.h">
+      <Filter>Composition</Filter>
+    </ClInclude>
+    <ClInclude Include="Composition\CompositeVideo.h">
+      <Filter>Composition</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Composition\CompositeAudio.h">
+      <Filter>Composition</Filter>
+    </ClInclude>
+    <ClInclude Include="Demultiplexer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -77,6 +113,9 @@
     <QtMoc Include="capture\CaptureViewWidget.h">
       <Filter>capture</Filter>
     </QtMoc>
+    <QtMoc Include="Composition\CompositeView.h">
+      <Filter>Composition</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="AVMainWnd.ui">
@@ -84,6 +123,9 @@
     </QtUic>
     <QtUic Include="capture\hlcapture.ui">
       <Filter>capture</Filter>
+    </QtUic>
+    <QtUic Include="Composition\CompositeView.ui">
+      <Filter>Composition</Filter>
     </QtUic>
   </ItemGroup>
 </Project>

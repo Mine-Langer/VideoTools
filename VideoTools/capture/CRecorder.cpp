@@ -52,7 +52,7 @@ bool CRecorder::Run(const char* szFile)
 		return false;
 
  	// ¿ªÊ¼Â¼ÖÆ
-	//Start();
+	Start();
 
 	return true;
 }

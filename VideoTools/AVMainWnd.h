@@ -3,6 +3,7 @@
 #include <QWidget>
 #include "ui_AVMainWnd.h"
 #include "capture/hlcapture.h"
+#include "Composition/CompositeView.h"
 
 class AVMainWnd : public QWidget
 {
@@ -18,6 +19,7 @@ private slots:
 
 private:
 	Ui::AVMainWnd ui;
-	HLCapture m_capture;
+	HLCapture m_capture; //Â¼ÆÁ
+	CompositeView m_compositeView; // ºÏ³É
 	QWidget* m_pCurrentWidget = nullptr;
 };

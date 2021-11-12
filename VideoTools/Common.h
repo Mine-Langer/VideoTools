@@ -65,3 +65,21 @@ extern "C"
 
 
 enum RecordState { NotStarted, Started, Paused, Stopped, Unknowned };
+
+class IVideoEvent
+{
+public:
+	virtual bool VideoEvent(AVFrame* frame) = 0;
+};
+
+class IAudioEvent
+{
+public:
+	virtual bool AudioEvent(AVFrame* frame) = 0;
+};
+
+class IDemuxEvent
+{
+public:
+	virtual bool DemuxPacket(AVPacket* pkt, int type) = 0;
+};

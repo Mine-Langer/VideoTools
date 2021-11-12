@@ -61,11 +61,16 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;.\Composition;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../library/FFmpeg/lib/win64;../library/SDL2-2.0.12/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\Composition;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -94,24 +99,37 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Composition\CompositeAudio.cpp" />
+    <ClCompile Include="Demultiplexer.cpp" />
+    <ClCompile Include="VideoDecoder.cpp" />
     <QtRcc Include="avtools.qrc" />
     <QtUic Include="AVMainWnd.ui" />
     <ClCompile Include="AVMainWnd.cpp" />
-    <ClCompile Include="capture\audioDecoder.cpp" />
+    <ClCompile Include="capture\CapAudio.cpp" />
     <ClCompile Include="capture\CaptureViewWidget.cpp" />
     <ClCompile Include="capture\CRecorder.cpp" />
     <ClCompile Include="capture\hlcapture.cpp" />
-    <ClCompile Include="capture\videoDecoder.cpp" />
+    <ClCompile Include="capture\CapVideo.cpp" />
+    <ClCompile Include="Composition\Composite.cpp" />
+    <ClCompile Include="Composition\CompositeView.cpp" />
+    <ClCompile Include="Composition\CompositeVideo.cpp" />
     <ClCompile Include="main.cpp" />
     <QtUic Include="capture\hlcapture.ui" />
+    <QtUic Include="Composition\CompositeView.ui" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Composition\Composite.h" />
+    <ClInclude Include="Composition\CompositeAudio.h" />
+    <ClInclude Include="Composition\CompositeVideo.h" />
+    <ClInclude Include="Demultiplexer.h" />
+    <ClInclude Include="VideoDecoder.h" />
+    <QtMoc Include="Composition\CompositeView.h" />
     <QtMoc Include="AVMainWnd.h" />
     <QtMoc Include="capture\CaptureViewWidget.h" />
-    <ClInclude Include="capture\audioDecoder.h" />
+    <ClInclude Include="capture\CapAudio.h" />
     <ClInclude Include="capture\CRecorder.h" />
     <QtMoc Include="capture\hlcapture.h" />
-    <ClInclude Include="capture\videoDecoder.h" />
+    <ClInclude Include="capture\CapVideo.h" />
     <ClInclude Include="Common.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

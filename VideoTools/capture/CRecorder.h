@@ -1,8 +1,9 @@
 #pragma once
-#include "audioDecoder.h"
-#include "videoDecoder.h"
+#include "CapAudio.h"
+#include "CapVideo.h"
 
-class CRecorder :public capture::IVideoEvent, public capture::IAudioEvent
+
+class CRecorder :public IVideoEvent, public IAudioEvent
 {
 public:
 	CRecorder();
@@ -57,8 +58,8 @@ private:
 	SwsContext* SwsCtx = nullptr;
 	SwrContext* SwrCtx = nullptr;
 
-	capture::CAudioDecoder m_audioDecoder;
-	capture::CVideoDecoder m_videoDecoder;
+	CCapAudio m_audioDecoder;
+	CCapVideo m_videoDecoder;
 
 	int VideoIndex = -1;
 	int AudioIndex = -1;
