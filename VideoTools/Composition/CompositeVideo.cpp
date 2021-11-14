@@ -59,6 +59,37 @@ void CompositeVideo::Release()
 	}
 }
 
+bool CompositeVideo::SetFrameSize(int width, int height, enum AVPixelFormat pix_fmt)
+{
+	m_swsWidth = width;
+	m_swsHeight = height;
+	m_swsPixfmt = pix_fmt;
+	if (m_pSwsCtx) {
+		sws_freeContext(m_pSwsCtx);
+		m_pSwsCtx = nullptr;
+	}
+	m_pSwsCtx = sws_getContext(m_pCodecCtx->width, m_pCodecCtx->height, m_pCodecCtx->pix_fmt,
+		m_swsWidth, m_swsHeight, pix_fmt, SWS_BICUBIC, nullptr, nullptr, nullptr);
+	if (m_pSwsCtx == nullptr)
+		return false;
+
+	return true;
+}
+
+AVFrame* CompositeVideo::ConvertFrame(AVFrame* frame)
+{
+	AVFrame* swsFrame = av_frame_alloc();
+	swsFrame->format = m_swsPixfmt;
+	swsFrame->width = m_swsWidth;
+	swsFrame->height = m_swsHeight;
+	if (0 > av_frame_get_buffer(swsFrame, 0))
+		return nullptr;
+
+	sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, m_pCodecCtx->height, swsFrame->data, swsFrame->linesize);
+
+	return swsFrame;
+}
+
 void CompositeVideo::OnDecodeFunction()
 {
 	int ret = 0;

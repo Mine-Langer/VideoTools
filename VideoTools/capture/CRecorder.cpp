@@ -35,6 +35,9 @@ bool CRecorder::Run(const char* szFile)
 	// 设置输出参数
 	if (!InitOutput(szFile))
 		return false;
+	
+	// 初始化摄像头
+	// m_videoDecoder.InitCamera();
 
 	// 设置视频参数
 	if (!m_videoDecoder.Init(CapX, CapY, capWidth, capHeight))

@@ -52,7 +52,7 @@ void CompositeView::OnAudioWidgetContextMenuRequested(const QPoint& pos)
 
 void CompositeView::OnActImage()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("打开文件"), "", tr("图像文件(*.jpg *.bmp *.png)"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("打开文件"), "", tr("图像文件(*.jpg *.bmp *.png);;  所有文件(*.*)"));
 	if (filename.isEmpty())
 		return;
 

@@ -55,6 +55,30 @@ bool CCapVideo::Init(int posX, int posY, int sWidth, int sHeight)
 	return true;
 }
 
+bool CCapVideo::InitCamera()
+{
+	AVInputFormat* ifmt = av_find_input_format("vfwcap");
+	if (0 > avformat_open_input(&m_pFormatCtx, "0", ifmt, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
+		return false;
+
+	AVCodec* codec = nullptr;
+	int videoIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, &codec, 0);
+	if (videoIndex == -1)
+		return false;
+
+	AVCodecContext* codecCtx = avcodec_alloc_context3(codec);
+	if (0 > avcodec_parameters_to_context(codecCtx, m_pFormatCtx->streams[videoIndex]->codecpar))
+		return false;
+
+	if (0 > avcodec_open2(codecCtx, codec, nullptr))
+		return false;
+
+	return true;
+}
+
 bool CCapVideo::Start(IVideoEvent* pEvt)
 {
 	if (pEvt == nullptr)

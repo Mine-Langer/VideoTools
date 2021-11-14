@@ -10,6 +10,9 @@ public:
 
 	bool Init(int posX, int posY, int sWidth, int sHeight);
 
+	// ≥ı ºªØ…„œÒÕ∑
+	bool InitCamera();
+
 	bool Start(IVideoEvent* pEvt);
 
 	void Release();

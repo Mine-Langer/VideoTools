@@ -16,6 +16,7 @@ bool Composite::OpenImage(const char* szFile)
 	if (!m_videoDecoder.Open(szFile))
 		return false;
 
+	m_videoDecoder.SetFrameSize(m_videoWidth, m_videoHeight);
 	m_videoDecoder.Start(this);
 
 	return true;
@@ -69,6 +70,7 @@ void Composite::Close()
 
 void Composite::Play()
 {
+	m_state = Started;
 	m_playThread = std::thread(&Composite::OnPlayFunction, this);
 }
 
@@ -88,6 +90,32 @@ bool Composite::InitWnd(void* pWnd, int width, int height)
 
 	m_videoWidth = width;
 	m_videoHeight = height;
+	m_rect.x = m_rect.y = 0;
+	m_rect.w = m_videoWidth;
+	m_rect.h = m_videoHeight;
+
+	return true;
+}
+
+bool Composite::SaveFile(const char* szOutput)
+{
+	if (0 > avformat_alloc_output_context2(&m_pOutFormatCtx, nullptr, nullptr, szOutput))
+		return false;
+	
+	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE)
+		InitVideoEnc(m_pOutFormatCtx->oformat->video_codec);
+	
+	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE)
+		InitAudioEnc(m_pOutFormatCtx->oformat->audio_codec);
+
+	// 打开输出文件
+	if (!(m_pOutFormatCtx->oformat->flags & AVFMT_NOFILE))
+		if (0 > avio_open(&m_pOutFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
+			return false;
+
+	// 写文件流头
+	if (0 > avformat_write_header(m_pOutFormatCtx, nullptr))
+		return false;
 
 	return true;
 }
@@ -103,6 +131,16 @@ bool Composite::AudioEvent(AVFrame* frame)
 {
 	m_audioQueue.push(frame);
 	return true;
+}
+
+void Composite::InitVideoEnc(enum AVCodecID codec_id)
+{
+
+}
+
+void Composite::InitAudioEnc(enum AVCodecID codec_id)
+{
+
 }
 
 void Composite::OnSDLAudioFunction(void* userdata, Uint8* stream, int len)
@@ -134,7 +172,17 @@ void Composite::OnPlayFunction()
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		else
 		{
-			m_videoQueue.front();
+			AVFrame* frame = m_videoQueue.front();
+			AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
+			SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
+				swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
+			SDL_RenderClear(m_render);
+			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
+			SDL_RenderPresent(m_render);
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+
+			av_frame_free(&swsFrame);
 		}
 	}
 }
