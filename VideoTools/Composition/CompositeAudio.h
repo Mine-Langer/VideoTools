@@ -27,7 +27,7 @@ private:
 	AVCodecContext* m_codecCtx = nullptr;
 	SwrContext* m_swrCtx = nullptr;
 
-	std::queue<AVPacket*> m_audioQueue;
+	SafeQueue<AVPacket*> m_audioQueue;
 	
 	IAudioEvent* m_pEvent = nullptr;
 

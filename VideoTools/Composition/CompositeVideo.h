@@ -17,6 +17,10 @@ public:
 	bool SetFrameSize(int width, int height, enum AVPixelFormat pix_fmt = AV_PIX_FMT_YUV420P);
 	AVFrame* ConvertFrame(AVFrame* frame);
 
+	int GetSrcWidth();
+	int GetSrcHeight();
+	AVPixelFormat GetSrcFormat();
+
 private:
 	void OnDecodeFunction();
 

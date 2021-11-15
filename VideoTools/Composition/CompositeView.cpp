@@ -104,5 +104,5 @@ void CompositeView::OnBtnPlay()
 
 void CompositeView::OnBtnExport()
 {
-
+	m_composite.SaveFile("output.mp4");
 }

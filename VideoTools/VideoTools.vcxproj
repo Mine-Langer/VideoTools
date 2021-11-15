@@ -32,7 +32,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>msvc2017_64</QtInstall>
+    <QtInstall>5.12.10_msvc2017_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
@@ -122,6 +122,7 @@
     <ClInclude Include="Composition\CompositeAudio.h" />
     <ClInclude Include="Composition\CompositeVideo.h" />
     <ClInclude Include="Demultiplexer.h" />
+    <ClInclude Include="SafeQueue.h" />
     <ClInclude Include="VideoDecoder.h" />
     <QtMoc Include="Composition\CompositeView.h" />
     <QtMoc Include="AVMainWnd.h" />

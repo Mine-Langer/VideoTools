@@ -81,42 +81,43 @@ void CompositeAudio::Release()
 void CompositeAudio::OnDecodeFunction()
 {
 	int ret = 0;
-	AVFrame* frame = av_frame_alloc();
 
 	while (m_bRun)
 	{
-		if (m_audioQueue.empty())
+		if (m_audioQueue.Empty())
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		else
 		{
-			AVPacket* pkt = m_audioQueue.front();
-			m_audioQueue.pop();
+			AVPacket* pkt = nullptr;
+			m_audioQueue.Pop(pkt);
+
 			if (0 > avcodec_send_packet(m_codecCtx, pkt))
 			{
 				av_packet_free(&pkt);
 				continue;
 			}
 
+			AVFrame* frame = av_frame_alloc();
 			if (0 != avcodec_receive_frame(m_codecCtx, frame))
 			{
 				av_packet_free(&pkt);
 				continue;
 			}
 			// зЊТы
-			AVFrame* dstFrame = av_frame_alloc();
-			if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize, 
-				av_get_channel_layout_nb_channels(m_ch_layout), m_nb_samples, m_sample_fmt, 1))
-			{
-				av_frame_unref(frame);
-				av_packet_free(&pkt);
-				continue;
-			}
+// 			AVFrame* dstFrame = av_frame_alloc();
+// 			if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize, 
+// 				av_get_channel_layout_nb_channels(m_ch_layout), m_nb_samples, m_sample_fmt, 1))
+// 			{
+// 				av_frame_unref(frame);
+// 				av_packet_free(&pkt);
+// 				continue;
+// 			}
+// 
+// 			swr_convert(m_swrCtx, dstFrame->data, m_nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
 
-			swr_convert(m_swrCtx, dstFrame->data, m_nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+			m_pEvent->AudioEvent(frame);
 
-			m_pEvent->AudioEvent(dstFrame);
-
-			av_frame_unref(frame);
+		//	av_frame_unref(frame);
 			av_packet_free(&pkt);
 		}
 	}
@@ -128,7 +129,7 @@ bool CompositeAudio::DemuxPacket(AVPacket* pkt, int type)
 	if (type == AVMEDIA_TYPE_AUDIO)
 	{
 		AVPacket* packet = av_packet_clone(pkt);
-		m_audioQueue.push(packet);
+		m_audioQueue.Push(packet);
 	}
 
 	return true;

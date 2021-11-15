@@ -40,7 +40,7 @@ extern "C"
 #pragma comment (lib, "swresample.lib")
 #pragma comment (lib, "swscale.lib")
 
-//#include "SafeQueue.h"
+#include "SafeQueue.h"
 
 #include <thread>
 #include <iostream>

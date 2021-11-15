@@ -90,6 +90,21 @@ AVFrame* CompositeVideo::ConvertFrame(AVFrame* frame)
 	return swsFrame;
 }
 
+int CompositeVideo::GetSrcWidth()
+{
+	return m_pCodecCtx->width;
+}
+
+int CompositeVideo::GetSrcHeight()
+{
+	return m_pCodecCtx->height;
+}
+
+AVPixelFormat CompositeVideo::GetSrcFormat()
+{
+	return m_pCodecCtx->pix_fmt;
+}
+
 void CompositeVideo::OnDecodeFunction()
 {
 	int ret = 0;

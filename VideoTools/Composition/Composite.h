@@ -29,8 +29,8 @@ private:
 	virtual bool AudioEvent(AVFrame* frame) override;
 
 private:
-	void InitVideoEnc(enum AVCodecID codec_id);
-	void InitAudioEnc(enum AVCodecID codec_id);
+	bool InitVideoEnc(enum AVCodecID codec_id);
+	bool InitAudioEnc(enum AVCodecID codec_id);
 
 private:
 	static void OnSDLAudioFunction(void* userdata, Uint8* stream, int len);
@@ -40,10 +40,16 @@ private:
 private:
 	CompositeVideo m_videoDecoder;
 	CompositeAudio m_audioDecoder;
-	std::queue<AVFrame*> m_videoQueue;
-	std::queue<AVFrame*> m_audioQueue;
+	SafeQueue<AVFrame*> m_videoQueue;
+	SafeQueue<AVFrame*> m_audioQueue;
 
 	AVFormatContext* m_pOutFormatCtx = nullptr;
+	AVCodecContext* m_pOutVCodecCtx = nullptr;
+	AVCodecContext* m_pOutACodecCtx = nullptr;
+	AVStream* m_pOutVStream = nullptr;
+	AVStream* m_pOutAStream = nullptr;
+	SwrContext* m_pSwrCtx = nullptr;
+	AVAudioFifo* m_pAudioFifo = nullptr;
 
 	// ²¥·Å
 	SDL_AudioSpec m_audioSpec;
@@ -54,6 +60,10 @@ private:
 
 	int m_videoWidth = 0;
 	int m_videoHeight = 0;
+
+	int m_bitRate = 0;
+	int m_frameRate = 0;
+	int m_audioFrameSize = 0;
 
 	std::thread m_playThread;
 	std::thread m_saveThread;
