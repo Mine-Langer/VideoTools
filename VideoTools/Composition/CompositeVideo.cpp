@@ -33,6 +33,9 @@ bool CompositeVideo::Open(const char* szFile)
 	if (0 > avcodec_open2(m_pCodecCtx, videoCodec, nullptr))
 		return false;
 
+	m_filter.SetFilter("drawtext=fontfile=arial.ttf:x=100:y=100:fontcolor=red:fontsize=48:text='Fuck CCP!'");
+	m_filter.Init(m_pCodecCtx, m_pFormatCtx->streams[m_videoIndex]);
+
 	return true;
 }
 
@@ -87,17 +90,20 @@ AVFrame* CompositeVideo::ConvertFrame(AVFrame* frame)
 
 	sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, m_pCodecCtx->height, swsFrame->data, swsFrame->linesize);
 
-	return swsFrame;
+	AVFrame* dstFrame = m_filter.Convert(swsFrame);
+	av_frame_free(&swsFrame);
+
+	return dstFrame;
 }
 
 int CompositeVideo::GetSrcWidth()
 {
-	return m_pCodecCtx->width;
+	return m_pCodecCtx->width / 2 * 2;
 }
 
 int CompositeVideo::GetSrcHeight()
 {
-	return m_pCodecCtx->height;
+	return m_pCodecCtx->height / 2 * 2;
 }
 
 AVPixelFormat CompositeVideo::GetSrcFormat()

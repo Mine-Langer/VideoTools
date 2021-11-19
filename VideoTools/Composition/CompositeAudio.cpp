@@ -90,6 +90,11 @@ void CompositeAudio::OnDecodeFunction()
 		{
 			AVPacket* pkt = nullptr;
 			m_audioQueue.Pop(pkt);
+			if (pkt == nullptr)
+			{
+				m_pEvent->AudioEvent(nullptr);
+				break;
+			}
 
 			if (0 > avcodec_send_packet(m_codecCtx, pkt))
 			{
@@ -128,8 +133,13 @@ bool CompositeAudio::DemuxPacket(AVPacket* pkt, int type)
 {
 	if (type == AVMEDIA_TYPE_AUDIO)
 	{
-		AVPacket* packet = av_packet_clone(pkt);
-		m_audioQueue.Push(packet);
+		if (pkt == nullptr)
+			m_audioQueue.Push(nullptr);
+		else
+		{
+			AVPacket* packet = av_packet_clone(pkt);
+			m_audioQueue.Push(packet);
+		}
 	}
 
 	return true;

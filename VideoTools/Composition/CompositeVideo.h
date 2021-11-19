@@ -1,6 +1,6 @@
 #pragma once
 #include "../Common.h"
-
+#include "../FilterVideo.h"
 
 class CompositeVideo
 {
@@ -30,6 +30,8 @@ private:
 	SwsContext* m_pSwsCtx = nullptr;
 
 	IVideoEvent* m_pEvent = nullptr;
+
+	CFilterVideo m_filter;
 
 	int m_videoIndex = -1;
 	int m_swsWidth = 0;

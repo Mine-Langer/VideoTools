@@ -96,7 +96,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>PushButton</string>
+            <string>视频转换</string>
            </property>
            <property name="checkable">
             <bool>true</bool>
@@ -118,7 +118,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>PushButton</string>
+            <string>音频转换</string>
            </property>
            <property name="checkable">
             <bool>true</bool>

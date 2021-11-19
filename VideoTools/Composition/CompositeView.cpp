@@ -67,7 +67,7 @@ void CompositeView::OnActImage()
 
 	if (m_composite.OpenImage(szName))
 	{
-
+		m_comType |= 0x1;
 	}
 }
 
@@ -82,7 +82,7 @@ void CompositeView::OnActAudio()
 
 	if (m_composite.OpenAudio(szName))
 	{
-
+		m_comType |= 0x2;
 	}
 	/*strcpy_s(m_szAudio, FILENAME_MAX, szName);
 
@@ -104,5 +104,6 @@ void CompositeView::OnBtnPlay()
 
 void CompositeView::OnBtnExport()
 {
-	m_composite.SaveFile("output.mp4");
+	m_composite.SaveFile("output.mp4", m_comType);
+	m_comType = 0;
 }

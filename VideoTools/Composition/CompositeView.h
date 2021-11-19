@@ -33,4 +33,5 @@ private:
 	QMenu* m_audioMenu = nullptr;
 
 	Composite m_composite;
+	int m_comType = 0;
 };

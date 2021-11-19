@@ -1,6 +1,7 @@
 #pragma once
 #include "CompositeVideo.h"
 #include "CompositeAudio.h"
+#include "../FilterVideo.h"
 
 class Composite :public IVideoEvent, public IAudioEvent
 {
@@ -22,7 +23,7 @@ public:
 	bool InitWnd(void* pWnd, int width, int height);
 
 	// 保存文件
-	bool SaveFile(const char* szOutput);
+	bool SaveFile(const char* szOutput, int type);
 
 private:
 	virtual bool VideoEvent(AVFrame* frame) override;
@@ -50,6 +51,7 @@ private:
 	AVStream* m_pOutAStream = nullptr;
 	SwrContext* m_pSwrCtx = nullptr;
 	AVAudioFifo* m_pAudioFifo = nullptr;
+	CFilterVideo m_filter;
 
 	// 播放
 	SDL_AudioSpec m_audioSpec;

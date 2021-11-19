@@ -47,7 +47,7 @@ bool Composite::OpenAudio(const char* szFile)
 	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
 		return false;
 
-	SDL_PauseAudio(0);
+	SDL_PauseAudio(1);
 
 	return true;
 }
@@ -98,17 +98,17 @@ bool Composite::InitWnd(void* pWnd, int width, int height)
 	return true;
 }
 
-bool Composite::SaveFile(const char* szOutput)
+bool Composite::SaveFile(const char* szOutput, int type)
 {
 	if (0 > avformat_alloc_output_context2(&m_pOutFormatCtx, nullptr, nullptr, szOutput))
 		return false;
 	
 	m_bitRate = 400000;
 	m_frameRate = 25;
-	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE)
+	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE && ((type&0x1) == 0x1))
 		InitVideoEnc(m_pOutFormatCtx->oformat->video_codec);
 	
-	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE)
+	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE && ((type & 0x2) == 0x2))
 		InitAudioEnc(m_pOutFormatCtx->oformat->audio_codec);
 
 	av_dump_format(m_pOutFormatCtx, 0, szOutput, 1);
@@ -237,6 +237,9 @@ void Composite::OnSDLAudioFunction(void* userdata, Uint8* stream, int len)
 {
 	Composite* pThis = (Composite*)userdata;
 	
+	if (pThis->m_state != Started)
+		return;
+
 	if (pThis->m_audioQueue.Empty())
 	{
 		SDL_memset(stream, 0, len);
@@ -245,11 +248,14 @@ void Composite::OnSDLAudioFunction(void* userdata, Uint8* stream, int len)
 	{
 		AVFrame* frame = nullptr;
 		pThis->m_audioQueue.Pop(frame);
-		int wLen = len < frame->linesize[0] ? len : frame->linesize[0];
-		SDL_memset(stream, 0, len);
-		SDL_MixAudio(stream, frame->data[0], wLen, SDL_MIX_MAXVOLUME);
+		if (frame != nullptr)
+		{
+			int wLen = len < frame->linesize[0] ? len : frame->linesize[0];
+			SDL_memset(stream, 0, len);
+			SDL_MixAudio(stream, frame->data[0], wLen, SDL_MIX_MAXVOLUME);
 
-		av_frame_free(&frame);
+			av_frame_free(&frame);
+		}
 	}
 	
 }
@@ -299,25 +305,37 @@ void Composite::OnSaveFunction()
 			AVFrame* videoFrame = m_videoQueue.Front();
 			if (videoFrame == nullptr)
 				break;
+			// ≈–∂œ“Ù∆µ÷°/ ”∆µ÷° ±–Ú
 			if (0 >= av_compare_ts(videoIndex, m_pOutVCodecCtx->time_base, audioIndex, m_pOutACodecCtx->time_base))
 			{
+				// –¥ ”∆µ÷°
 				AVFrame* swsVideoFrame = m_videoDecoder.ConvertFrame(videoFrame);
+				if (!swsVideoFrame)
+					continue;
 				swsVideoFrame->pts = videoIndex++;
 				ret = avcodec_send_frame(m_pOutVCodecCtx, swsVideoFrame);
 				if (ret < 0)
+				{
+					av_frame_free(&swsVideoFrame);
 					continue;
+				}
 
 				ret = avcodec_receive_packet(m_pOutVCodecCtx, vPacket);
 				if (ret < 0)
+				{
+					av_frame_free(&swsVideoFrame);
 					continue;
-
+				}
 				av_packet_rescale_ts(vPacket, m_pOutVCodecCtx->time_base, m_pOutVStream->time_base);
 				vPacket->stream_index = m_pOutVStream->index;
 
 				ret = av_interleaved_write_frame(m_pOutFormatCtx, vPacket);
+
+				av_frame_free(&swsVideoFrame);
 			}
 			else
 			{
+				// –¥“Ù∆µ÷°
 				while (bRun && av_audio_fifo_size(m_pAudioFifo) < m_audioFrameSize)
 				{
 					AVFrame* audioFrame = nullptr;
@@ -326,7 +344,7 @@ void Composite::OnSaveFunction()
 						bRun = false;
 					else
 					{
-						uint8_t** convertedBuffer = new uint8_t * [m_pOutACodecCtx->channels]();
+						uint8_t** convertedBuffer = new uint8_t* [m_pOutACodecCtx->channels]();
 						av_samples_alloc(convertedBuffer, nullptr, m_pOutACodecCtx->channels, audioFrame->nb_samples, m_pOutACodecCtx->sample_fmt, 0);
 						swr_convert(m_pSwrCtx, convertedBuffer, audioFrame->nb_samples, (const uint8_t**)audioFrame->extended_data, audioFrame->nb_samples);
 						av_audio_fifo_realloc(m_pAudioFifo, av_audio_fifo_size(m_pAudioFifo) + audioFrame->nb_samples);
@@ -340,32 +358,35 @@ void Composite::OnSaveFunction()
 				if (!bRun)
 					break;
 
-				const int frameSize = FFMIN(av_audio_fifo_size(m_pAudioFifo), m_audioFrameSize);
-				AVFrame* outputFrame = av_frame_alloc();
-				outputFrame->nb_samples = frameSize;
-				outputFrame->channel_layout = m_pOutACodecCtx->channel_layout;
-				outputFrame->format = m_pOutACodecCtx->sample_fmt;
-				outputFrame->sample_rate = m_pOutACodecCtx->sample_rate;
-				av_frame_get_buffer(outputFrame, 0);
-
-				av_audio_fifo_read(m_pAudioFifo, (void**)outputFrame->data, frameSize);
-				outputFrame->pts = audioIndex;
-				audioIndex += outputFrame->nb_samples;
-
-				if (0 > avcodec_send_frame(m_pOutACodecCtx, outputFrame))
-					break;
-
-				ret = avcodec_receive_packet(m_pOutACodecCtx, aPacket);
-				if (ret == 0)
+				while (av_audio_fifo_size(m_pAudioFifo) >= m_audioFrameSize || (!bRun && av_audio_fifo_size(m_pAudioFifo)>0))
 				{
-					av_packet_rescale_ts(aPacket, m_pOutACodecCtx->time_base, m_pOutAStream->time_base);
-					aPacket->stream_index = m_pOutAStream->index;
-					printf(" audio packet pts: %I64d.\r\n", aPacket->pts);
+					const int frameSize = FFMIN(av_audio_fifo_size(m_pAudioFifo), m_audioFrameSize);
+					AVFrame* outputFrame = av_frame_alloc();
+					outputFrame->nb_samples = frameSize;
+					outputFrame->channel_layout = m_pOutACodecCtx->channel_layout;
+					outputFrame->format = m_pOutACodecCtx->sample_fmt;
+					outputFrame->sample_rate = m_pOutACodecCtx->sample_rate;
+					av_frame_get_buffer(outputFrame, 0);
 
-					av_interleaved_write_frame(m_pOutFormatCtx, aPacket);
+					av_audio_fifo_read(m_pAudioFifo, (void**)outputFrame->data, frameSize);
+					outputFrame->pts = audioIndex;
+					audioIndex += outputFrame->nb_samples;
+
+					if (0 > avcodec_send_frame(m_pOutACodecCtx, outputFrame))
+						break;
+
+					ret = avcodec_receive_packet(m_pOutACodecCtx, aPacket);
+					if (ret == 0)
+					{
+						av_packet_rescale_ts(aPacket, m_pOutACodecCtx->time_base, m_pOutAStream->time_base);
+						aPacket->stream_index = m_pOutAStream->index;
+						printf(" audio packet pts: %I64d.\r\n", aPacket->pts);
+
+						av_interleaved_write_frame(m_pOutFormatCtx, aPacket);
+					}
+					av_frame_free(&outputFrame);
+					av_packet_unref(aPacket);
 				}
-				av_frame_free(&outputFrame);
-				av_packet_unref(aPacket);
 			}
 		}
 	}

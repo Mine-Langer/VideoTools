@@ -78,7 +78,11 @@ void CDemultiplexer::OnDemuxFunction()
 	while (m_bRun)
 	{
 		if (0 > av_read_frame(m_pFormatCtx, pkt))
+		{
+			m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);
+			m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_VIDEO);
 			m_bRun = false;
+		}
 		else
 		{
 			if (pkt->stream_index == m_audioIndex)
