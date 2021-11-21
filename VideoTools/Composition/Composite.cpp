@@ -72,6 +72,7 @@ void Composite::Close()
 void Composite::Play()
 {
 	m_state = Started;
+	SDL_PauseAudio(0);
 	m_playThread = std::thread(&Composite::OnPlayFunction, this);
 }
 
@@ -270,6 +271,7 @@ void Composite::OnPlayFunction()
 		{
 			AVFrame* frame = m_videoQueue.Front();
 			AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
+
 			SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
 				swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
 			SDL_RenderClear(m_render);

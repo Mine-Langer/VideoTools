@@ -43,6 +43,7 @@ void CompositeVideo::Start(IVideoEvent* pEvt)
 {
 	m_pEvent = pEvt;
 	m_thread = std::thread(&CompositeVideo::OnDecodeFunction, this);
+	m_thread.detach();
 }
 
 void CompositeVideo::Release()
@@ -88,7 +89,7 @@ AVFrame* CompositeVideo::ConvertFrame(AVFrame* frame)
 	if (0 > av_frame_get_buffer(swsFrame, 0))
 		return nullptr;
 
-	sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, m_pCodecCtx->height, swsFrame->data, swsFrame->linesize);
+	sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, frame->height, swsFrame->data, swsFrame->linesize);
 
 	AVFrame* dstFrame = m_filter.Convert(swsFrame);
 	av_frame_free(&swsFrame);
@@ -147,4 +148,7 @@ void CompositeVideo::OnDecodeFunction()
 		av_packet_unref(&packet);
 	}
 	av_frame_free(&frame);
+	
+	// Çå³ý
+	Release();
 }

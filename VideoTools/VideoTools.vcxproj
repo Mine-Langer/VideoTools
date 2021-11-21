@@ -32,7 +32,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>5.12.10_msvc2017_64</QtInstall>
+    <QtInstall>msvc2017_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
@@ -99,6 +99,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Composition\AVTextureBar.cpp" />
     <ClCompile Include="Composition\CompositeAudio.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
@@ -119,6 +120,7 @@
     <QtUic Include="Composition\CompositeView.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="Composition\AVTextureBar.h" />
     <ClInclude Include="Composition\Composite.h" />
     <ClInclude Include="Composition\CompositeAudio.h" />
     <ClInclude Include="Composition\CompositeVideo.h" />

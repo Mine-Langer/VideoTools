@@ -366,7 +366,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QWidget" name="imageCtrlWidget" native="true">
+          <widget class="AVTextureBar" name="imageCtrlWidget" native="true">
            <property name="contextMenuPolicy">
             <enum>Qt::CustomContextMenu</enum>
            </property>
@@ -447,7 +447,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QWidget" name="audioCtrlWidget" native="true">
+          <widget class="AVTextureBar" name="audioCtrlWidget" native="true">
            <property name="contextMenuPolicy">
             <enum>Qt::CustomContextMenu</enum>
            </property>
@@ -503,7 +503,7 @@ font: 9pt &quot;微软雅黑&quot;;</string>
           <number>2</number>
          </property>
          <item>
-          <widget class="QSlider" name="horizontalSlider">
+          <widget class="QSlider" name="sliderTime">
            <property name="maximumSize">
             <size>
              <width>16777215</width>
@@ -601,7 +601,7 @@ QSlider::handle:horizontal:hover {
              <number>0</number>
             </property>
             <item>
-             <widget class="QLabel" name="label_5">
+             <widget class="QLabel" name="labelStartTime">
               <property name="text">
                <string>00:00</string>
               </property>
@@ -621,7 +621,7 @@ QSlider::handle:horizontal:hover {
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="label_6">
+             <widget class="QLabel" name="labelEndTime">
               <property name="text">
                <string>03:00</string>
               </property>
@@ -679,6 +679,14 @@ QSlider::handle:horizontal:hover {
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>AVTextureBar</class>
+   <extends>QWidget</extends>
+   <header>AVTextureBar.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

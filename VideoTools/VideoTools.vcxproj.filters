@@ -76,6 +76,9 @@
     <ClCompile Include="FilterVideo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Composition\AVTextureBar.cpp">
+      <Filter>Composition</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -123,6 +126,9 @@
       <Filter>capture</Filter>
     </QtMoc>
     <QtMoc Include="Composition\CompositeView.h">
+      <Filter>Composition</Filter>
+    </QtMoc>
+    <QtMoc Include="Composition\AVTextureBar.h">
       <Filter>Composition</Filter>
     </QtMoc>
   </ItemGroup>

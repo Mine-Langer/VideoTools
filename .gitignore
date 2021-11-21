@@ -147,3 +147,5 @@ VideoTools/x64/Debug/moc/moc_CompositeView.cpp
 VideoTools/x64/Debug/uic/ui_CompositeView.h
 VideoTools/x64/Release/moc/moc_CompositeView.cpp
 VideoTools/x64/Release/uic/ui_CompositeView.h
+VideoTools/x64/Debug/moc/moc_AVTextureBar.cpp
+VideoTools/x64/Release/moc/moc_AVTextureBar.cpp

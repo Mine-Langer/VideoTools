@@ -71,11 +71,32 @@ void CompositeAudio::Start(IAudioEvent* pEvt)
 
 	m_bRun = true;
 	m_thread = std::thread(&CompositeAudio::OnDecodeFunction, this);
+	m_thread.detach();
 }
 
 void CompositeAudio::Release()
 {
 	m_demux.Release();
+
+	if (m_codecCtx) {
+		avcodec_close(m_codecCtx);
+		avcodec_free_context(&m_codecCtx);
+		m_codecCtx = nullptr;
+	}
+
+	if (m_swrCtx) {
+		swr_free(&m_swrCtx);
+		m_swrCtx = nullptr;
+	}
+
+	while (true)
+	{
+		if (m_audioQueue.Empty())
+			break;
+		AVPacket* pkt = nullptr;
+		m_audioQueue.Pop(pkt);
+		av_packet_free(&pkt);
+	}
 }
 
 void CompositeAudio::OnDecodeFunction()
@@ -127,6 +148,7 @@ void CompositeAudio::OnDecodeFunction()
 		}
 	}
 
+	Release();
 }
 
 bool CompositeAudio::DemuxPacket(AVPacket* pkt, int type)

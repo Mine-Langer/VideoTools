@@ -16,12 +16,20 @@ CompositeView::CompositeView(QWidget *parent)
 	m_imageMenu->addAction(actImage);
 	m_audioMenu->addAction(actAudio);
 
+	// 默认时长3分钟
+	const int defaultSecond = 180;
+	ui->audioCtrlWidget->SetTimeLength(defaultSecond);
+	ui->imageCtrlWidget->SetTimeLength(defaultSecond);
+	ui->sliderTime->setRange(0, defaultSecond);
+
 	connect(actImage, SIGNAL(triggered()), this, SLOT(OnActImage()));
 	connect(actAudio, SIGNAL(triggered()), this, SLOT(OnActAudio()));
-	connect(ui->imageCtrlWidget, &QWidget::customContextMenuRequested, this, &CompositeView::OnImageWidgetContextMenuRequested);
-	connect(ui->audioCtrlWidget, &QWidget::customContextMenuRequested, this, &CompositeView::OnAudioWidgetContextMenuRequested);
+	connect(ui->imageCtrlWidget, &AVTextureBar::customContextMenuRequested, this, &CompositeView::OnImageWidgetContextMenuRequested);
+	connect(ui->audioCtrlWidget, &AVTextureBar::customContextMenuRequested, this, &CompositeView::OnAudioWidgetContextMenuRequested);
 	connect(ui->btnPlay, &QPushButton::clicked, this, &CompositeView::OnBtnPlay);
 	connect(ui->btnExport, &QPushButton::clicked, this, &CompositeView::OnBtnExport);
+	connect(ui->timeDuration, &QTimeEdit::timeChanged, this, &CompositeView::timeDurationChanged);
+	connect(ui->sliderTime, &QSlider::sliderMoved, this, &CompositeView::sliderTimeMoved);
 }
 
 CompositeView::~CompositeView()
@@ -42,6 +50,7 @@ void CompositeView::showEvent(QShowEvent* event)
 
 void CompositeView::OnImageWidgetContextMenuRequested(const QPoint& pos)
 {
+	ui->imageCtrlWidget->UpdatePostion();
 	m_imageMenu->exec(QCursor::pos());
 }
 
@@ -51,7 +60,7 @@ void CompositeView::OnAudioWidgetContextMenuRequested(const QPoint& pos)
 }
 
 void CompositeView::OnActImage()
-{
+{	
 	QString filename = QFileDialog::getOpenFileName(this, tr("打开文件"), "", tr("图像文件(*.jpg *.bmp *.png);;  所有文件(*.*)"));
 	if (filename.isEmpty())
 		return;
@@ -68,6 +77,7 @@ void CompositeView::OnActImage()
 	if (m_composite.OpenImage(szName))
 	{
 		m_comType |= 0x1;
+		ui->imageCtrlWidget->AddTexture(filename);
 	}
 }
 
@@ -106,4 +116,20 @@ void CompositeView::OnBtnExport()
 {
 	m_composite.SaveFile("output.mp4", m_comType);
 	m_comType = 0;
+}
+
+void CompositeView::timeDurationChanged(const QTime& time)
+{
+	QString szText = time.toString("mm:ss");
+	int secDuration = time.msecsSinceStartOfDay() / 1000;
+	ui->sliderTime->setRange(0, secDuration);
+	ui->labelEndTime->setText(szText);
+	ui->audioCtrlWidget->SetTimeLength(secDuration);
+	ui->imageCtrlWidget->SetTimeLength(secDuration);
+}
+
+void CompositeView::sliderTimeMoved(int position)
+{
+	QString szText = QString("%1:%2").arg(position / 60, 2, 10, QLatin1Char('0')).arg(position % 60, 2, 10, QLatin1Char('0'));
+	ui->labelStartTime->setText(szText);
 }

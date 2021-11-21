@@ -26,6 +26,8 @@ private slots:
 	void OnActAudio();
 	void OnBtnPlay();
 	void OnBtnExport();
+	void timeDurationChanged(const QTime& time);
+	void sliderTimeMoved(int position);
 
 private:
 	Ui::CompositeView *ui;
