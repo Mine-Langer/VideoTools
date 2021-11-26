@@ -12,7 +12,7 @@ public:
 	void GetSrcParameter(int& sample_rate, int& nb_sample, int64_t& ch_layout,enum AVSampleFormat& sample_fmt);
 	bool SetSwrContext(int64_t ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
 
-	void Start(IAudioEvent* pEvt);
+	void Start(IAudioEvent* pEvt, int nType = 0);
 
 	void Release();
 
@@ -38,5 +38,7 @@ private:
 
 	bool m_bRun = false;
 	std::thread m_thread;
+
+	int m_nType = 0; // 0:²¥·Å   1:±àÂë´æ´¢
 };
 

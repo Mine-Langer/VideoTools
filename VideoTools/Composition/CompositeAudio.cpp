@@ -64,9 +64,10 @@ bool CompositeAudio::SetSwrContext(int64_t ch_layout, enum AVSampleFormat sample
 	return true;
 }
 
-void CompositeAudio::Start(IAudioEvent* pEvt)
+void CompositeAudio::Start(IAudioEvent* pEvt, int nType)
 {
 	m_pEvent = pEvt;
+	m_nType = nType;
 	m_demux.Start(this);
 
 	m_bRun = true;
@@ -130,20 +131,20 @@ void CompositeAudio::OnDecodeFunction()
 				continue;
 			}
 			// зЊТы
-// 			AVFrame* dstFrame = av_frame_alloc();
-// 			if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize, 
-// 				av_get_channel_layout_nb_channels(m_ch_layout), m_nb_samples, m_sample_fmt, 1))
-// 			{
-// 				av_frame_unref(frame);
-// 				av_packet_free(&pkt);
-// 				continue;
-// 			}
-// 
-// 			swr_convert(m_swrCtx, dstFrame->data, m_nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+			AVFrame* dstFrame = av_frame_alloc();
+			if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize, 
+				av_get_channel_layout_nb_channels(m_ch_layout), m_nb_samples, m_sample_fmt, 1))
+			{
+				av_frame_unref(frame);
+				av_packet_free(&pkt);
+				continue;
+			}
 
-			m_pEvent->AudioEvent(frame);
+			swr_convert(m_swrCtx, dstFrame->data, m_nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
 
-		//	av_frame_unref(frame);
+			m_pEvent->AudioEvent(dstFrame);
+
+			av_frame_free(&frame);
 			av_packet_free(&pkt);
 		}
 	}
