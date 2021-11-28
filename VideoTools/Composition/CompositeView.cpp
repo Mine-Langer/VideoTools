@@ -74,11 +74,9 @@ void CompositeView::OnActImage()
 // 	ui->thumbnail_widget->setFixedSize(calcWidth, ui->imageCtrlWidget->height());
 // 	ui->thumbnail_widget->setStyleSheet(QString(tr("border-image:url(%1);background-size:contain")).arg(filename));
 
-	if (m_composite.OpenImage(szName))
-	{
-		m_comType |= 0x1;
-		ui->imageCtrlWidget->AddTexture(filename);
-	}
+	m_composite.AddImage(szName);
+	m_comType |= 0x1;
+	ui->imageCtrlWidget->AddTexture(filename);
 }
 
 void CompositeView::OnActAudio()
@@ -90,10 +88,8 @@ void CompositeView::OnActAudio()
 	QByteArray arrFile = filename.toLocal8Bit();
 	const char* szName = arrFile.data();
 
-	if (m_composite.OpenAudio(szName))
-	{
-		m_comType |= 0x2;
-	}
+	m_composite.AddAudio(szName);
+	m_comType |= 0x2;
 	/*strcpy_s(m_szAudio, FILENAME_MAX, szName);
 
 	if (m_player.OpenAudio(szName))

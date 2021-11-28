@@ -1,6 +1,6 @@
 #pragma once
-#include "CompositeVideo.h"
-#include "CompositeAudio.h"
+#include "../VideoDecoder.h"
+#include "../AudioDecoder.h"
 #include "../FilterVideo.h"
 
 class Composite :public IVideoEvent, public IAudioEvent
@@ -9,9 +9,8 @@ public:
 	Composite();
 	~Composite();
 
-	bool OpenImage(const char* szFile);
-
-	bool OpenAudio(const char* szFile);
+	void AddAudio(const char* szFile);
+	void AddImage(const char* szFile);
 
 	void Start();
 
@@ -30,6 +29,9 @@ private:
 	virtual bool AudioEvent(AVFrame* frame) override;
 
 private:
+	bool OpenAudio(const char* szFile);
+	bool OpenImage(const char* szFile);
+
 	bool InitVideoEnc(enum AVCodecID codec_id);
 	bool InitAudioEnc(enum AVCodecID codec_id);
 
@@ -39,8 +41,8 @@ private:
 	void OnSaveFunction(); // 保存文件
 
 private:
-	CompositeVideo m_videoDecoder;
-	CompositeAudio m_audioDecoder;
+	CVideoDecoder m_videoDecoder;
+	CAudioDecoder m_audioDecoder;
 	SafeQueue<AVFrame*> m_videoQueue;
 	SafeQueue<AVFrame*> m_audioQueue;
 
@@ -69,6 +71,9 @@ private:
 
 	std::thread m_playThread;
 	std::thread m_saveThread;
-	RecordState m_state = NotStarted;
+	AVState m_state = NotStarted;
+	int m_type = 0; // 0: 预览播放  1：保存文件
+	char m_szAudioFile[128] = { 0 };
+	char m_szVideoFile[128] = { 0 };
 };
 

@@ -11,12 +11,25 @@ Composite::~Composite()
 
 }
 
+void Composite::AddAudio(const char* szFile)
+{
+	strcpy_s(m_szAudioFile, sizeof(m_szAudioFile), szFile);
+}
+
+void Composite::AddImage(const char* szFile)
+{
+	strcpy_s(m_szVideoFile, sizeof(m_szVideoFile), szFile);
+}
+
 bool Composite::OpenImage(const char* szFile)
 {
 	if (!m_videoDecoder.Open(szFile))
 		return false;
 
-	m_videoDecoder.SetFrameSize(m_videoWidth, m_videoHeight);
+	if (m_type == 0)
+		m_videoDecoder.SetSwsConfig(m_videoWidth, m_videoHeight);
+	else if (m_type == 1)
+		m_videoDecoder.SetSwsConfig();
 	m_videoDecoder.Start(this);
 
 	return true;
@@ -44,11 +57,6 @@ bool Composite::OpenAudio(const char* szFile)
 	m_audioSpec.userdata = this;
 	m_audioSpec.callback = OnSDLAudioFunction;
 
-	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
-		return false;
-
-	SDL_PauseAudio(1);
-
 	return true;
 }
 
@@ -71,9 +79,32 @@ void Composite::Close()
 
 void Composite::Play()
 {
-	m_state = Started;
-	SDL_PauseAudio(0);
-	m_playThread = std::thread(&Composite::OnPlayFunction, this);
+	m_type = 0;
+	if (m_state == NotStarted)
+	{
+		// 打开音频
+		if (!OpenAudio(m_szAudioFile))
+			return;
+		// 打开图像
+		if (!OpenImage(m_szVideoFile))
+			return;
+		// 置为开始播放
+		m_state = Started;
+		SDL_PauseAudio(0);
+		if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
+			return;
+
+		m_playThread = std::thread(&Composite::OnPlayFunction, this);
+	}
+	else if (m_state == Started)
+	{
+		// 置为暂停状态
+		m_state = Paused;
+	}
+	else if (m_state == Paused)
+	{
+		m_state = Started;
+	}
 }
 
 bool Composite::InitWnd(void* pWnd, int width, int height)
@@ -101,20 +132,26 @@ bool Composite::InitWnd(void* pWnd, int width, int height)
 
 bool Composite::SaveFile(const char* szOutput, int type)
 {
+	m_type = 1;
+	m_audioDecoder.SetSaveEnable(true);
+	if (!OpenAudio(m_szAudioFile))
+		return false;
+
+	if (!OpenImage(m_szVideoFile))
+		return false;
+
 	if (0 > avformat_alloc_output_context2(&m_pOutFormatCtx, nullptr, nullptr, szOutput))
 		return false;
 	
 	m_bitRate = 400000;
 	m_frameRate = 25;
-	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE && ((type&0x1) == 0x1))
+	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE && ((type & 0x1) == 0x1))
 		InitVideoEnc(m_pOutFormatCtx->oformat->video_codec);
 	
 	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE && ((type & 0x2) == 0x2))
 		InitAudioEnc(m_pOutFormatCtx->oformat->audio_codec);
 
 	av_dump_format(m_pOutFormatCtx, 0, szOutput, 1);
-
-	m_videoDecoder.SetFrameSize(m_videoDecoder.GetSrcWidth(), m_videoDecoder.GetSrcHeight());
 
 	// 打开输出文件
 	if (!(m_pOutFormatCtx->oformat->flags & AVFMT_NOFILE))
@@ -134,13 +171,13 @@ bool Composite::SaveFile(const char* szOutput, int type)
 bool Composite::VideoEvent(AVFrame* frame)
 {
 	AVFrame* vdata = av_frame_clone(frame);
-	m_videoQueue.Push(vdata);
+	m_videoQueue.MaxSizePush(vdata);
 	return true;
 }
 
 bool Composite::AudioEvent(AVFrame* frame)
 {
-	m_audioQueue.Push(frame);
+	m_audioQueue.MaxSizePush(frame);
 	return true;
 }
 
@@ -154,9 +191,10 @@ bool Composite::InitVideoEnc(enum AVCodecID codec_id)
 	if (!m_pOutVCodecCtx)
 		return false;
 
-	int srcWidth = m_videoDecoder.GetSrcWidth();
-	int srcHeight = m_videoDecoder.GetSrcHeight();
-	AVPixelFormat srcFormat = m_videoDecoder.GetSrcFormat();
+	int srcWidth, srcHeight;
+	AVPixelFormat srcFormat;
+	m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
+
 	m_pOutVCodecCtx->width = srcWidth;
 	m_pOutVCodecCtx->height = srcHeight;
 	m_pOutVCodecCtx->codec_id = codec_id;
@@ -269,18 +307,23 @@ void Composite::OnPlayFunction()
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		else
 		{
-			AVFrame* frame = m_videoQueue.Front();
-			AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
+			if (m_videoQueue.Empty())
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			else
+			{
+				AVFrame* frame = m_videoQueue.Front();
+				AVFrame* swsFrame = m_videoDecoder.GetConvertFrame(frame);
 
-			SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
-				swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
-			SDL_RenderClear(m_render);
-			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
-			SDL_RenderPresent(m_render);
+				SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
+					swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
+				SDL_RenderClear(m_render);
+				SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
+				SDL_RenderPresent(m_render);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+				std::this_thread::sleep_for(std::chrono::milliseconds(40));
 
-			av_frame_free(&swsFrame);
+				av_frame_free(&swsFrame);
+			}
 		}
 	}
 }
@@ -311,7 +354,7 @@ void Composite::OnSaveFunction()
 			if (0 >= av_compare_ts(videoIndex, m_pOutVCodecCtx->time_base, audioIndex, m_pOutACodecCtx->time_base))
 			{
 				// 写视频帧
-				AVFrame* swsVideoFrame = m_videoDecoder.ConvertFrame(videoFrame);
+				AVFrame* swsVideoFrame = m_videoDecoder.GetConvertFrame(videoFrame);
 				if (!swsVideoFrame)
 					continue;
 				swsVideoFrame->pts = videoIndex++;
@@ -341,7 +384,11 @@ void Composite::OnSaveFunction()
 				while (bRun && av_audio_fifo_size(m_pAudioFifo) < m_audioFrameSize)
 				{
 					AVFrame* audioFrame = nullptr;
-					m_audioQueue.Pop(audioFrame);
+					if (!m_audioQueue.Pop(audioFrame))
+					{
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
+						continue;
+					}
 					if (audioFrame == nullptr)
 						bRun = false;
 					else

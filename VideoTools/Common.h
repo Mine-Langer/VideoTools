@@ -64,7 +64,7 @@ extern "C"
 #define AVSYNC_DYNAMIC_THRESHOLD 0.003        // 音视频同步动态帧率进行干预的二者当前时间差的阈值
 
 
-enum RecordState { NotStarted, Started, Paused, Stopped, Unknowned };
+enum AVState { NotStarted, Started, Paused, Stopped };
 
 class IVideoEvent
 {

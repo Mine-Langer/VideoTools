@@ -25,7 +25,7 @@ private:
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwsContext* m_swsCtx = nullptr;
 
-	enum RecordState m_state = NotStarted;
+	enum AVState m_state = NotStarted;
 
 	int m_videoIndex = -1;
 	int m_imageWidth = 0;

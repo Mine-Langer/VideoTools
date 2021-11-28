@@ -1,6 +1,6 @@
 #pragma once
 #include "CapAudio.h"
-#include "CapVideo.h"
+#include "../VideoDecoder.h"
 
 
 class CRecorder :public IVideoEvent, public IAudioEvent
@@ -59,7 +59,7 @@ private:
 	SwrContext* SwrCtx = nullptr;
 
 	CCapAudio m_audioDecoder;
-	CCapVideo m_videoDecoder;
+	CVideoDecoder m_videoDecoder;
 
 	int VideoIndex = -1;
 	int AudioIndex = -1;
@@ -71,7 +71,7 @@ private:
 	int64_t m_vCurPts = 0;
 	int64_t m_aCurPts = 0;
 
-	RecordState m_state; // 
+	AVState m_state; // 
 
 	int CapX, CapY, capWidth, capHeight;
 	std::string m_szFilename;

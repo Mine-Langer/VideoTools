@@ -32,7 +32,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>5.12.10_msvc2017_64</QtInstall>
+    <QtInstall>msvc2017_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
@@ -99,8 +99,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioDecoder.cpp" />
+    <ClCompile Include="AVTools.cpp" />
     <ClCompile Include="Composition\AVTextureBar.cpp" />
-    <ClCompile Include="Composition\CompositeAudio.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
     <ClCompile Include="VideoDecoder.cpp" />
@@ -114,16 +115,15 @@
     <ClCompile Include="capture\CapVideo.cpp" />
     <ClCompile Include="Composition\Composite.cpp" />
     <ClCompile Include="Composition\CompositeView.cpp" />
-    <ClCompile Include="Composition\CompositeVideo.cpp" />
     <ClCompile Include="main.cpp" />
     <QtUic Include="capture\hlcapture.ui" />
     <QtUic Include="Composition\CompositeView.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="Composition\AVTextureBar.h" />
+    <ClInclude Include="AudioDecoder.h" />
+    <ClInclude Include="AVTools.h" />
     <ClInclude Include="Composition\Composite.h" />
-    <ClInclude Include="Composition\CompositeAudio.h" />
-    <ClInclude Include="Composition\CompositeVideo.h" />
     <ClInclude Include="Demultiplexer.h" />
     <ClInclude Include="FilterVideo.h" />
     <ClInclude Include="SafeQueue.h" />

@@ -61,14 +61,8 @@
     <ClCompile Include="Composition\Composite.cpp">
       <Filter>Composition</Filter>
     </ClCompile>
-    <ClCompile Include="Composition\CompositeVideo.cpp">
-      <Filter>Composition</Filter>
-    </ClCompile>
     <ClCompile Include="VideoDecoder.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Composition\CompositeAudio.cpp">
-      <Filter>Composition</Filter>
     </ClCompile>
     <ClCompile Include="Demultiplexer.cpp">
       <Filter>Source Files</Filter>
@@ -78,6 +72,12 @@
     </ClCompile>
     <ClCompile Include="Composition\AVTextureBar.cpp">
       <Filter>Composition</Filter>
+    </ClCompile>
+    <ClCompile Include="AVTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioDecoder.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -96,14 +96,8 @@
     <ClInclude Include="Composition\Composite.h">
       <Filter>Composition</Filter>
     </ClInclude>
-    <ClInclude Include="Composition\CompositeVideo.h">
-      <Filter>Composition</Filter>
-    </ClInclude>
     <ClInclude Include="VideoDecoder.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Composition\CompositeAudio.h">
-      <Filter>Composition</Filter>
     </ClInclude>
     <ClInclude Include="Demultiplexer.h">
       <Filter>Header Files</Filter>
@@ -112,6 +106,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FilterVideo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AVTools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioDecoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

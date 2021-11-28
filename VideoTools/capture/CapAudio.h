@@ -32,7 +32,7 @@ private:
 	IAudioEvent* m_pEvent = nullptr;
 	SwrContext* m_swrCtx = nullptr;
 
-	enum RecordState m_state = NotStarted;
+	enum AVState m_state = NotStarted;
 
 	int m_audioIndex = -1;
 	int m_frameSize = 0;

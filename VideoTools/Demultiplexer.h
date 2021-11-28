@@ -8,7 +8,11 @@ public:
 
 	~CDemultiplexer();
 
+	// 读取文件
 	bool Open(const char* szInput);
+
+	// 读取设备
+	bool Open(const char* szInput, AVInputFormat* ifmt, AVDictionary** pDict);
 
 	void Start(IDemuxEvent* pEvt);
 

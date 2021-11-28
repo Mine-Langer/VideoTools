@@ -40,7 +40,7 @@ bool CRecorder::Run(const char* szFile)
 	// m_videoDecoder.InitCamera();
 
 	// 设置视频参数
-	if (!m_videoDecoder.Init(CapX, CapY, capWidth, capHeight))
+	if (!m_videoDecoder.OpenScreen(CapX, CapY, capWidth, capHeight))
 		return false;
 	
 	if (!m_videoDecoder.Start(this))

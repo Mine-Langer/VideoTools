@@ -33,6 +33,29 @@ bool CDemultiplexer::Open(const char* szInput)
 	return true;
 }
 
+bool CDemultiplexer::Open(const char* szInput, AVInputFormat* ifmt, AVDictionary** pDict)
+{
+	if (0 != avformat_open_input(&m_pFormatCtx, szInput, ifmt, pDict))
+		return false;
+
+	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
+		return false;
+
+	for (int i = 0; i < m_pFormatCtx->nb_streams; i++)
+	{
+		if (m_pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+		{
+			m_videoIndex = i;
+		}
+		else if (m_pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
+		{
+			m_audioIndex = i;
+		}
+	}
+
+	return true;
+}
+
 void CDemultiplexer::Start(IDemuxEvent* pEvt)
 {
 	m_pEvent = pEvt;
