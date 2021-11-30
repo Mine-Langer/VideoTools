@@ -1,4 +1,4 @@
-#include "CAudioEncoder.h"
+#include "AudioEncoder.h"
 
 CAudioEncoder::CAudioEncoder()
 {
@@ -10,95 +10,81 @@ CAudioEncoder::~CAudioEncoder()
 
 }
 
-bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, CAudioDecoder* audioDecoder)
+bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
 {
 	AVCodec* pCodec = avcodec_find_encoder(codecId);
 	if (pCodec == nullptr)
 		return false;
 
-	AudioCodecCtx = avcodec_alloc_context3(pCodec);
-	if (AudioCodecCtx == nullptr)
+	m_pCodecCtx = avcodec_alloc_context3(pCodec);
+	if (m_pCodecCtx == nullptr)
 		return false;
 
-	AudioCodecCtx->codec_id = codecId;
-	AudioCodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
-	AudioCodecCtx->channels = av_get_channel_layout_nb_channels(AudioCodecCtx->channel_layout);
-	AudioCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-	AudioCodecCtx->sample_rate = 44100;
-	AudioCodecCtx->bit_rate = 96000;
-	AudioCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
-	AudioCodecCtx->time_base = { 1, AudioCodecCtx->sample_rate };
+	m_pCodecCtx->codec_id = codecId;
+	m_pCodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
+//	m_pCodecCtx->channels = av_get_channel_layout_nb_channels(AudioCodecCtx->channel_layout);
+	m_pCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
+	m_pCodecCtx->sample_rate = 44100;
+	m_pCodecCtx->bit_rate = 96000;
+	m_pCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
+	m_pCodecCtx->time_base = { 1, m_pCodecCtx->sample_rate };
 	
-	AudioStream = avformat_new_stream(formatCtx, nullptr);
-	AudioStream->time_base = AudioCodecCtx->time_base;
+	m_pStream = avformat_new_stream(formatCtx, nullptr);
+	m_pStream->time_base = m_pCodecCtx->time_base;
 
 	if (formatCtx->oformat->flags & AVFMT_GLOBALHEADER)
-		AudioCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+		m_pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-	if (0 > avcodec_open2(AudioCodecCtx, pCodec, nullptr))
+	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
-	avcodec_parameters_from_context(AudioStream->codecpar, AudioCodecCtx);
+	avcodec_parameters_from_context(m_pStream->codecpar, m_pCodecCtx);
 
-	SwrCtx = swr_alloc_set_opts(nullptr, AudioCodecCtx->channel_layout, AudioCodecCtx->sample_fmt, AudioCodecCtx->sample_rate,
-		audioDecoder->GetChannelLayouts(), audioDecoder->GetSampleFormat(), audioDecoder->GetSampleRate(), 0, nullptr);
-	if (SwrCtx == nullptr)
-		return false;
+// 	SwrCtx = swr_alloc_set_opts(nullptr, AudioCodecCtx->channel_layout, AudioCodecCtx->sample_fmt, AudioCodecCtx->sample_rate,
+// 		audioDecoder->GetChannelLayouts(), audioDecoder->GetSampleFormat(), audioDecoder->GetSampleRate(), 0, nullptr);
+// 	if (SwrCtx == nullptr)
+// 		return false;
+// 
+// 	if (0 > swr_init(SwrCtx))
+// 		return false;
 
-	if (0 > swr_init(SwrCtx))
-		return false;
-
-	m_nbSamples = AudioCodecCtx->frame_size;
+	m_nbSamples = m_pCodecCtx->frame_size;
 	if (!m_nbSamples)
 		m_nbSamples = 1024;
 
-	AudioFIFO = av_audio_fifo_alloc(AudioCodecCtx->sample_fmt, AudioCodecCtx->channels, m_nbSamples);
-	if (AudioFIFO == nullptr)
-		return false;
+// 	AudioFIFO = av_audio_fifo_alloc(AudioCodecCtx->sample_fmt, AudioCodecCtx->channels, m_nbSamples);
+// 	if (AudioFIFO == nullptr)
+// 		return false;
 
 	return true;
 }
 
-void CAudioEncoder::Start(IEncoderEvent* pEvt)
-{
-	m_event = pEvt;
-	
-	m_bRun = true;
-	m_encodeThread = std::thread(&CAudioEncoder::OnEncodeThread, this);
-}
-
-void CAudioEncoder::PushFrame(AVFrame* frame)
-{
-	m_audioFrameQueue.Push(frame);
-}
+// void CAudioEncoder::Start(IEncoderEvent* pEvt)
+// {
+// 	m_event = pEvt;
+// 	
+// 	m_bRun = true;
+// 	m_encodeThread = std::thread(&CAudioEncoder::OnEncodeThread, this);
+// }
+// 
+// void CAudioEncoder::PushFrame(AVFrame* frame)
+// {
+// 	m_audioFrameQueue.Push(frame);
+// }
 
 void CAudioEncoder::Release()
 {
-	if (AudioCodecCtx)
+	if (m_pCodecCtx)
 	{
-		avcodec_close(AudioCodecCtx);
-		avcodec_free_context(&AudioCodecCtx);
-		AudioCodecCtx = nullptr;
+		avcodec_close(m_pCodecCtx);
+		avcodec_free_context(&m_pCodecCtx);
+		m_pCodecCtx = nullptr;
 	}
 }
 
-void CAudioEncoder::OnEncodeThread()
-{
-	int error = 0;
-	while (m_bRun)
-	{
-		if (m_audioFrameQueue.Size() == 0)
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		else
-		{
-			ConvertAudioBuffer();
 
-			GetConvertBuffer();
-		}
-	}
-}
 
-void CAudioEncoder::ConvertAudioBuffer()
+/*void CAudioEncoder::ConvertAudioBuffer()
 {
 	int frameSize = AudioCodecCtx->frame_size;
 	while (av_audio_fifo_size(AudioFIFO) < frameSize)
@@ -155,4 +141,4 @@ void CAudioEncoder::EncodeFrame(AVFrame* frame)
 		m_event->AudioEvent(&pkt);
 	}
 	av_packet_unref(&pkt);
-}
+}*/

@@ -47,12 +47,12 @@ bool CRecorder::Run(const char* szFile)
 		return false;
 
  	// 设置音频参数
-	if (!m_audioDecoder.Init(AudioEncCodecCtx->sample_fmt, AudioEncCodecCtx->channels, 
-		AudioEncCodecCtx->channel_layout, AudioEncCodecCtx->sample_rate, AudioEncCodecCtx->frame_size))
-		return false;
-	
-	if (!m_audioDecoder.Start(this))
-		return false;
+// 	if (!m_audioDecoder.Init(AudioEncCodecCtx->sample_fmt, AudioEncCodecCtx->channels, 
+// 		AudioEncCodecCtx->channel_layout, AudioEncCodecCtx->sample_rate, AudioEncCodecCtx->frame_size))
+// 		return false;
+// 	
+// 	if (!m_audioDecoder.Start(this))
+// 		return false;
 
  	// 开始录制
 	Start();

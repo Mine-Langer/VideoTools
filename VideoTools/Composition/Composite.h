@@ -1,6 +1,7 @@
 #pragma once
 #include "../VideoDecoder.h"
 #include "../AudioDecoder.h"
+#include "../VideoEncoder.h"
 #include "../FilterVideo.h"
 
 class Composite :public IVideoEvent, public IAudioEvent
@@ -32,7 +33,6 @@ private:
 	bool OpenAudio(const char* szFile);
 	bool OpenImage(const char* szFile);
 
-	bool InitVideoEnc(enum AVCodecID codec_id);
 	bool InitAudioEnc(enum AVCodecID codec_id);
 
 private:
@@ -43,6 +43,8 @@ private:
 private:
 	CVideoDecoder m_videoDecoder;
 	CAudioDecoder m_audioDecoder;
+	CVideoEncoder m_videoEncoder;
+
 	SafeQueue<AVFrame*> m_videoQueue;
 	SafeQueue<AVFrame*> m_audioQueue;
 

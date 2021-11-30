@@ -49,9 +49,6 @@
     <ClCompile Include="capture\CaptureViewWidget.cpp">
       <Filter>capture</Filter>
     </ClCompile>
-    <ClCompile Include="capture\CapVideo.cpp">
-      <Filter>capture</Filter>
-    </ClCompile>
     <ClCompile Include="capture\CapAudio.cpp">
       <Filter>capture</Filter>
     </ClCompile>
@@ -79,15 +76,18 @@
     <ClCompile Include="AudioDecoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VideoEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="capture\CRecorder.h">
-      <Filter>capture</Filter>
-    </ClInclude>
-    <ClInclude Include="capture\CapVideo.h">
       <Filter>capture</Filter>
     </ClInclude>
     <ClInclude Include="capture\CapAudio.h">
@@ -112,6 +112,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AudioDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoEncoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioEncoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

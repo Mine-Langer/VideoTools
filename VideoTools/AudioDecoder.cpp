@@ -36,6 +36,36 @@ bool CAudioDecoder::Open(const char* szInput)
 	return true;
 }
 
+bool CAudioDecoder::OpenMicrophone(const char* szUrl)
+{
+	AVInputFormat* ifmt = av_find_input_format("dshow");
+	if (!ifmt)
+		return false;
+
+	if (!m_demux.Open(szUrl, ifmt, nullptr))
+		return false;
+
+	AVStream* pStream = m_demux.FormatContext()->streams[m_demux.AudioStreamIndex()];
+	if (!pStream)
+		return false;
+
+	m_pCodecCtx = avcodec_alloc_context3(nullptr);
+	if (!m_pCodecCtx)
+		return false;
+
+	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
+		return false;
+
+	AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	if (!pCodec)
+		return false;
+
+	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
+		return false;
+
+	return true;
+}
+
 bool CAudioDecoder::Start(IAudioEvent* pEvt)
 {
 	m_pEvent = pEvt;

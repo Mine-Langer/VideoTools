@@ -142,11 +142,17 @@ bool Composite::SaveFile(const char* szOutput, int type)
 
 	if (0 > avformat_alloc_output_context2(&m_pOutFormatCtx, nullptr, nullptr, szOutput))
 		return false;
-	
+
+	int srcWidth, srcHeight;
+	AVPixelFormat srcFormat;
+	m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
+
+
 	m_bitRate = 400000;
 	m_frameRate = 25;
 	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE && ((type & 0x1) == 0x1))
-		InitVideoEnc(m_pOutFormatCtx->oformat->video_codec);
+		if (!m_videoEncoder.Init(m_pOutFormatCtx, m_pOutFormatCtx->oformat->video_codec, srcWidth, srcHeight))
+			return false;
 	
 	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE && ((type & 0x2) == 0x2))
 		InitAudioEnc(m_pOutFormatCtx->oformat->audio_codec);
@@ -178,46 +184,6 @@ bool Composite::VideoEvent(AVFrame* frame)
 bool Composite::AudioEvent(AVFrame* frame)
 {
 	m_audioQueue.MaxSizePush(frame);
-	return true;
-}
-
-bool Composite::InitVideoEnc(enum AVCodecID codec_id)
-{
-	AVCodec* pCodec = avcodec_find_encoder(codec_id);
-	if (!pCodec)
-		return false;
-
-	m_pOutVCodecCtx = avcodec_alloc_context3(pCodec);
-	if (!m_pOutVCodecCtx)
-		return false;
-
-	int srcWidth, srcHeight;
-	AVPixelFormat srcFormat;
-	m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
-
-	m_pOutVCodecCtx->width = srcWidth;
-	m_pOutVCodecCtx->height = srcHeight;
-	m_pOutVCodecCtx->codec_id = codec_id;
-	m_pOutVCodecCtx->bit_rate = m_bitRate;
-	m_pOutVCodecCtx->time_base = { 1, m_frameRate };
-	m_pOutVCodecCtx->gop_size = 12;
-	m_pOutVCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
-	if (m_pOutFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
-		m_pOutVCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-
-	if (0 > avcodec_open2(m_pOutVCodecCtx, pCodec, nullptr))
-		return false;
-
-	m_pOutVStream = avformat_new_stream(m_pOutFormatCtx, nullptr);
-	if (!m_pOutVStream)
-		return false;
-
-	m_pOutVStream->time_base = m_pOutVCodecCtx->time_base;
-	m_pOutVStream->id = m_pOutFormatCtx->nb_streams - 1;
-
-	if (0 > avcodec_parameters_from_context(m_pOutVStream->codecpar, m_pOutVCodecCtx))
-		return false;
-
 	return true;
 }
 
@@ -330,11 +296,10 @@ void Composite::OnPlayFunction()
 
 void Composite::OnSaveFunction()
 {
-	AVPacket* vPacket = av_packet_alloc();
+	AVPacket* vPacket = nullptr;
 	AVPacket* aPacket = av_packet_alloc();
 	av_init_packet(aPacket);
-	av_init_packet(vPacket);
-	vPacket->pts = aPacket->pts = 0;
+	aPacket->pts = 0;
 
 	int videoIndex = 0;
 	int audioIndex = 0;
@@ -358,23 +323,13 @@ void Composite::OnSaveFunction()
 				if (!swsVideoFrame)
 					continue;
 				swsVideoFrame->pts = videoIndex++;
-				ret = avcodec_send_frame(m_pOutVCodecCtx, swsVideoFrame);
-				if (ret < 0)
-				{
-					av_frame_free(&swsVideoFrame);
-					continue;
-				}
 
-				ret = avcodec_receive_packet(m_pOutVCodecCtx, vPacket);
-				if (ret < 0)
+				vPacket = m_videoEncoder.Encode(swsVideoFrame);
+				if (vPacket)
 				{
-					av_frame_free(&swsVideoFrame);
-					continue;
+					av_interleaved_write_frame(m_pOutFormatCtx, vPacket);
+					av_packet_free(&vPacket);
 				}
-				av_packet_rescale_ts(vPacket, m_pOutVCodecCtx->time_base, m_pOutVStream->time_base);
-				vPacket->stream_index = m_pOutVStream->index;
-
-				ret = av_interleaved_write_frame(m_pOutFormatCtx, vPacket);
 
 				av_frame_free(&swsVideoFrame);
 			}

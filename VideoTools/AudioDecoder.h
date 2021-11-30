@@ -7,7 +7,11 @@ public:
 	CAudioDecoder();
 	~CAudioDecoder();
 
+	// 打开指定音频文件
 	bool Open(const char* szInput);
+
+	// 打开音频设备
+	bool OpenMicrophone(const char* szUrl);
 
 	bool Start(IAudioEvent* pEvt);
 
@@ -15,13 +19,16 @@ public:
 	bool SetSwrContext(int64_t ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
 
 	void SetSaveEnable(bool isSave);
+	
+	// 转码
+	AVFrame* ConvertFrame(AVFrame* frame);
 
 	void Release();
+
 protected:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 	void OnDecodeFunction();
-	// 转码
-	AVFrame* ConvertFrame(AVFrame* frame);
+
 
 private:
 	CDemultiplexer m_demux;

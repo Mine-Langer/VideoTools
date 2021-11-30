@@ -1,5 +1,5 @@
 #pragma once
-#include "CapAudio.h"
+#include "../AudioDecoder.h"
 #include "../VideoDecoder.h"
 
 
@@ -58,7 +58,7 @@ private:
 	SwsContext* SwsCtx = nullptr;
 	SwrContext* SwrCtx = nullptr;
 
-	CCapAudio m_audioDecoder;
+	CAudioDecoder m_audioDecoder;
 	CVideoDecoder m_videoDecoder;
 
 	int VideoIndex = -1;
