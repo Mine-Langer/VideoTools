@@ -15,6 +15,8 @@ public:
 
 	void Close();
 
+	AVRational GetTimeBase();
+
 private:
 	void OnEncodeFunction();
 

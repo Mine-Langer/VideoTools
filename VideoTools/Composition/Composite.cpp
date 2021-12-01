@@ -26,9 +26,9 @@ bool Composite::OpenImage(const char* szFile)
 	if (!m_videoDecoder.Open(szFile))
 		return false;
 
-	if (m_type == 0)
+	if (m_type == E_Play)
 		m_videoDecoder.SetSwsConfig(m_videoWidth, m_videoHeight);
-	else if (m_type == 1)
+	else if (m_type == E_Save)
 		m_videoDecoder.SetSwsConfig();
 	m_videoDecoder.Start(this);
 
@@ -79,7 +79,7 @@ void Composite::Close()
 
 void Composite::Play()
 {
-	m_type = 0;
+	m_type = E_Play;
 	if (m_state == NotStarted)
 	{
 		// ¥Úø™“Ù∆µ
@@ -90,19 +90,21 @@ void Composite::Play()
 			return;
 		// ÷√Œ™ø™ º≤•∑≈
 		m_state = Started;
-		SDL_PauseAudio(0);
 		if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
 			return;
 
+		SDL_PauseAudio(0);
 		m_playThread = std::thread(&Composite::OnPlayFunction, this);
 	}
 	else if (m_state == Started)
 	{
 		// ÷√Œ™‘›Õ£◊¥Ã¨
+		SDL_PauseAudio(1);
 		m_state = Paused;
 	}
 	else if (m_state == Paused)
 	{
+		SDL_PauseAudio(0);
 		m_state = Started;
 	}
 }
@@ -132,7 +134,7 @@ bool Composite::InitWnd(void* pWnd, int width, int height)
 
 bool Composite::SaveFile(const char* szOutput, int type)
 {
-	m_type = 1;
+	m_type = E_Save;
 	m_audioDecoder.SetSaveEnable(true);
 	if (!OpenAudio(m_szAudioFile))
 		return false;
@@ -147,15 +149,25 @@ bool Composite::SaveFile(const char* szOutput, int type)
 	AVPixelFormat srcFormat;
 	m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
 
-
 	m_bitRate = 400000;
 	m_frameRate = 25;
 	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE && ((type & 0x1) == 0x1))
 		if (!m_videoEncoder.Init(m_pOutFormatCtx, m_pOutFormatCtx->oformat->video_codec, srcWidth, srcHeight))
 			return false;
 	
+	int sample_rate;
+	int nb_sample;
+	int64_t ch_layout;
+	enum AVSampleFormat sample_fmt;
+	m_audioDecoder.GetSrcParameter(sample_rate, nb_sample, ch_layout, sample_fmt);
+
 	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE && ((type & 0x2) == 0x2))
-		InitAudioEnc(m_pOutFormatCtx->oformat->audio_codec);
+	{
+		if (!m_audioEncoder.InitAudio(m_pOutFormatCtx, m_pOutFormatCtx->oformat->audio_codec, ch_layout, sample_fmt, sample_rate))
+			return false;
+
+		m_audioEncoder.BindAudioData(&m_audioQueue);
+	}
 
 	av_dump_format(m_pOutFormatCtx, 0, szOutput, 1);
 
@@ -184,57 +196,6 @@ bool Composite::VideoEvent(AVFrame* frame)
 bool Composite::AudioEvent(AVFrame* frame)
 {
 	m_audioQueue.MaxSizePush(frame);
-	return true;
-}
-
-bool Composite::InitAudioEnc(enum AVCodecID codec_id)
-{
-	AVCodec* pCodec = avcodec_find_encoder(codec_id);
-	if (!pCodec)
-		return false;
-
-	m_pOutACodecCtx = avcodec_alloc_context3(pCodec);
-	if (!m_pOutACodecCtx)
-		return false;
-
-	m_pOutACodecCtx->codec_id = codec_id;
-	m_pOutACodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
-	m_pOutACodecCtx->channels = av_get_channel_layout_nb_channels(m_pOutACodecCtx->channel_layout);
-	m_pOutACodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-	m_pOutACodecCtx->sample_rate = 44100;
-	m_pOutACodecCtx->bit_rate = 96000;
-	m_pOutACodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
-	m_pOutACodecCtx->time_base = { 1, 44100 };
-
-	m_pOutAStream = avformat_new_stream(m_pOutFormatCtx, nullptr);
-	m_pOutAStream->time_base = m_pOutACodecCtx->time_base;
-	m_pOutAStream->id = m_pOutFormatCtx->nb_streams - 1;
-
-	if (m_pOutFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
-		m_pOutACodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-	
-	if (0 > avcodec_open2(m_pOutACodecCtx, pCodec, nullptr))
-		return false;
-
-	if (0 > avcodec_parameters_from_context(m_pOutAStream->codecpar, m_pOutACodecCtx))
-		return false;
-
-	int sample_rate;
-	int nb_sample; 
-	int64_t ch_layout;
-	enum AVSampleFormat sample_fmt;
-	m_audioDecoder.GetSrcParameter(sample_rate, nb_sample, ch_layout, sample_fmt);
-	m_pSwrCtx = swr_alloc_set_opts(nullptr, m_pOutACodecCtx->channel_layout, m_pOutACodecCtx->sample_fmt, m_pOutACodecCtx->sample_rate,
-		ch_layout, sample_fmt, sample_rate, 0, nullptr);
-
-	if (0 > swr_init(m_pSwrCtx))
-		return false;
-
-	m_pAudioFifo = av_audio_fifo_alloc(m_pOutACodecCtx->sample_fmt, m_pOutACodecCtx->channels, 1);
-	if (!m_pAudioFifo)
-		return false;
-	m_audioFrameSize = m_pOutACodecCtx->frame_size;
-
 	return true;
 }
 
@@ -316,7 +277,7 @@ void Composite::OnSaveFunction()
 			if (videoFrame == nullptr)
 				break;
 			// ≈–∂œ“Ù∆µ÷°/ ”∆µ÷° ±–Ú
-			if (0 >= av_compare_ts(videoIndex, m_pOutVCodecCtx->time_base, audioIndex, m_pOutACodecCtx->time_base))
+			if (0 >= av_compare_ts(videoIndex, m_videoEncoder.GetTimeBase(), audioIndex, m_audioEncoder.GetTimeBase()))
 			{
 				// –¥ ”∆µ÷°
 				AVFrame* swsVideoFrame = m_videoDecoder.GetConvertFrame(videoFrame);
@@ -336,60 +297,15 @@ void Composite::OnSaveFunction()
 			else
 			{
 				// –¥“Ù∆µ÷°
-				while (bRun && av_audio_fifo_size(m_pAudioFifo) < m_audioFrameSize)
+				if (m_audioEncoder.GetEncodePacket(aPacket, audioIndex))
 				{
-					AVFrame* audioFrame = nullptr;
-					if (!m_audioQueue.Pop(audioFrame))
-					{
-						std::this_thread::sleep_for(std::chrono::milliseconds(10));
-						continue;
-					}
-					if (audioFrame == nullptr)
-						bRun = false;
-					else
-					{
-						uint8_t** convertedBuffer = new uint8_t* [m_pOutACodecCtx->channels]();
-						av_samples_alloc(convertedBuffer, nullptr, m_pOutACodecCtx->channels, audioFrame->nb_samples, m_pOutACodecCtx->sample_fmt, 0);
-						swr_convert(m_pSwrCtx, convertedBuffer, audioFrame->nb_samples, (const uint8_t**)audioFrame->extended_data, audioFrame->nb_samples);
-						av_audio_fifo_realloc(m_pAudioFifo, av_audio_fifo_size(m_pAudioFifo) + audioFrame->nb_samples);
-						av_audio_fifo_write(m_pAudioFifo, (void**)convertedBuffer, audioFrame->nb_samples);
-						av_freep(&convertedBuffer[0]);
-						delete[] convertedBuffer;
-						av_frame_free(&audioFrame);
-					}
-				}
-				
-				if (!bRun)
-					break;
-
-				while (av_audio_fifo_size(m_pAudioFifo) >= m_audioFrameSize || (!bRun && av_audio_fifo_size(m_pAudioFifo)>0))
-				{
-					const int frameSize = FFMIN(av_audio_fifo_size(m_pAudioFifo), m_audioFrameSize);
-					AVFrame* outputFrame = av_frame_alloc();
-					outputFrame->nb_samples = frameSize;
-					outputFrame->channel_layout = m_pOutACodecCtx->channel_layout;
-					outputFrame->format = m_pOutACodecCtx->sample_fmt;
-					outputFrame->sample_rate = m_pOutACodecCtx->sample_rate;
-					av_frame_get_buffer(outputFrame, 0);
-
-					av_audio_fifo_read(m_pAudioFifo, (void**)outputFrame->data, frameSize);
-					outputFrame->pts = audioIndex;
-					audioIndex += outputFrame->nb_samples;
-
-					if (0 > avcodec_send_frame(m_pOutACodecCtx, outputFrame))
-						break;
-
-					ret = avcodec_receive_packet(m_pOutACodecCtx, aPacket);
-					if (ret == 0)
-					{
-						av_packet_rescale_ts(aPacket, m_pOutACodecCtx->time_base, m_pOutAStream->time_base);
-						aPacket->stream_index = m_pOutAStream->index;
-						printf(" audio packet pts: %I64d.\r\n", aPacket->pts);
-
-						av_interleaved_write_frame(m_pOutFormatCtx, aPacket);
-					}
-					av_frame_free(&outputFrame);
+					av_interleaved_write_frame(m_pOutFormatCtx, aPacket);
 					av_packet_unref(aPacket);
+				}
+				else
+				{
+					av_packet_free(&aPacket);
+					break;
 				}
 			}
 		}

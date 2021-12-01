@@ -2,8 +2,11 @@
 #include "../VideoDecoder.h"
 #include "../AudioDecoder.h"
 #include "../VideoEncoder.h"
+#include "../AudioEncoder.h"
 #include "../FilterVideo.h"
 
+#define E_Play 0x1
+#define E_Save 0x2
 class Composite :public IVideoEvent, public IAudioEvent
 {
 public:
@@ -44,17 +47,12 @@ private:
 	CVideoDecoder m_videoDecoder;
 	CAudioDecoder m_audioDecoder;
 	CVideoEncoder m_videoEncoder;
+	CAudioEncoder m_audioEncoder;
 
 	SafeQueue<AVFrame*> m_videoQueue;
 	SafeQueue<AVFrame*> m_audioQueue;
 
 	AVFormatContext* m_pOutFormatCtx = nullptr;
-	AVCodecContext* m_pOutVCodecCtx = nullptr;
-	AVCodecContext* m_pOutACodecCtx = nullptr;
-	AVStream* m_pOutVStream = nullptr;
-	AVStream* m_pOutAStream = nullptr;
-	SwrContext* m_pSwrCtx = nullptr;
-	AVAudioFifo* m_pAudioFifo = nullptr;
 	CFilterVideo m_filter;
 
 	// ²¥·Å

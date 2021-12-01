@@ -78,3 +78,8 @@ void CVideoEncoder::Release()
 		m_pCodecCtx = nullptr;
 	}
 }
+
+AVRational CVideoEncoder::GetTimeBase()
+{
+	return m_pCodecCtx->time_base;
+}
