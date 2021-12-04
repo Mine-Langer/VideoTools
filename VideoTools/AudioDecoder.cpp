@@ -77,11 +77,13 @@ bool CAudioDecoder::Start(IAudioEvent* pEvt)
 	m_state = Started;
 	m_thread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
 	m_thread.detach();
-	return false;
+	return true;
 }
 
 void CAudioDecoder::GetSrcParameter(int& sample_rate, int& nb_sample, int64_t& ch_layout, enum AVSampleFormat& sample_fmt)
 {
+	if (m_pCodecCtx->channel_layout == 0)
+		m_pCodecCtx->channel_layout = av_get_default_channel_layout(m_pCodecCtx->channels);
 	sample_rate = m_pCodecCtx->sample_rate;
 	nb_sample = m_pCodecCtx->frame_size;
 	ch_layout = m_pCodecCtx->channel_layout;

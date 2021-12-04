@@ -1,7 +1,8 @@
 #pragma once
 #include "../AudioDecoder.h"
 #include "../VideoDecoder.h"
-
+#include "../AudioEncoder.h"
+#include "../VideoEncoder.h"
 
 class CRecorder :public IVideoEvent, public IAudioEvent
 {
@@ -27,11 +28,10 @@ private:
 	bool InitOutput(const char* szOutput);
 
 	bool Start(); // 开启解复用
-	void OnDemuxAudioThread(); // 录音解复用线程
-	void OnSaveThread(); // 保存视频帧线程
 
-	bool InitVideoOutput();
-	bool InitAudioOutput();
+	void Close();
+
+	void OnSaveThread(); // 保存视频帧线程
 
 	wchar_t* GetMicrophoneName();
 
@@ -41,25 +41,14 @@ private:
 private:
 	bool m_bRun = false;
 	AVFormatContext* OutputFormatCtx = nullptr;
-	AVFormatContext* AudioFormatCtx = nullptr;
-
-	AVCodecContext* VideoCodecCtx = nullptr;
-	AVCodecContext* AudioCodecCtx = nullptr;
-
-	AVCodecContext* VideoEncCodecCtx = nullptr;
-	AVCodecContext* AudioEncCodecCtx = nullptr;
-
-	AVFrame* VideoFrame = nullptr;
-	uint8_t* VideoBuffer = nullptr;
-	AVFifoBuffer* VideoFifo = nullptr;
-
-	AVAudioFifo* AudioFifo = nullptr;
-
-	SwsContext* SwsCtx = nullptr;
-	SwrContext* SwrCtx = nullptr;
 
 	CAudioDecoder m_audioDecoder;
 	CVideoDecoder m_videoDecoder;
+	CAudioEncoder m_audioEncoder;
+	CVideoEncoder m_videoEncoder;
+
+	SafeQueue<AVFrame*> m_videoQueue;
+	SafeQueue<AVFrame*> m_audioQueue;
 
 	int VideoIndex = -1;
 	int AudioIndex = -1;
@@ -68,28 +57,11 @@ private:
 	int m_nbSamples = 0;
 	int m_nImageSize = 0;
 
-	int64_t m_vCurPts = 0;
-	int64_t m_aCurPts = 0;
-
 	AVState m_state; // 
 
 	int CapX, CapY, capWidth, capHeight;
 	std::string m_szFilename;
 
-	std::queue<AVFrame*> m_videoQueue;
-	std::queue<AVFrame*> m_audioQueue;
-
-	std::thread m_demuxVThread;
-	std::thread m_demuxAThread;
-	std::thread m_saveThread;
-	std::mutex m_mutexPause;
-	std::mutex m_mutexVideoBuf;
-	std::mutex m_mutexAudioBuf;
-
-	std::condition_variable m_cvPause;
-	std::condition_variable m_cvVideoBufNotFull;
-	std::condition_variable m_cvVideoBufNotEmpty;
-	std::condition_variable m_cvAudioBufNotFull;
-	std::condition_variable m_cvAudioBufNotEmpty;
+	std::thread m_thread;
 };
 

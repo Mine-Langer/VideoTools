@@ -49,9 +49,6 @@ bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 	sprintf(szTemp, "%dx%d", sWidth, sHeight);
 	av_dict_set(&options, "video_size", szTemp, 0);
 
-	//m_imageWidth = sWidth;
-	//m_imageHeight = sHeight;
-
 	AVInputFormat* ifmt = av_find_input_format("gdigrab");
 	if (ifmt == nullptr)
 		return false;
