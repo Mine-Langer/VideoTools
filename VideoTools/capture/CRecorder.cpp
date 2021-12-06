@@ -35,13 +35,16 @@ bool CRecorder::Run(const char* szFile)
 	// 设置视频参数
 	if (!m_videoDecoder.OpenScreen(CapX, CapY, capWidth, capHeight))
 		return false;
-	
+	if (!m_videoDecoder.SetSwsConfig())
+		return false;
+
  	// 设置音频参数
 	wchar_t pszDevName[MAX_PATH] = { L"audio=" };// L"audio = virtual-audio-capturer"};
 	wcscat_s(pszDevName, MAX_PATH, GetMicrophoneName());
 	char* szDevName = dup_wchar_to_utf8(pszDevName);
 	if (!m_audioDecoder.OpenMicrophone(szDevName))
 		return false;
+
 	m_audioDecoder.SetSaveEnable(true);
 
 	// 设置输出参数

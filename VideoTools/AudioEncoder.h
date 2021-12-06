@@ -30,6 +30,7 @@ private:
 
 	SwrContext* m_pSwrCtx = nullptr;
 	AVAudioFifo* m_pAudioFifo = nullptr;
+	uint8_t** m_convertBuffer = nullptr;
 
 	int m_nbSamples = 0;
 
