@@ -22,7 +22,7 @@ CRecorder::~CRecorder()
 
 }
 
-void CRecorder::Init(int posX, int posY, int sWidth, int sHeight)
+void CRecorder::InitVideoCfg(int posX, int posY, int sWidth, int sHeight)
 {
 	CapX = posX;
 	CapY = posY;

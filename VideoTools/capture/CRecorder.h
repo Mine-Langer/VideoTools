@@ -10,7 +10,7 @@ public:
 	CRecorder();
 	~CRecorder();
 
-	void Init(int posX, int posY, int sWidth, int sHeight);
+	void InitVideoCfg(int posX, int posY, int sWidth, int sHeight);
 
 	bool Run(const char* szFile);
 
