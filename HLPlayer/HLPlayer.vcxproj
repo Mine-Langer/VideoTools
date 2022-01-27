@@ -60,7 +60,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../public;../library/FFmpeg/include;../library/SDL2-2.0.12/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../library/FFmpeg/lib/win64;../library/SDL2-2.0.12/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -97,11 +97,16 @@
     <QtUic Include="HLPlayer.ui" />
     <QtMoc Include="HLPlayer.h" />
     <ClCompile Include="CPlayer.cpp" />
+    <ClCompile Include="Demultiplex.cpp" />
     <ClCompile Include="HLPlayer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="avAsync.h" />
+    <ClInclude Include="Common.h" />
     <ClInclude Include="CPlayer.h" />
+    <ClInclude Include="Demultiplex.h" />
+    <ClInclude Include="SafeQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
