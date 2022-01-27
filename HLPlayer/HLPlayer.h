@@ -1,10 +1,11 @@
 #pragma once
+#pragma execution_character_set("utf-8")
 
 #include <QtWidgets/QWidget>
 #include "ui_HLPlayer.h"
 #include "CPlayer.h"
 
-class HLPlayer : public QWidget, public IPlayEvent
+class HLPlayer : public QWidget//, public IPlayEvent
 {
     Q_OBJECT
 
@@ -23,6 +24,7 @@ private:
 private slots:
     void OnBtnPlayClicked();
     void OnSliderPlayMoved(int);
+    void OnBtnOpenFile();
 
 private:
     Ui::HLPlayerClass ui;

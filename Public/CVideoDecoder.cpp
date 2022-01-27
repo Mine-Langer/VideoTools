@@ -39,7 +39,6 @@ void CVideoDecoder::Start(IDecoderEvent* evt)
 {
 	m_event = evt;
 	m_bRun = true;
-	m_type = 1;
 	m_nFrameCount = 0;
 	m_decodeThread = std::thread(&CVideoDecoder::OnDecodeFunction, this);
 }
@@ -99,11 +98,11 @@ void CVideoDecoder::OnDecodeFunction()
 				DstFrame->format = VideoFormat;
 				av_frame_get_buffer(DstFrame, 0);
 				sws_scale(SwsCtx, SrcFrame->data, SrcFrame->linesize, 0, VideoCodecCtx->height, DstFrame->data, DstFrame->linesize);
-				if (m_type == 1) // Â¼Ïñ
-				{
-					DstFrame->pts = m_nFrameCount++;
-				}
-				else if (m_type == 0) // ²¥·Å
+// 				if (m_type == 1) // Â¼Ïñ
+// 				{
+// 					DstFrame->pts = m_nFrameCount++;
+// 				}
+//				else if (m_type == 0) // ²¥·Å
 				{
 					DstFrame->pts = SrcFrame->pts;
 					DstFrame->best_effort_timestamp = SrcFrame->best_effort_timestamp;

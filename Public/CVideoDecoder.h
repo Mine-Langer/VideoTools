@@ -30,7 +30,6 @@ private:
 	AVFrame* DstFrame = nullptr;
 
 	SwsContext* SwsCtx = nullptr;
-	int m_type = -1; // 0:²¥·Å  1:Â¼Ïñ
 	int64_t m_nFrameCount = 0;
 };
 

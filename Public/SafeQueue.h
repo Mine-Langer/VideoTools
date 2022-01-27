@@ -13,7 +13,7 @@ public:
 		_qdata.push(val);
 	}
 
-	void MaxSizePush(const T& val, const int nMaxSize = 256) {
+	void MaxSizePush(const T& val, const int nMaxSize = 32) {
 		while (true) {
 			_mut.lock();
 			int nSize = _qdata.size();

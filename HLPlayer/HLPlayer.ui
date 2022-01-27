@@ -36,7 +36,45 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QWidget" name="PlayView" native="true"/>
+    <widget class="QWidget" name="PlayView" native="true">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(57, 57, 57);</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QPushButton" name="btnOpenFile">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <family>微软雅黑</family>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QPushButton{background-color: rgb(87, 87, 87); border:2px; border-radius:5px; color: rgb(218, 218, 218); border-color: rgb(87, 87, 87); }
+                                           
+QPushButton:hover{background-color:rgb(99, 99, 99); color: rgb(208, 208, 208);}
+                                           
+QPushButton:pressed{background-color:rgb(74, 74, 74);border-style: inset;}</string>
+        </property>
+        <property name="text">
+         <string>打开文件</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QWidget" name="progressView" native="true">

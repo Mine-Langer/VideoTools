@@ -1,5 +1,6 @@
 #include "HLPlayer.h"
 #include <QMouseEvent>
+#include <QFileDialog>
 #include <QSlider>
 
 HLPlayer::HLPlayer(QWidget *parent)
@@ -11,6 +12,7 @@ HLPlayer::HLPlayer(QWidget *parent)
 	ui.sliderPlay->installEventFilter(this);
 	ui.sliderVolumn->installEventFilter(this);
 	connect(ui.btnPlay, SIGNAL(clicked()), this, SLOT(OnBtnPlayClicked()));
+	connect(ui.btnOpenFile, SIGNAL(clicked()), this, SLOT(OnBtnOpenFile()));
 	connect(ui.sliderPlay, SIGNAL(sliderMoved(int)), this, SLOT(OnSliderPlayMoved(int)));
 }
 
@@ -20,11 +22,11 @@ void HLPlayer::showEvent(QShowEvent* event)
 	if (!bShow)
 	{
 		bShow = true;
-		if (m_player.Open("D:/OneDrive/video/同胞布甲手足未必.mp4"))
+		//if (m_player.Open("D:/OneDrive/video/同胞布甲手足未必.mp4"))
 		{
 			m_player.InitWindow((const void*)ui.PlayView->winId(), ui.PlayView->width(), ui.PlayView->height());
-			m_player.Start(this);
-			m_bPlay = true;
+		//	m_player.Start(this);
+		//	m_bPlay = true;
 		}
 	}
 }
@@ -96,4 +98,28 @@ void HLPlayer::OnSliderPlayMoved(int value)
 {
 
 	return;
+}
+
+void HLPlayer::OnBtnOpenFile()
+{
+	QStringList filters;
+	filters << tr("常见媒体格式 (*.avi *.mp4 *.flv *.mp3 *.wav *.wma)")
+		<< tr("Windows Media 视频 (*.avi *.wmv *.wmp *.asf)")
+		<< tr("Windows Media 音频 (*.wav *.wma *.mid *.midi)")
+		<< tr("所有文件 (*.*)");
+	QFileDialog fileDlg(this);
+	fileDlg.setWindowTitle(tr("打开文件"));
+	fileDlg.setNameFilters(filters);
+	if (fileDlg.exec())
+	{
+		QStringList strList = fileDlg.selectedFiles();
+		QByteArray baName = strList[0].toLocal8Bit();
+		char* pszName = baName.data();
+		if (m_player.Open(pszName))
+		{
+			m_player.Start(this);
+			m_bPlay = true;
+			ui.btnOpenFile->setVisible(false);
+		}
+	}
 }

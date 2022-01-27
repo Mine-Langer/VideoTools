@@ -2,12 +2,12 @@
 
 CPlayer::CPlayer()
 {
-
+	avformat_network_init();
 }
 
 CPlayer::~CPlayer()
 {
-
+	avformat_network_deinit();
 }
 
 bool CPlayer::Open(const char* szFile)
@@ -39,15 +39,18 @@ void CPlayer::Start(IPlayEvent* pEvt)
 	m_playEvent = pEvt;
 	if (VideoIndex != -1)
 	{
+		m_videoDecoder.SetConfig(m_rect.w, m_rect.h, AV_PIX_FMT_YUV420P, SWS_BICUBIC);
 		m_videoDecoder.Start(this);
 	}
 
 	if (AudioIndex != -1)
 	{
+		m_audioDecoder.SetConfig();
 		m_audioDecoder.Start(this);
 	}
 
 	m_playEvent->UpdateDuration(m_videoDecoder.GetDuration());
+
 	m_bRun = true;
 	m_ReadThread = std::thread(&CPlayer::OnReadFunction, this); // ½âÂë
 
@@ -69,15 +72,6 @@ bool CPlayer::InitWindow(const void* pwnd, int width, int height)
 	m_rect.w = width;
 	m_rect.h = height;
 
-
-	if (VideoIndex != -1) {
-		m_videoDecoder.SetConfig(m_rect.w, m_rect.h, AV_PIX_FMT_YUV420P, SWS_BICUBIC);
-	}
-
-	if (AudioIndex != -1) {
-		m_audioDecoder.SetConfig();
-	}
-
 	m_render = SDL_CreateRenderer(m_window, -1, 0);
 	if (m_render == nullptr)
 		return false;
@@ -86,6 +80,11 @@ bool CPlayer::InitWindow(const void* pwnd, int width, int height)
 	if (m_texture == nullptr)
 		return false;
 
+	return true;
+}
+
+bool CPlayer::InitAudio()
+{
 	m_audioSpec.freq = m_audioDecoder.GetSampleRate();
 	m_audioSpec.format = AUDIO_S16SYS;
 	m_audioSpec.channels = m_audioDecoder.GetChannels();
@@ -93,12 +92,12 @@ bool CPlayer::InitWindow(const void* pwnd, int width, int height)
 	m_audioSpec.samples = m_audioDecoder.GetSamples();
 	m_audioSpec.userdata = this;
 	m_audioSpec.callback = OnAudioCallback;
-	
+
 	if (SDL_OpenAudio(&m_audioSpec, nullptr) < 0)
 		return false;
 
 	SDL_PauseAudio(0);
-
+	
 	return true;
 }
 

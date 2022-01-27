@@ -21,9 +21,6 @@
       <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
       <Extensions>ts</Extensions>
     </Filter>
-    <Filter Include="Public">
-      <UniqueIdentifier>{d59c51b8-794d-4f0d-b41c-dde413033591}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="HLPlayer.qrc">
@@ -46,37 +43,10 @@
     <ClCompile Include="CPlayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Public\CAudioDecoder.cpp">
-      <Filter>Public</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Public\CVideoDecoder.cpp">
-      <Filter>Public</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Public\decoder.cpp">
-      <Filter>Public</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPlayer.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\CAudioDecoder.h">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\Common.h">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\CVideoDecoder.h">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\SafeQueue.h">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\decoder.h">
-      <Filter>Public</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Public\avsync.h">
-      <Filter>Public</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
