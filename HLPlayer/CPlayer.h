@@ -1,7 +1,8 @@
 #pragma once
 #include "Demultiplex.h"
+#include "VideoDecoder.h"
 
-class CPlayer :public IDemuxEvent
+class CPlayer :public IDemuxEvent, public IDecoderEvent
 {
 public:
 	CPlayer();
@@ -11,18 +12,30 @@ public:
 
 	bool InitWindow(const void* pwnd, int width, int height);
 
+	void Start();
+
 	bool InitAudio();
+
+	void UpdateWindow(int width, int height);
+
+	void Close();
 
 private:
 	void OnReadFunction();
 	void OnPlayFunction();
 
 	virtual bool OnDemuxPacket(AVPacket* pkt, int type) override;
+	virtual bool VideoEvent(AVFrame* vdata) override;
+	virtual bool AudioEvent(AVFrame* adata) override;
 
 	static void OnAudioCallback(void* userdata, Uint8* stream, int len);
 
 private:
 	CDemultiplex m_demux;
+	CVideoDecoder m_videoDecoder;
+
+	eAVStatus m_avStatus = eStop;
+
 // 	AVFormatContext* FormatCtx = nullptr;
 // 
 // 	AVPacket* SrcPacket = nullptr;
@@ -46,5 +59,9 @@ private:
 	SDL_Renderer* m_render = nullptr;
 	SDL_AudioSpec m_audioSpec;
 	SDL_Rect m_rect;
+
+	SafeQueue<AVFrame*> m_videoQueue;
+
+	std::thread m_playThread;
 };
 

@@ -18,23 +18,22 @@ HLPlayer::HLPlayer(QWidget *parent)
 
 void HLPlayer::showEvent(QShowEvent* event)
 {
-	static bool bShow = false;
-	if (!bShow)
+	if (!m_bShow)
 	{
-		bShow = true;
-		//if (m_player.Open("D:/OneDrive/video/同胞布甲手足未必.mp4"))
-		{
-			m_player.InitWindow((const void*)ui.PlayView->winId(), ui.PlayView->width(), ui.PlayView->height());
-		//	m_player.Start(this);
-		//	m_bPlay = true;
-		}
+		m_bShow = true;
+		m_player.InitWindow((const void*)ui.PlayView->winId(), ui.PlayView->width(), ui.PlayView->height());
 	}
 }
 
 void HLPlayer::resizeEvent(QResizeEvent* event)
 {
-	int width = ui.PlayView->width(); 
+	int width = ui.PlayView->width();
 	int height = ui.PlayView->height();
+
+	if (!m_bShow)
+		return;
+
+	m_player.UpdateWindow(width, height);
 }
 
 bool HLPlayer::eventFilter(QObject* watched, QEvent* event)
@@ -57,25 +56,25 @@ bool HLPlayer::eventFilter(QObject* watched, QEvent* event)
 	return QObject::eventFilter(watched, event);
 }
 
-void HLPlayer::UpdateDuration(double dur)
-{
-	int64_t duration = dur;
-	int h = duration / 3600;
-	int m = (duration - (3600 * h)) / 60;
-	int s = (duration - (3600 * h)) % 60;
-	ui.labelEnd->setText(QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
-	ui.sliderPlay->setRange(0, duration);
-}
-
-void HLPlayer::UpdatePlayPosition(double postion)
-{
-	int64_t duration = postion;
-	int h = duration / 3600;
-	int m = (duration - (3600 * h)) / 60;
-	int s = (duration - (3600 * h)) % 60;
-	ui.labelStart->setText(QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
-	ui.sliderPlay->setValue(duration);
-}
+// void HLPlayer::UpdateDuration(double dur)
+// {
+// 	int64_t duration = dur;
+// 	int h = duration / 3600;
+// 	int m = (duration - (3600 * h)) / 60;
+// 	int s = (duration - (3600 * h)) % 60;
+// 	ui.labelEnd->setText(QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
+// 	ui.sliderPlay->setRange(0, duration);
+// }
+// 
+// void HLPlayer::UpdatePlayPosition(double postion)
+// {
+// 	int64_t duration = postion;
+// 	int h = duration / 3600;
+// 	int m = (duration - (3600 * h)) / 60;
+// 	int s = (duration - (3600 * h)) % 60;
+// 	ui.labelStart->setText(QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
+// 	ui.sliderPlay->setValue(duration);
+// }
 
 void HLPlayer::OnBtnPlayClicked()
 {
@@ -117,7 +116,7 @@ void HLPlayer::OnBtnOpenFile()
 		char* pszName = baName.data();
 		if (m_player.Open(pszName))
 		{
-			m_player.Start(this);
+			m_player.Start();
 			m_bPlay = true;
 			ui.btnOpenFile->setVisible(false);
 		}

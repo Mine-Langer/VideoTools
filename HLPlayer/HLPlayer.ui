@@ -114,10 +114,10 @@ QPushButton:pressed{background-color:rgb(74, 74, 74);border-style: inset;}</stri
        <widget class="QPushButton" name="btnSlow">
         <property name="styleSheet">
          <string notr="true">background-image: url(:/HLPlayer/res/forward.png);
-</string>
+color: rgb(239, 239, 239);</string>
         </property>
         <property name="text">
-         <string/>
+         <string>&lt;&lt;</string>
         </property>
        </widget>
       </item>
@@ -160,8 +160,11 @@ QSlider::sub-page:horizontal{
       </item>
       <item>
        <widget class="QPushButton" name="btnFast">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(239, 239, 239);</string>
+        </property>
         <property name="text">
-         <string/>
+         <string>&gt;&gt;</string>
         </property>
        </widget>
       </item>

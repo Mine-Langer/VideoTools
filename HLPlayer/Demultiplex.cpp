@@ -48,6 +48,30 @@ void CDemultiplex::Close()
 	}
 }
 
+AVStream* CDemultiplex::VideoStream()
+{
+	if (m_videoIndex < 0)
+		return nullptr;
+
+	return m_pFormatCtx->streams[m_videoIndex];
+}
+
+AVStream* CDemultiplex::AudioStream()
+{
+	if (m_audioIndex < 0)
+		return nullptr;
+
+	return m_pFormatCtx->streams[m_audioIndex];
+}
+
+AVStream* CDemultiplex::SubtitleStream()
+{
+	if (m_subtitleIndex < 0)
+		return nullptr;
+
+	return m_pFormatCtx->streams[m_subtitleIndex];
+}
+
 void CDemultiplex::OnDemuxThread()
 {
 	while (m_avStatus != eStop)
@@ -58,7 +82,12 @@ void CDemultiplex::OnDemuxThread()
 		{
 			AVPacket pkt;
 			if (0 > av_read_frame(m_pFormatCtx, &pkt))
+			{
+				m_pDemuxEvent->OnDemuxPacket(nullptr, AVMEDIA_TYPE_VIDEO);
+				m_pDemuxEvent->OnDemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);
+				m_pDemuxEvent->OnDemuxPacket(nullptr, AVMEDIA_TYPE_SUBTITLE);
 				break;
+			}
 
 			if (pkt.stream_index == m_videoIndex)
 			{

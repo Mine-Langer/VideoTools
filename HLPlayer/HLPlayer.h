@@ -13,8 +13,8 @@ public:
     HLPlayer(QWidget *parent = Q_NULLPTR);
 
 private:
-	void UpdateDuration(double duration) override;
-	void UpdatePlayPosition(double postion) override;
+//	void UpdateDuration(double duration) override;
+//	void UpdatePlayPosition(double postion) override;
 
 private:
     void showEvent(QShowEvent* event) override;
@@ -31,4 +31,5 @@ private:
 
     CPlayer m_player;
     bool m_bPlay = false;
+    bool m_bShow = false;
 };

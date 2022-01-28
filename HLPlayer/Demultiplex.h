@@ -22,6 +22,10 @@ public:
 	// ¹Ø±Õ
 	void Close();
 
+	AVStream* VideoStream();
+	AVStream* AudioStream();
+	AVStream* SubtitleStream();
+
 private:
 	void OnDemuxThread();
 

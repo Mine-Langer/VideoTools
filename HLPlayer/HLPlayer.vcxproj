@@ -93,6 +93,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="VideoDecoder.cpp" />
     <QtRcc Include="HLPlayer.qrc" />
     <QtUic Include="HLPlayer.ui" />
     <QtMoc Include="HLPlayer.h" />
@@ -107,6 +108,7 @@
     <ClInclude Include="CPlayer.h" />
     <ClInclude Include="Demultiplex.h" />
     <ClInclude Include="SafeQueue.h" />
+    <ClInclude Include="VideoDecoder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
