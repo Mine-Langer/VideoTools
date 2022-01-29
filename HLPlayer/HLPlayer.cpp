@@ -14,6 +14,7 @@ HLPlayer::HLPlayer(QWidget *parent)
 	connect(ui.btnPlay, SIGNAL(clicked()), this, SLOT(OnBtnPlayClicked()));
 	connect(ui.btnOpenFile, SIGNAL(clicked()), this, SLOT(OnBtnOpenFile()));
 	connect(ui.sliderPlay, SIGNAL(sliderMoved(int)), this, SLOT(OnSliderPlayMoved(int)));
+	connect(this, SIGNAL(PlayStatus(int)), this, SLOT(OnPlayerStatus(int)));
 }
 
 void HLPlayer::showEvent(QShowEvent* event)
@@ -54,6 +55,16 @@ bool HLPlayer::eventFilter(QObject* watched, QEvent* event)
 		}
 	}
 	return QObject::eventFilter(watched, event);
+}
+
+void HLPlayer::OnPlayStatus(eAVStatus eStatus)
+{
+	emit PlayStatus(eStatus);
+}
+
+void HLPlayer::closeEvent(QCloseEvent* event)
+{
+	m_player.Close();
 }
 
 // void HLPlayer::UpdateDuration(double dur)
@@ -114,11 +125,22 @@ void HLPlayer::OnBtnOpenFile()
 		QStringList strList = fileDlg.selectedFiles();
 		QByteArray baName = strList[0].toLocal8Bit();
 		char* pszName = baName.data();
+
+		m_player.UpdateWindow(0, 0, ui.PlayView->width(), ui.PlayView->height());
 		if (m_player.Open(pszName))
 		{
-			m_player.Start();
+			m_player.Start(this);
 			m_bPlay = true;
 			ui.btnOpenFile->setVisible(false);
 		}
+	}
+}
+
+void HLPlayer::OnPlayerStatus(int iStatus)
+{
+	if (iStatus == eStop)
+	{
+		ui.btnOpenFile->setVisible(true);
+		ui.PlayView->update();
 	}
 }

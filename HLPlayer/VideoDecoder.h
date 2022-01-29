@@ -42,6 +42,9 @@ private:
 	int m_swsHeight = 0;
 	AVPixelFormat m_swsFormat = AV_PIX_FMT_NONE;
 
+	double m_timebase = 0.0f;
+	double m_duration = 0.0f;
+
 	SafeQueue<AVPacket*> m_vPktQueue;
 };
 

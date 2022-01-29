@@ -5,7 +5,7 @@
 #include "ui_HLPlayer.h"
 #include "CPlayer.h"
 
-class HLPlayer : public QWidget//, public IPlayEvent
+class HLPlayer : public QWidget, public IPlayerEvent
 {
     Q_OBJECT
 
@@ -20,11 +20,17 @@ private:
     void showEvent(QShowEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
+    virtual void OnPlayStatus(eAVStatus eStatus) override;
+    void closeEvent(QCloseEvent* event) override;
 
 private slots:
     void OnBtnPlayClicked();
     void OnSliderPlayMoved(int);
     void OnBtnOpenFile();
+    void OnPlayerStatus(int iStatus);
+
+signals:
+    void PlayStatus(int iStatus);
 
 private:
     Ui::HLPlayerClass ui;

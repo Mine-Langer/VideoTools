@@ -23,7 +23,11 @@ bool CPlayer::Open(const char* szFile)
 	}
 
 	AVStream* audioStream = m_demux.AudioStream();
-	if (audioStream) { }
+	if (audioStream) 
+	{
+		if (m_audioDecoder.Open(audioStream))
+			InitAudio();
+	}
 	
 	return true;
 }
@@ -54,11 +58,15 @@ bool CPlayer::InitWindow(const void* pwnd, int width, int height)
 	return true;
 }
 
-void CPlayer::Start()
+void CPlayer::Start(IPlayerEvent* pEvent)
 {
+	m_pEvent = pEvent;
 	m_demux.Start(this);
 
 	m_videoDecoder.Start(this);
+
+	m_audioDecoder.Start(this);
+	SDL_PauseAudio(0);
 
 	m_avStatus = ePlay;
 	m_playThread = std::thread(&CPlayer::OnPlayFunction, this);
@@ -67,18 +75,16 @@ void CPlayer::Start()
 
 bool CPlayer::InitAudio()
 {
-// 	m_audioSpec.freq = m_audioDecoder.GetSampleRate();
-// 	m_audioSpec.format = AUDIO_S16SYS;
-// 	m_audioSpec.channels = m_audioDecoder.GetChannels();
-// 	m_audioSpec.silence = 0;
-// 	m_audioSpec.samples = m_audioDecoder.GetSamples();
-// 	m_audioSpec.userdata = this;
-// 	m_audioSpec.callback = OnAudioCallback;
-// 
-// 	if (SDL_OpenAudio(&m_audioSpec, nullptr) < 0)
-// 		return false;
-// 
-// 	SDL_PauseAudio(0);
+	m_audioDecoder.InitAudioSpec(m_audioSpec);
+	m_audioSpec.format = AUDIO_S16SYS;
+	m_audioSpec.silence = 0;
+	m_audioSpec.userdata = this;
+	m_audioSpec.callback = OnAudioCallback;
+
+	if (SDL_OpenAudio(&m_audioSpec, nullptr) < 0)
+		return false;
+
+	SDL_PauseAudio(1);
 	
 	return true;
 }
@@ -87,6 +93,8 @@ void CPlayer::UpdateWindow(int width, int height)
 {
 	m_rect.w = width;
 	m_rect.h = height;
+	if (m_avStatus != ePlay)
+		return;
 
 	m_videoDecoder.SetConfig(m_rect, m_rect.w, m_rect.h);
 
@@ -99,6 +107,14 @@ void CPlayer::UpdateWindow(int width, int height)
 	m_texture = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
 }
 
+void CPlayer::UpdateWindow(int x, int y, int width, int height)
+{
+	m_rect.x = x;
+	m_rect.y = y;
+	m_rect.w = width;
+	m_rect.h = height;
+}
+
 void CPlayer::Close()
 {
 	m_avStatus = eStop;
@@ -106,6 +122,9 @@ void CPlayer::Close()
 	m_demux.Close();
 
 	m_videoDecoder.Close();
+
+	if (m_pEvent)
+		m_pEvent->OnPlayStatus(m_avStatus);
 }
 
 void CPlayer::OnReadFunction()
@@ -123,9 +142,15 @@ void CPlayer::OnPlayFunction()
 		else
 		{
 			if (vFrame == nullptr)
+			{
+				SDL_RenderClear(m_render);
+				SDL_RenderPresent(m_render);
 				break;
+			}
 
 			vFrame = m_videoDecoder.ConvertFrame(vFrame);
+
+			printf("\timage frame: pts(%lld), time_pos(%lld) \r\n", vFrame->pts, vFrame->pkt_dts);
 
 			SDL_UpdateYUVTexture(m_texture, nullptr, vFrame->data[0], vFrame->linesize[0], vFrame->data[1], vFrame->linesize[1], vFrame->data[2], vFrame->linesize[2]);
 			SDL_RenderClear(m_render);
@@ -154,6 +179,7 @@ bool CPlayer::OnDemuxPacket(AVPacket* pkt, int type)
 		m_videoDecoder.PushPacket(pkt);
 		break;
 	case AVMEDIA_TYPE_AUDIO:
+		m_audioDecoder.PushPacket(pkt);
 		break;
 	case AVMEDIA_TYPE_SUBTITLE:
 		break;
@@ -169,25 +195,26 @@ bool CPlayer::VideoEvent(AVFrame* vdata)
 
 bool CPlayer::AudioEvent(AVFrame* adata)
 {
+	m_audioQueue.MaxSizePush(adata);
 	return true;
 }
 
 void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 {
-// 	CPlayer* pThis = (CPlayer*)userdata;
-// 	STAudioBuffer* aframe = nullptr;
-// 	if (pThis->AudioFrameData.Pop(aframe))
-// 	{
-// 		int wlen = len < aframe->size ? len : aframe->size;
-// 		SDL_memset(stream, 0, wlen);
-// 		SDL_MixAudio(stream, aframe->buffer, wlen, SDL_MIX_MAXVOLUME);
-// 		pThis->m_sync.SetAudioClock(aframe->dpts);
-// 		pThis->m_playEvent->UpdatePlayPosition(aframe->dpts);
-// 		HL_PRINT("	[AudioFrame] pts:%lld, dts:%f \r\n", aframe->pts, aframe->dpts);
-// 		delete aframe;
-// 	}
-// 	else
-// 	{
-// 		SDL_memset(stream, 0, len);
-// 	}
+	CPlayer* pThis = (CPlayer*)userdata;
+	AVFrame* aframe = nullptr;
+	if (pThis->m_audioQueue.Pop(aframe))
+	{
+		int wlen = len < aframe->nb_samples ? len : aframe->nb_samples;
+		SDL_memset(stream, 0, wlen);
+		SDL_MixAudio(stream, aframe->data[0], wlen, SDL_MIX_MAXVOLUME);
+		//pThis->m_sync.SetAudioClock(aframe->dpts);
+		//pThis->m_playEvent->UpdatePlayPosition(aframe->dpts);
+		//HL_PRINT("	[AudioFrame] pts:%lld, dts:%f \r\n", aframe->pts, aframe->dpts);
+		av_frame_free(&aframe);
+	}
+	else
+	{
+		SDL_memset(stream, 0, len);
+	}
 }

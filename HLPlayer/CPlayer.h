@@ -1,6 +1,12 @@
 #pragma once
 #include "Demultiplex.h"
-#include "VideoDecoder.h"
+#include "AudioDecoder.h"
+
+class IPlayerEvent
+{
+public:
+	virtual void OnPlayStatus(eAVStatus eStatus) = 0;
+};
 
 class CPlayer :public IDemuxEvent, public IDecoderEvent
 {
@@ -12,15 +18,19 @@ public:
 
 	bool InitWindow(const void* pwnd, int width, int height);
 
-	void Start();
+	void Start(IPlayerEvent* pEvent);
 
-	bool InitAudio();
+	void SetPosition(); // …Ë÷√Œª÷√
 
 	void UpdateWindow(int width, int height);
+	void UpdateWindow(int x, int y, int width, int height);
 
 	void Close();
 
+
 private:
+	bool InitAudio();
+
 	void OnReadFunction();
 	void OnPlayFunction();
 
@@ -33,6 +43,7 @@ private:
 private:
 	CDemultiplex m_demux;
 	CVideoDecoder m_videoDecoder;
+	CAudioDecoder m_audioDecoder;
 
 	eAVStatus m_avStatus = eStop;
 
@@ -61,6 +72,9 @@ private:
 	SDL_Rect m_rect;
 
 	SafeQueue<AVFrame*> m_videoQueue;
+	SafeQueue<AVFrame*> m_audioQueue;
+
+	IPlayerEvent* m_pEvent = nullptr;
 
 	std::thread m_playThread;
 };
