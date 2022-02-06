@@ -25,13 +25,16 @@ public:
 	void UpdateWindow(int width, int height);
 	void UpdateWindow(int x, int y, int width, int height);
 
+	// 关闭播放
 	void Close();
 
 
 private:
+	// 释放资源
+	void Release();
+
 	bool InitAudio();
 
-	void OnReadFunction();
 	void OnPlayFunction();
 
 	virtual bool OnDemuxPacket(AVPacket* pkt, int type) override;
@@ -45,7 +48,8 @@ private:
 	CVideoDecoder m_videoDecoder;
 	CAudioDecoder m_audioDecoder;
 
-	eAVStatus m_avStatus = eStop;
+	eAVStatus m_avStatus = eStop; 
+	int m_bPlayOvered = false;
 
 // 	AVFormatContext* FormatCtx = nullptr;
 // 

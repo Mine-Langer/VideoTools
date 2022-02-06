@@ -69,8 +69,8 @@ void CPlayer::Start(IPlayerEvent* pEvent)
 	SDL_PauseAudio(0);
 
 	m_avStatus = ePlay;
+	m_bPlayOvered = false;
 	m_playThread = std::thread(&CPlayer::OnPlayFunction, this);
-	m_playThread.detach();
 }
 
 bool CPlayer::InitAudio()
@@ -118,18 +118,31 @@ void CPlayer::UpdateWindow(int x, int y, int width, int height)
 void CPlayer::Close()
 {
 	m_avStatus = eStop;
+	if (m_playThread.joinable())
+		m_playThread.join();
+
+	SDL_CloseAudio();
+	m_videoDecoder.Close();
+	m_audioDecoder.Close();
 
 	m_demux.Close();
-
-	m_videoDecoder.Close();
 
 	if (m_pEvent)
 		m_pEvent->OnPlayStatus(m_avStatus);
 }
 
-void CPlayer::OnReadFunction()
+void CPlayer::Release()
 {
+	m_avStatus = eStop;
 
+	m_demux.Close();
+
+	m_videoDecoder.Close();
+
+	m_audioDecoder.Close();
+
+	if (m_pEvent)
+		m_pEvent->OnPlayStatus(m_avStatus);
 }
 
 void CPlayer::OnPlayFunction()
@@ -145,6 +158,7 @@ void CPlayer::OnPlayFunction()
 			{
 				SDL_RenderClear(m_render);
 				SDL_RenderPresent(m_render);
+				m_bPlayOvered = true;
 				break;
 			}
 
@@ -166,8 +180,8 @@ void CPlayer::OnPlayFunction()
 //			m_sync.SetShowTime();
 		}
 	}
-
-	Close();
+	if (m_bPlayOvered)
+		Release();
 }
 
 
@@ -189,19 +203,24 @@ bool CPlayer::OnDemuxPacket(AVPacket* pkt, int type)
 
 bool CPlayer::VideoEvent(AVFrame* vdata)
 {
-	m_videoQueue.MaxSizePush(vdata);
+	bool bRun = (m_avStatus == eStop);
+	m_videoQueue.MaxSizePush(vdata, &bRun);
 	return true;
 }
 
 bool CPlayer::AudioEvent(AVFrame* adata)
 {
-	m_audioQueue.MaxSizePush(adata);
+	bool bRun = (m_avStatus == eStop);
+	m_audioQueue.MaxSizePush(adata, &bRun);
 	return true;
 }
 
 void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 {
 	CPlayer* pThis = (CPlayer*)userdata;
+	if (pThis->m_avStatus != ePlay)
+		return;
+
 	AVFrame* aframe = nullptr;
 	if (pThis->m_audioQueue.Pop(aframe))
 	{

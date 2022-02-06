@@ -43,7 +43,34 @@ void CAudioDecoder::Start(IDecoderEvent* pEvent)
 
 	m_status = ePlay;
 	m_decodeThread = std::thread(&CAudioDecoder::OnDecodeThread, this);
-	m_decodeThread.detach();
+}
+
+void CAudioDecoder::Close()
+{
+	m_status = eStop;
+	if (m_decodeThread.joinable())
+		m_decodeThread.join();
+
+	if (m_pCodecCtx)
+	{
+		avcodec_close(m_pCodecCtx);
+		avcodec_free_context(&m_pCodecCtx);
+		m_pCodecCtx = nullptr;
+	}
+
+	if (m_pSwrCtx)
+	{
+		swr_free(&m_pSwrCtx);
+		m_pSwrCtx = nullptr;
+	}
+
+	while (!m_audioQueue.Empty())
+	{
+		AVPacket* pkt = nullptr;
+		m_audioQueue.Pop(pkt);
+		if (pkt)
+			av_packet_free(&pkt);
+	}
 }
 
 void CAudioDecoder::PushPacket(AVPacket* pkt)
@@ -52,7 +79,8 @@ void CAudioDecoder::PushPacket(AVPacket* pkt)
 	if (pkt)
 		apkt = av_packet_clone(pkt);
 
-	m_audioQueue.MaxSizePush(apkt);
+	bool bRun = (m_status == eStop);
+	m_audioQueue.MaxSizePush(apkt, &bRun);
 }
 
 void CAudioDecoder::OnDecodeThread()

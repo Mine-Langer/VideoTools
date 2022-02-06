@@ -14,9 +14,9 @@ public:
 		_data.push(val);
 	}
 
-	void MaxSizePush(const T& val, const int nMaxSize = 32)
+	void MaxSizePush(const T& val,volatile bool* bFlag, const int nMaxSize = 32)
 	{
-		while (true)
+		while (*bFlag)
 		{
 			_mutex.lock();
 			int nSize = _data.size();
@@ -40,6 +40,11 @@ public:
 		_data.pop();
 
 		return true;
+	}
+
+	bool Empty()
+	{
+		return _data.empty();
 	}
 
 private:

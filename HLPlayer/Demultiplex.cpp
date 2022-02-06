@@ -31,7 +31,6 @@ void CDemultiplex::Start(IDemuxEvent* pEvent)
 
 	m_avStatus = ePlay;
 	m_demuxThread = std::thread(&CDemultiplex::OnDemuxThread, this);
-	m_demuxThread.detach();
 }
 
 void CDemultiplex::Close()
@@ -103,4 +102,5 @@ void CDemultiplex::OnDemuxThread()
 			}
 		}
 	}
+	return;
 }

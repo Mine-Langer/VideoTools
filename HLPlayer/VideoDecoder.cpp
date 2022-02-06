@@ -37,7 +37,6 @@ void CVideoDecoder::Start(IDecoderEvent* pEvent)
 	m_pEvent = pEvent;
 	m_avStatus = ePlay;
 	m_decodeThread = std::thread(&CVideoDecoder::OnDecodeThread, this);
-	m_decodeThread.detach();
 }
 
 void CVideoDecoder::Close()
@@ -91,8 +90,8 @@ AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)
 	swsFrame->width = m_swsWidth;
 	swsFrame->height = m_swsHeight;
 	swsFrame->format = m_swsFormat;
-	av_frame_get_buffer(swsFrame, 0);
-	sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, frame->height, swsFrame->data, swsFrame->linesize);
+	int ret = av_frame_get_buffer(swsFrame, 0);
+	ret = sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, frame->height, swsFrame->data, swsFrame->linesize);
 
 	swsFrame->pts = frame->pts;
 	swsFrame->best_effort_timestamp = frame->best_effort_timestamp;
@@ -109,7 +108,8 @@ void CVideoDecoder::PushPacket(AVPacket* pkt)
 	if (pkt)
 		vPkt = av_packet_clone(pkt);
 
-	m_vPktQueue.MaxSizePush(vPkt);
+	bool bRun = (m_avStatus == eStop);
+	m_vPktQueue.MaxSizePush(vPkt, &bRun);
 }
 
 void CVideoDecoder::OnDecodeThread()
