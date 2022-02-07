@@ -18,8 +18,6 @@ public:
 
 	void Stop();
 
-	void Release();
-
 	bool SetSwsConfig(int width = -1, int height = -1, enum AVPixelFormat pix_fmt = AV_PIX_FMT_NONE);
 	void GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat);
 
@@ -31,7 +29,7 @@ protected:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 	void OnDecodeFunction();
 
-	void Close();
+	void Release();
 
 private:
 	CDemultiplexer m_demux;

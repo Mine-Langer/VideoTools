@@ -19,6 +19,8 @@ public:
 
 	void InitAudioSpec(SDL_AudioSpec& audioSpec);
 
+	double Timebase() { return m_timebase; }
+
 private:
 	void OnDecodeThread();
 

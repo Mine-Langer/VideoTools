@@ -16,7 +16,7 @@ public:
 
 	void Start(IDemuxEvent* pEvt);
 
-	void Release();
+	void Stop();
 
 	int AudioStreamIndex();
 

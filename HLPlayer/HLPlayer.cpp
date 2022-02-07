@@ -8,7 +8,6 @@ HLPlayer::HLPlayer(QWidget *parent)
 {
     ui.setupUi(this);
     
-
 	ui.sliderPlay->installEventFilter(this);
 	ui.sliderVolumn->installEventFilter(this);
 	connect(ui.btnPlay, SIGNAL(clicked()), this, SLOT(OnBtnPlayClicked()));

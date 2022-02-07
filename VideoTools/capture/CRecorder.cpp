@@ -54,6 +54,7 @@ bool CRecorder::Run(const char* szFile)
 	// 开始图像解码
 	if (!m_videoDecoder.Start(this))
 		return false;
+
 	// 开始音频解码
 	if (!m_audioDecoder.Start(this))
 		return false;
@@ -97,7 +98,10 @@ void CRecorder::Stop()
 	if (m_thread.joinable())
 		m_thread.join();
 
-	Close();
+	m_videoDecoder.Stop();
+	m_videoEncoder.Close();
+	m_audioDecoder.Release();
+	m_audioEncoder.Release();
 }
 
 bool CRecorder::VideoEvent(AVFrame* frame)
@@ -106,7 +110,8 @@ bool CRecorder::VideoEvent(AVFrame* frame)
 	if (vFrame == nullptr)
 		return false;
 
-	m_videoQueue.MaxSizePush(vFrame);
+	bool bRun = (m_state != Stopped);
+	m_videoQueue.MaxSizePush(vFrame, &bRun);
 
 	return true;
 }
@@ -117,7 +122,8 @@ bool CRecorder::AudioEvent(AVFrame* frame)
 	if (aFrame == nullptr)
 		return false;
 	
-	m_audioQueue.MaxSizePush(aFrame);
+	bool bRun = (m_state != Stopped);
+	m_audioQueue.MaxSizePush(aFrame, &bRun);
 	
 	return true;
 }
@@ -136,7 +142,7 @@ bool CRecorder::Start()
 
 	// 保存数据帧线程
 	m_thread = std::thread(&CRecorder::OnSaveThread, this);
-	m_thread.detach();
+
 	return true;
 }
 
@@ -210,6 +216,8 @@ void CRecorder::OnSaveThread()
 		}				
 	}
 	av_write_trailer(OutputFormatCtx);
+
+	Close();
 }
 
 wchar_t* CRecorder::GetMicrophoneName()

@@ -27,6 +27,8 @@ public:
 
 	AVFrame* ConvertFrame(AVFrame* frame);
 
+	double Timebase() { return m_timebase; }
+
 private:
 	void OnDecodeThread();
 

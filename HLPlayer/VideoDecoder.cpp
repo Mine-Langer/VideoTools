@@ -93,9 +93,8 @@ AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)
 	int ret = av_frame_get_buffer(swsFrame, 0);
 	ret = sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, frame->height, swsFrame->data, swsFrame->linesize);
 
-	swsFrame->pts = frame->pts;
+	swsFrame->pts = frame->best_effort_timestamp;
 	swsFrame->best_effort_timestamp = frame->best_effort_timestamp;
-	swsFrame->pkt_dts = frame->pts * m_timebase;
 
 	av_frame_free(&frame);
 

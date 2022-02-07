@@ -74,7 +74,7 @@ void Composite::Close()
 			av_frame_free(&vdata);
 	}
 
-	m_videoDecoder.Release();
+	m_videoDecoder.Stop();
 }
 
 void Composite::Play()
@@ -189,13 +189,15 @@ bool Composite::SaveFile(const char* szOutput, int type)
 bool Composite::VideoEvent(AVFrame* frame)
 {
 	AVFrame* vdata = av_frame_clone(frame);
-	m_videoQueue.MaxSizePush(vdata);
+	bool bRun = (m_state != Stopped);
+	m_videoQueue.MaxSizePush(vdata, &bRun);
 	return true;
 }
 
 bool Composite::AudioEvent(AVFrame* frame)
 {
-	m_audioQueue.MaxSizePush(frame);
+	bool bRun = (m_state != Stopped);
+	m_audioQueue.MaxSizePush(frame, &bRun);
 	return true;
 }
 

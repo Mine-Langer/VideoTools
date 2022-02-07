@@ -141,9 +141,13 @@
   <ItemGroup>
     <ClCompile Include="audioRecoder.cpp" />
     <ClCompile Include="recoder.cpp" />
+    <ClCompile Include="wmp3x.cpp" />
+    <ClCompile Include="wqueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="recoder.h" />
+    <ClInclude Include="wmp3x.h" />
+    <ClInclude Include="wqueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

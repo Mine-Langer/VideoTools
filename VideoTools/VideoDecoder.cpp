@@ -121,23 +121,20 @@ bool CVideoDecoder::Start(IVideoEvent* pEvt)
 	m_demux.Start(this);
 	m_state = Started;
 	m_thread = std::thread(&CVideoDecoder::OnDecodeFunction, this);
-	m_thread.detach();
 
 	return true;
 }
 
 void CVideoDecoder::Stop()
 {
-	Release();
+	m_state = Stopped;
+	if (m_thread.joinable())
+		m_thread.join();
 }
 
 void CVideoDecoder::Release()
 {
-	m_state = Stopped;
-	if (m_thread.joinable())
-		m_thread.join();
-
-	m_demux.Release();
+	m_demux.Stop();
 
 	if (m_pCodecCtx)
 	{
@@ -151,17 +148,13 @@ void CVideoDecoder::Release()
 		sws_freeContext(m_pSwsCtx);
 		m_pSwsCtx = nullptr;
 	}
-}
 
-void CVideoDecoder::Close()
-{
-	m_demux.Release();
-
-	if (m_pCodecCtx)
+	while (!m_srcVPktQueue.Empty())
 	{
-		avcodec_close(m_pCodecCtx);
-		avcodec_free_context(&m_pCodecCtx);
-		m_pCodecCtx = nullptr;
+		AVPacket* pkt = nullptr;
+		m_srcVPktQueue.Pop(pkt);
+		if (pkt)
+			av_packet_free(&pkt);
 	}
 }
 
@@ -249,7 +242,7 @@ void CVideoDecoder::OnDecodeFunction()
 		}
 	}
 	av_frame_free(&srcFrame);
-	Close();
+	Release();
 }
 
 bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
@@ -258,8 +251,9 @@ bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
 	{
 		if (pkt != nullptr)
 		{
+			bool bRun = (m_state != Stopped);
 			AVPacket* srcVPkt = av_packet_clone(pkt);
-			m_srcVPktQueue.MaxSizePush(srcVPkt);
+			m_srcVPktQueue.MaxSizePush(srcVPkt, &bRun);
 		}
 	}
 	return true;

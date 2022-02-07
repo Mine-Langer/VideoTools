@@ -64,7 +64,7 @@ void CDemultiplexer::Start(IDemuxEvent* pEvt)
 	m_thread = std::thread(&CDemultiplexer::OnDemuxFunction, this);
 }
 
-void CDemultiplexer::Release()
+void CDemultiplexer::Stop()
 {
 	m_bRun = false;
 

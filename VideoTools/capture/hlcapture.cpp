@@ -16,6 +16,7 @@ HLCapture::HLCapture(QWidget *parent)
     QString szDesktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     ui.editOutputPath->setText(szDesktopPath);
 
+	m_timer = new QTimer(this);
     connect(ui.radioAreaCap, SIGNAL(clicked(bool)), this, SLOT(OnRadioVideoClicked(bool)));
     connect(ui.radioScreenCap, SIGNAL(clicked(bool)), this, SLOT(OnRadioVideoClicked(bool)));
 
@@ -35,6 +36,7 @@ HLCapture::HLCapture(QWidget *parent)
     connect(ui.radioEXE, SIGNAL(clicked(bool)), this, SLOT(OnSaveTypeClicked(bool)));
 
     connect(ui.btnStartCap, SIGNAL(clicked()), this, SLOT(OnBtnStartCaptureClicked()));
+    connect(m_timer, SIGNAL(timeout()), this, SLOT(OnCaptureTimeout()));
 }
 
 void HLCapture::CreateCapWidget()
@@ -111,13 +113,15 @@ void HLCapture::OnBtnStartCaptureClicked()
         m_recordFmt == 1 ? ".flv" : 
         m_recordFmt == 2 ? ".avi" : 
         m_recordFmt == 3 ? ".mp3" : ".mp4";
-
+       
     QDateTime currTime = QDateTime::currentDateTime();
     QString fileName = currTime.toString("yyyy-mm-dd hhmmsszzz");
     QString szPath = ui.editOutputPath->text();
     QString szFilePath = szPath + "\\" + fileName + szSuffic;
     QByteArray baName = szFilePath.toLocal8Bit();
     const char* pszName = baName.data();
+
+	m_bCapture = !m_bCapture;
 
     if (m_videoType == 0) // È«ÆÁ
     {
@@ -134,7 +138,27 @@ void HLCapture::OnBtnStartCaptureClicked()
         screen_height = m_pCapWidget->geometry().height();
     }
    
-    m_recoder.InitVideoCfg(posX, posY, screen_width, screen_height);
-    m_recoder.Run(pszName);
+	if (m_bCapture)
+	{
+		m_nCount = 0;
+		ui.labelCapDuration->setText("00:00:00");
+		ui.btnStartCap->setText(tr("Í£Ö¹"));
 
+		m_recoder.InitVideoCfg(posX, posY, screen_width, screen_height);
+		m_recoder.Run(pszName);
+		m_timer->start(1000);
+	}
+	else
+	{
+		ui.btnStartCap->setText(tr("¿ªÊ¼"));
+		m_timer->stop();
+        m_recoder.Stop();
+	} 
+}
+
+void HLCapture::OnCaptureTimeout()
+{
+    m_nCount++;
+    QString szCount = QString("%1:%2:%3").arg(m_nCount/3600, 2, 10, QLatin1Char('0')).arg(m_nCount%3600/60, 2, 10, QLatin1Char('0')).arg(m_nCount%60, 2, 10, QLatin1Char('0'));
+    ui.labelCapDuration->setText(szCount);
 }

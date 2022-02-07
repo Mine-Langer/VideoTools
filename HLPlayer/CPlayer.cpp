@@ -164,20 +164,20 @@ void CPlayer::OnPlayFunction()
 
 			vFrame = m_videoDecoder.ConvertFrame(vFrame);
 
-			printf("\timage frame: pts(%lld), time_pos(%lld) \r\n", vFrame->pts, vFrame->pkt_dts);
+			printf("\timage frame: pts(%lld), time_pos(%f) \r\n", vFrame->pts, vFrame->pts * m_videoDecoder.Timebase());
 
 			SDL_UpdateYUVTexture(m_texture, nullptr, vFrame->data[0], vFrame->linesize[0], vFrame->data[1], vFrame->linesize[1], vFrame->data[2], vFrame->linesize[2]);
 			SDL_RenderClear(m_render);
 			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
 
-// 			int64_t delay = m_sync.CalcDelay(vFrame->pts * m_videoDecoder.GetTimebase());
-// 			if (delay > 0)
-// 				std::this_thread::sleep_for(std::chrono::microseconds(delay));
-			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+ 			int64_t delay = m_sync.CalcDelay(vFrame->pts * m_videoDecoder.Timebase());
+ 			if (delay > 0)
+ 				std::this_thread::sleep_for(std::chrono::microseconds(delay));
+
 			SDL_RenderPresent(m_render);		
-//			HL_PRINT("[VideoFrame] pts:%lld, dts:%lld \r\n", vFrame->pts, vFrame->pkt_dts);
+
 			av_frame_free(&vFrame);
-//			m_sync.SetShowTime();
+			m_sync.SetVideoShowTime();
 		}
 	}
 	if (m_bPlayOvered)
@@ -227,9 +227,9 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 		int wlen = len < aframe->nb_samples ? len : aframe->nb_samples;
 		SDL_memset(stream, 0, wlen);
 		SDL_MixAudio(stream, aframe->data[0], wlen, SDL_MIX_MAXVOLUME);
-		//pThis->m_sync.SetAudioClock(aframe->dpts);
+		pThis->m_sync.SetAudioClock(aframe->pts * pThis->m_audioDecoder.Timebase());
 		//pThis->m_playEvent->UpdatePlayPosition(aframe->dpts);
-		//HL_PRINT("	[AudioFrame] pts:%lld, dts:%f \r\n", aframe->pts, aframe->dpts);
+		printf("	[AudioFrame] pts:%lld, dts:%f \r\n", aframe->pts, aframe->pts * pThis->m_audioDecoder.Timebase());
 		av_frame_free(&aframe);
 	}
 	else

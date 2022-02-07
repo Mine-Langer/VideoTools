@@ -1,6 +1,7 @@
 #pragma once
 #include "Demultiplex.h"
 #include "AudioDecoder.h"
+#include "avAsync.h"
 
 class IPlayerEvent
 {
@@ -67,7 +68,7 @@ private:
 // 
 // 	CVideoDecoder m_videoDecoder;
 // 	CAudioDecoder m_audioDecoder;
-// 	CAVSync	m_sync;
+ 	CAVSync	m_sync;
 
 	SDL_Window* m_window = nullptr;
 	SDL_Texture* m_texture = nullptr;

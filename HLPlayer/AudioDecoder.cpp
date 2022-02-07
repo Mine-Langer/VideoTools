@@ -169,8 +169,7 @@ AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 		return nullptr;
 	}
 	
-	swrFrame->pts = frame->pts;
-	swrFrame->pkt_dts = swrFrame->pts * m_timebase;
+	swrFrame->pts = frame->best_effort_timestamp;
 	
 	return swrFrame;
 }

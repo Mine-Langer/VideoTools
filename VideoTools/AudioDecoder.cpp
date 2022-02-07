@@ -198,14 +198,15 @@ bool CAudioDecoder::DemuxPacket(AVPacket* pkt, int type)
 {
 	if (type == AVMEDIA_TYPE_AUDIO)
 	{
+		bool bRun = (m_state != Stopped);
 		if (pkt)
 		{
 			AVPacket* packet = av_packet_clone(pkt);
-			m_srcAPktQueue.MaxSizePush(packet);
+			m_srcAPktQueue.MaxSizePush(packet, &bRun);
 		}
 		else
 		{
-			m_srcAPktQueue.MaxSizePush(nullptr);
+			m_srcAPktQueue.MaxSizePush(nullptr, &bRun);
 		}
 	}
 	return true;
