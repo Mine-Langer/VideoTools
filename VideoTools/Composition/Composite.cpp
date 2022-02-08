@@ -241,7 +241,7 @@ void Composite::OnPlayFunction()
 			else
 			{
 				AVFrame* frame = m_videoQueue.Front();
-				AVFrame* swsFrame = m_videoDecoder.GetConvertFrame(frame);
+				AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
 
 				SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
 					swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
@@ -282,7 +282,7 @@ void Composite::OnSaveFunction()
 			if (0 >= av_compare_ts(videoIndex, m_videoEncoder.GetTimeBase(), audioIndex, m_audioEncoder.GetTimeBase()))
 			{
 				// Ð´ÊÓÆµÖ¡
-				AVFrame* swsVideoFrame = m_videoDecoder.GetConvertFrame(videoFrame);
+				AVFrame* swsVideoFrame = m_videoDecoder.ConvertFrame(videoFrame);
 				if (!swsVideoFrame)
 					continue;
 				swsVideoFrame->pts = videoIndex++;

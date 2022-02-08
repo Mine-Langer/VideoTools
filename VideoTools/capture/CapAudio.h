@@ -1,5 +1,6 @@
 #pragma once
 #include "../Common.h"
+#include "../VideoDecoder.h"
 
 extern char* dup_wchar_to_utf8(const wchar_t* w);
 
@@ -11,7 +12,7 @@ public:
 
 	bool Init(enum AVSampleFormat sample_fmt, int nChannels, int channel_layout, int sample_rate, int frame_size);
 
-	bool Start(IAudioEvent* pEvt);
+	bool Start(IDecoderEvent* pEvt);
 
 	void Release();
 
@@ -29,7 +30,7 @@ private:
 	AVCodecContext* m_pCodecCtx = nullptr;
 	AVAudioFifo* m_audioFifo = nullptr;
 
-	IAudioEvent* m_pEvent = nullptr;
+	IDecoderEvent* m_pEvent = nullptr;
 	SwrContext* m_swrCtx = nullptr;
 
 	enum AVState m_state = NotStarted;

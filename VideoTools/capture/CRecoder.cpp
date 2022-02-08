@@ -1,4 +1,4 @@
-#include "CRecorder.h"
+#include "CRecoder.h"
 #include <dshow.h>
 #pragma comment (lib, "strmiids.lib")
 
@@ -12,6 +12,7 @@ char* dup_wchar_to_utf8(const wchar_t* w)
 	return s;
 }
 
+/*
 CRecorder::CRecorder()
 {
 	avdevice_register_all();
@@ -30,22 +31,36 @@ void CRecorder::InitVideoCfg(int posX, int posY, int sWidth, int sHeight)
 	capHeight = sHeight;
 }
 
+void CRecorder::InitAudioOption(eAudioOpt audioOpt)
+{
+	m_audioOption = audioOpt;
+}
+
 bool CRecorder::Run(const char* szFile)
 {
 	// 设置视频参数
 	if (!m_videoDecoder.OpenScreen(CapX, CapY, capWidth, capHeight))
 		return false;
+
 	if (!m_videoDecoder.SetSwsConfig())
 		return false;
 
  	// 设置音频参数
-	wchar_t pszDevName[MAX_PATH] = { L"audio=" };// L"audio = virtual-audio-capturer"};
-	wcscat_s(pszDevName, MAX_PATH, GetMicrophoneName());
-	char* szDevName = dup_wchar_to_utf8(pszDevName);
-	if (!m_audioDecoder.OpenMicrophone(szDevName))
-		return false;
+	if (m_audioOption == NoAudio)
+	{
+		wchar_t pszDevName[MAX_PATH] = { L"audio=" };// L"audio = virtual-audio-capturer"};
+		wcscat_s(pszDevName, MAX_PATH, GetMicrophoneName());
+		char* szDevName = dup_wchar_to_utf8(pszDevName);
 
-	m_audioDecoder.SetSaveEnable(true);
+		if (!m_audioDecoder.OpenMicrophone(szDevName))
+			return false;
+
+		m_audioDecoder.SetSaveEnable(true);
+
+		// 开始音频解码
+		if (!m_audioDecoder.Start(this))
+			return false;
+	}
 
 	// 设置输出参数
 	if (!InitOutput(szFile))
@@ -53,10 +68,6 @@ bool CRecorder::Run(const char* szFile)
 
 	// 开始图像解码
 	if (!m_videoDecoder.Start(this))
-		return false;
-
-	// 开始音频解码
-	if (!m_audioDecoder.Start(this))
 		return false;
 
  	// 开始录制
@@ -99,8 +110,8 @@ void CRecorder::Stop()
 		m_thread.join();
 
 	m_videoDecoder.Stop();
-	m_videoEncoder.Close();
-	m_audioDecoder.Release();
+	m_audioDecoder.Stop();
+	m_videoEncoder.Release();
 	m_audioEncoder.Release();
 }
 
@@ -146,7 +157,7 @@ bool CRecorder::Start()
 	return true;
 }
 
-void CRecorder::Close()
+void CRecorder::Release()
 {
 	if (OutputFormatCtx) {
 		avformat_close_input(&OutputFormatCtx);
@@ -217,7 +228,7 @@ void CRecorder::OnSaveThread()
 	}
 	av_write_trailer(OutputFormatCtx);
 
-	Close();
+	Release();
 }
 
 wchar_t* CRecorder::GetMicrophoneName()
@@ -259,6 +270,190 @@ wchar_t* CRecorder::GetMicrophoneName()
 	}
 	CoUninitialize();
 	return szName;
+}*/
+
+CRecoder::CRecoder()
+{
+	avdevice_register_all();
 }
 
+CRecoder::~CRecoder()
+{
 
+}
+
+void CRecoder::SetVideoOption(int x, int y, int w, int h)
+{
+	m_x = x;
+	m_y = y;
+	m_w = w;
+	m_h = h;
+}
+
+void CRecoder::SetAudioOption(enum eAudioOpt audioOpt)
+{
+	m_audioOption = audioOpt;
+}
+
+void CRecoder::SetSaveFile(const char* szName)
+{
+	m_szFile = szName;
+}
+
+bool CRecoder::Start()
+{
+	if (!InitInput())
+		return false;
+
+	if (!InitOutput())
+		return false;
+
+	m_status = Started;
+	m_thread = std::thread(&CRecoder::CaptureThread, this);
+
+	return true;
+}
+
+void CRecoder::Pause()
+{
+	m_status = Paused;
+}
+
+void CRecoder::Stop()
+{
+	m_status = Stopped;
+	if (m_thread.joinable())
+		m_thread.join();
+	
+	Close();
+}
+
+void CRecoder::Close()
+{
+	m_videoDecoder.Stop();
+
+	m_videoEncoder.Release();
+
+	if (m_pFormatCtx)
+	{
+		avformat_close_input(&m_pFormatCtx);
+		avformat_free_context(m_pFormatCtx);
+		m_pFormatCtx = nullptr;
+	}
+}
+
+bool CRecoder::InitOutput()
+{
+	if (0 > avformat_alloc_output_context2(&m_pFormatCtx, nullptr, nullptr, m_szFile.c_str()))
+		return false;
+
+	AVOutputFormat* pOutputFmt = m_pFormatCtx->oformat;
+	if (pOutputFmt->video_codec != AV_CODEC_ID_NONE)
+	{
+		if (!m_videoEncoder.Init(m_pFormatCtx, pOutputFmt->video_codec, m_w, m_h))
+			return false;
+	}
+
+	if (pOutputFmt->audio_codec != AV_CODEC_ID_NONE)
+	{
+
+	}
+
+	av_dump_format(m_pFormatCtx, 0, m_szFile.c_str(), 1);
+	
+	return true;
+}
+
+bool CRecoder::InitInput()
+{
+	if (!m_videoDecoder.OpenScreen(m_x, m_y, m_w, m_h))
+		return false;
+	if (!m_videoDecoder.SetSwsConfig())
+		return false;
+	if (!m_videoDecoder.Start(this))
+		return false;
+
+	return true;
+}
+
+void CRecoder::CaptureThread()
+{
+	AVFrame* pvFrame = nullptr;
+	unsigned int videoIndex = 0;
+
+	if (!WriteHeader())
+		return;
+
+	while (m_status!=Stopped)
+	{
+		if (m_status == Paused)
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+		else
+		{
+			if (!m_vDataQueue.Pop(pvFrame))
+				std::this_thread::sleep_for(std::chrono::milliseconds(40));
+			else
+			{
+				if (pvFrame == nullptr)
+					break;
+				AVFrame* swsFrame = m_videoDecoder.ConvertFrame(pvFrame);
+				if (swsFrame)
+				{
+					swsFrame->pts = videoIndex++;
+					AVPacket* pkt = m_videoEncoder.Encode(swsFrame);
+					if (pkt)
+					{
+						av_interleaved_write_frame(m_pFormatCtx, pkt);
+						av_packet_free(&pkt);
+					}
+				}
+
+				av_frame_free(&pvFrame);
+				av_frame_free(&swsFrame);
+			}
+		}
+	}
+
+	WriteTrailer();
+
+	Close();
+}
+
+bool CRecoder::WriteHeader()
+{
+	if (!(m_pFormatCtx->oformat->flags & AVFMT_NOFILE))
+		if (0 > avio_open(&m_pFormatCtx->pb, m_szFile.c_str(), AVIO_FLAG_WRITE))
+			return false;
+
+	if (0 > avformat_write_header(m_pFormatCtx, nullptr))
+		return false;
+
+	return true;
+}
+
+void CRecoder::WriteTrailer()
+{
+	av_write_trailer(m_pFormatCtx);
+}
+
+bool CRecoder::VideoEvent(AVFrame* frame)
+{
+	bool bRun = (m_status != Stopped);
+	if (frame)
+	{
+		AVFrame* vframe = av_frame_clone(frame);
+		m_vDataQueue.MaxSizePush(vframe, &bRun);
+		return true;
+	}
+	m_vDataQueue.MaxSizePush(frame, &bRun);
+	return false;
+}
+
+bool CRecoder::AudioEvent(AVFrame* frame)
+{
+	if (frame)
+	{
+		return true;
+	}
+	return false;
+}

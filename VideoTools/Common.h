@@ -64,22 +64,5 @@ extern "C"
 #define AVSYNC_DYNAMIC_THRESHOLD 0.003        // 音视频同步动态帧率进行干预的二者当前时间差的阈值
 
 
-enum AVState { NotStarted, Started, Paused, Stopped };
 
-class IVideoEvent
-{
-public:
-	virtual bool VideoEvent(AVFrame* frame) = 0;
-};
 
-class IAudioEvent
-{
-public:
-	virtual bool AudioEvent(AVFrame* frame) = 0;
-};
-
-class IDemuxEvent
-{
-public:
-	virtual bool DemuxPacket(AVPacket* pkt, int type) = 0;
-};

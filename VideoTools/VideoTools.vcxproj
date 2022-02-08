@@ -112,7 +112,7 @@
     <ClCompile Include="AVMainWnd.cpp" />
     <ClCompile Include="capture\CapAudio.cpp" />
     <ClCompile Include="capture\CaptureViewWidget.cpp" />
-    <ClCompile Include="capture\CRecorder.cpp" />
+    <ClCompile Include="capture\CRecoder.cpp" />
     <ClCompile Include="capture\hlcapture.cpp" />
     <ClCompile Include="Composition\Composite.cpp" />
     <ClCompile Include="Composition\CompositeView.cpp" />
@@ -135,7 +135,7 @@
     <QtMoc Include="AVMainWnd.h" />
     <QtMoc Include="capture\CaptureViewWidget.h" />
     <ClInclude Include="capture\CapAudio.h" />
-    <ClInclude Include="capture\CRecorder.h" />
+    <ClInclude Include="capture\CRecoder.h" />
     <QtMoc Include="capture\hlcapture.h" />
     <ClInclude Include="Common.h" />
   </ItemGroup>

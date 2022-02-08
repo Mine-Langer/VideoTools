@@ -40,7 +40,7 @@
     <ClCompile Include="AVMainWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="capture\CRecorder.cpp">
+    <ClCompile Include="capture\CRecoder.cpp">
       <Filter>capture</Filter>
     </ClCompile>
     <ClCompile Include="capture\hlcapture.cpp">
@@ -87,7 +87,7 @@
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="capture\CRecorder.h">
+    <ClInclude Include="capture\CRecoder.h">
       <Filter>capture</Filter>
     </ClInclude>
     <ClInclude Include="capture\CapAudio.h">

@@ -44,6 +44,7 @@ bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 	char szTemp[32] = { 0 };
 	AVDictionary* options = nullptr;
 	av_dict_set(&options, "framerate", "25", 0);
+	av_dict_set(&options, "capture_mouse_clicks", "0", 0);
 	av_dict_set(&options, "offset_x", itoa(posX, szTemp, 10), 0);
 	av_dict_set(&options, "offset_y", itoa(posY, szTemp, 10), 0);
 	sprintf(szTemp, "%dx%d", sWidth, sHeight);
@@ -113,7 +114,7 @@ bool CVideoDecoder::OpenCamera()
 	return true;
 }
 
-bool CVideoDecoder::Start(IVideoEvent* pEvt)
+bool CVideoDecoder::Start(IDecoderEvent* pEvt)
 {
 	if (!(m_pEvent = pEvt))
 		return false;
@@ -178,19 +179,17 @@ void CVideoDecoder::GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelF
 	srcFormat = m_srcFormat;
 }
 
-void CVideoDecoder::SetVideoInfo(int x, int y, int width, int height)
-{
-
-}
-
-AVFrame* CVideoDecoder::GetConvertFrame(AVFrame* frame)
+AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)
 {
 	AVFrame* swsFrame = av_frame_alloc();
 	swsFrame->format = m_swsFormat;
 	swsFrame->width = m_swsWidth;
 	swsFrame->height = m_swsHeight;
 	if (0 > av_frame_get_buffer(swsFrame, 0))
+	{
+		av_frame_free(&swsFrame);
 		return nullptr;
+	}
 
 	int h = sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, m_srcHeight, swsFrame->data, swsFrame->linesize);
 
@@ -242,6 +241,7 @@ void CVideoDecoder::OnDecodeFunction()
 		}
 	}
 	av_frame_free(&srcFrame);
+
 	Release();
 }
 

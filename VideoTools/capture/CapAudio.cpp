@@ -65,7 +65,7 @@ bool CCapAudio::Init(enum AVSampleFormat sample_fmt, int nChannels, int channel_
 	return true;
 }
 
-bool CCapAudio::Start(IAudioEvent* pEvt)
+bool CCapAudio::Start(IDecoderEvent* pEvt)
 {
 	m_pEvent = pEvt;
 	if (!m_pEvent)

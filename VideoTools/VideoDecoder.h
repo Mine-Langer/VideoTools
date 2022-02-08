@@ -1,6 +1,16 @@
 #pragma once
 #include "Demultiplexer.h"
 
+enum AVState { NotStarted, Started, Paused, Stopped };
+
+class IDecoderEvent
+{
+public:
+	virtual bool VideoEvent(AVFrame* frame) = 0;
+
+	virtual bool AudioEvent(AVFrame* frame) = 0;
+};
+
 class CVideoDecoder :public IDemuxEvent
 {
 public:
@@ -14,16 +24,14 @@ public:
 	// ´ò¿ªÉãÏñÍ·
 	bool OpenCamera();
 
-	bool Start(IVideoEvent* pEvt);
+	bool Start(IDecoderEvent* pEvt);
 
 	void Stop();
 
 	bool SetSwsConfig(int width = -1, int height = -1, enum AVPixelFormat pix_fmt = AV_PIX_FMT_NONE);
 	void GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat);
 
-	void SetVideoInfo(int x, int y, int width, int height);
-
-	AVFrame* GetConvertFrame(AVFrame* frame);
+	AVFrame* ConvertFrame(AVFrame* frame);
 
 protected:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
@@ -35,7 +43,7 @@ private:
 	CDemultiplexer m_demux;
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwsContext* m_pSwsCtx = nullptr;
-	IVideoEvent* m_pEvent = nullptr;
+	IDecoderEvent* m_pEvent = nullptr;
 
 	enum AVState m_state = NotStarted;
 	std::thread m_thread;

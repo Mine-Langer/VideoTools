@@ -1,6 +1,12 @@
 #pragma once
 #include "Common.h"
 
+class IDemuxEvent
+{
+public:
+	virtual bool DemuxPacket(AVPacket* pkt, int type) = 0;
+};
+
 class CDemultiplexer
 {
 public:

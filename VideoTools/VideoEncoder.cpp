@@ -23,7 +23,7 @@ bool CVideoEncoder::Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, in
 	m_pCodecCtx->width = width;
 	m_pCodecCtx->height = height;
 	m_pCodecCtx->codec_id = codec_id;
-	m_pCodecCtx->bit_rate = 400000;
+	m_pCodecCtx->bit_rate = 4000000;
 	m_pCodecCtx->time_base = { 1, 25 };
 	m_pCodecCtx->gop_size = 12;
 	m_pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;

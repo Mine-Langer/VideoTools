@@ -1,5 +1,4 @@
 #pragma once
-#include "../VideoDecoder.h"
 #include "../AudioDecoder.h"
 #include "../VideoEncoder.h"
 #include "../AudioEncoder.h"
@@ -7,7 +6,7 @@
 
 #define E_Play 0x1
 #define E_Save 0x2
-class Composite :public IVideoEvent, public IAudioEvent
+class Composite :public IDecoderEvent
 {
 public:
 	Composite();

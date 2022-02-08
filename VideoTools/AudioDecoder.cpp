@@ -66,7 +66,7 @@ bool CAudioDecoder::OpenMicrophone(const char* szUrl)
 	return true;
 }
 
-bool CAudioDecoder::Start(IAudioEvent* pEvt)
+bool CAudioDecoder::Start(IDecoderEvent* pEvt)
 {
 	m_pEvent = pEvt;
 	if (!m_pEvent)
@@ -76,8 +76,41 @@ bool CAudioDecoder::Start(IAudioEvent* pEvt)
 
 	m_state = Started;
 	m_thread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
-	m_thread.detach();
+
 	return true;
+}
+
+void CAudioDecoder::Stop()
+{
+	m_state = Stopped;
+	if (m_thread.joinable())
+		m_thread.join();
+}
+
+void CAudioDecoder::Release()
+{
+	m_demux.Stop();
+
+	if (m_pCodecCtx)
+	{
+		avcodec_close(m_pCodecCtx);
+		avcodec_free_context(&m_pCodecCtx);
+		m_pCodecCtx = nullptr;
+	}
+
+	if (m_pSwrCtx)
+	{
+		swr_free(&m_pSwrCtx);
+		m_pSwrCtx = nullptr;
+	}
+
+	while (!m_srcAPktQueue.Empty())
+	{
+		AVPacket* pkt = nullptr;
+		m_srcAPktQueue.Pop(pkt);
+		if (pkt)
+			av_packet_free(&pkt);
+	}
 }
 
 void CAudioDecoder::GetSrcParameter(int& sample_rate, int& nb_sample, int64_t& ch_layout, enum AVSampleFormat& sample_fmt)
@@ -173,6 +206,8 @@ void CAudioDecoder::OnDecodeFunction()
 	}
 	if (!m_bIsSave)
 		av_frame_free(&srcFrame);
+
+	Release();
 }
 
 AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)

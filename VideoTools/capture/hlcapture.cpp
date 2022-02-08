@@ -70,13 +70,13 @@ void HLCapture::OnAudioTypeClicked(bool)
 {
     QRadioButton* pRadio = qobject_cast<QRadioButton*>(sender());
     if (pRadio == ui.radioAudioAll)
-        m_audioType = 3;
+        m_audioType = AllCap;
     if (pRadio == ui.radioAudioSys)
-        m_audioType = 1;
+        m_audioType = SysAudio;
     if (pRadio == ui.radioAudioMic)
-        m_audioType = 2;
+        m_audioType = MicroAudio;
     if (pRadio == ui.radioAudioNoCap)
-        m_audioType = 0;
+        m_audioType = NoAudio;
 }
 
 void HLCapture::OnVisionTypeClicked(bool)
@@ -144,9 +144,11 @@ void HLCapture::OnBtnStartCaptureClicked()
 		ui.labelCapDuration->setText("00:00:00");
 		ui.btnStartCap->setText(tr("ֹͣ"));
 
-		m_recoder.InitVideoCfg(posX, posY, screen_width, screen_height);
-		m_recoder.Run(pszName);
-		m_timer->start(1000);
+		m_recoder.SetVideoOption(posX, posY, screen_width, screen_height);
+        m_recoder.SetAudioOption(m_audioType);
+		m_recoder.SetSaveFile(pszName);
+        if (m_recoder.Start())
+     		m_timer->start(1000);
 	}
 	else
 	{

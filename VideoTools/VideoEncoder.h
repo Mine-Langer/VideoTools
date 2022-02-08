@@ -13,12 +13,10 @@ public:
 
 	void Release();
 
-	void Close();
-
 	AVRational GetTimeBase();
 
 private:
-	void OnEncodeFunction();
+
 
 private:
 	AVCodecContext* m_pCodecCtx = nullptr;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Demultiplexer.h"
+#include "VideoDecoder.h"
 
 class CAudioDecoder:public IDemuxEvent
 {
@@ -13,7 +14,9 @@ public:
 	// 打开音频设备
 	bool OpenMicrophone(const char* szUrl);
 
-	bool Start(IAudioEvent* pEvt);
+	bool Start(IDecoderEvent* pEvt);
+
+	void Stop();
 
 	void GetSrcParameter(int& sample_rate, int& nb_sample, int64_t& ch_layout, enum AVSampleFormat& sample_fmt);
 	bool SetSwrContext(int64_t ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
@@ -23,18 +26,18 @@ public:
 	// 转码
 	AVFrame* ConvertFrame(AVFrame* frame);
 
-	void Release();
 
 protected:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 	void OnDecodeFunction();
 
+	void Release();
 
 private:
 	CDemultiplexer m_demux;
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwrContext* m_pSwrCtx = nullptr;
-	IAudioEvent* m_pEvent = nullptr;
+	IDecoderEvent* m_pEvent = nullptr;
 
 	int64_t m_channelLayout = 0;
 	AVSampleFormat m_sampleFormat = AV_SAMPLE_FMT_NONE;
