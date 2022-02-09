@@ -330,7 +330,9 @@ void CRecoder::Stop()
 
 void CRecoder::Close()
 {
-	m_videoDecoder.Stop();
+//	m_videoDecoder.Stop();
+
+	av_frame_free(&m_swsFrame);
 
 	m_videoEncoder.Release();
 
@@ -366,12 +368,23 @@ bool CRecoder::InitOutput()
 
 bool CRecoder::InitInput()
 {
-	if (!m_videoDecoder.OpenScreen(m_x, m_y, m_w, m_h))
+// 	if (!m_videoDecoder.OpenScreen(m_x, m_y, m_w, m_h))
+// 		return false;
+// 	if (!m_videoDecoder.SetSwsConfig())
+// 		return false;
+// 	if (!m_videoDecoder.Start(this))
+// 		return false;
+	m_captureScreen.Init(m_x, m_y, m_w, m_h);
+
+	m_swsFrame = av_frame_alloc();
+	if (!m_swsFrame)
 		return false;
-	if (!m_videoDecoder.SetSwsConfig())
-		return false;
-	if (!m_videoDecoder.Start(this))
-		return false;
+
+	m_swsFrame->format = AV_PIX_FMT_YUV420P;
+	m_swsFrame->width = m_w;
+	m_swsFrame->height = m_h;
+	int64_t frameSize = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, m_w, m_h, 1);
+	av_image_fill_arrays(m_swsFrame->data, m_swsFrame->linesize, m_captureScreen.YUVBuffer(), AV_PIX_FMT_YUV420P, m_w, m_h, 1);
 
 	return true;
 }
@@ -380,6 +393,7 @@ void CRecoder::CaptureThread()
 {
 	AVFrame* pvFrame = nullptr;
 	unsigned int videoIndex = 0;
+	uint64_t lastPts = 0, lastDts = 0;
 
 	if (!WriteHeader())
 		return;
@@ -390,26 +404,33 @@ void CRecoder::CaptureThread()
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 		else
 		{
-			if (!m_vDataQueue.Pop(pvFrame))
-				std::this_thread::sleep_for(std::chrono::milliseconds(40));
-			else
 			{
-				if (pvFrame == nullptr)
-					break;
-				AVFrame* swsFrame = m_videoDecoder.ConvertFrame(pvFrame);
-				if (swsFrame)
+// 				if (pvFrame == nullptr)
+// 					break;
+				// AVFrame* swsFrame = m_videoDecoder.ConvertFrame(pvFrame);
+				m_captureScreen.CaptureImage();
 				{
-					swsFrame->pts = videoIndex++;
-					AVPacket* pkt = m_videoEncoder.Encode(swsFrame);
+					m_swsFrame->pkt_dts = m_swsFrame->pts = videoIndex++;
+					//m_swsFrame->pkt_duration = 90000 / 25 / 100;
+					//m_swsFrame->pkt_pos = -1;
+
+					AVPacket* pkt = m_videoEncoder.Encode(m_swsFrame);
 					if (pkt)
 					{
-						av_interleaved_write_frame(m_pFormatCtx, pkt);
+						pkt->duration = 1024;
+						pkt->pts = lastPts + pkt->duration;
+						pkt->dts = lastDts + pkt->duration;
+						lastPts = pkt->pts;
+						lastDts = pkt->dts;
+// 						pkt->pts = -1;
+
+						av_write_frame(m_pFormatCtx, pkt);
+						//av_interleaved_write_frame(m_pFormatCtx, pkt);
 						av_packet_free(&pkt);
 					}
 				}
 
 				av_frame_free(&pvFrame);
-				av_frame_free(&swsFrame);
 			}
 		}
 	}

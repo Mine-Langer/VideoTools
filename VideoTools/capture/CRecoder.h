@@ -2,6 +2,7 @@
 #include "../AudioDecoder.h"
 #include "../AudioEncoder.h"
 #include "../VideoEncoder.h"
+#include "captureScreen.h"
 
 enum eAudioOpt { AllCap, SysAudio, MicroAudio, NoAudio };
 
@@ -52,10 +53,12 @@ private:
 
 	SafeQueue<AVFrame*> m_vDataQueue;
 	SafeQueue<AVFrame*> m_aDataQueue;
+	AVFrame* m_swsFrame = nullptr;
 
 	AVFormatContext* m_pFormatCtx = nullptr;
-	CVideoDecoder m_videoDecoder;
+//	CVideoDecoder m_videoDecoder;
 	CVideoEncoder m_videoEncoder;
+	CaptureScreen m_captureScreen;
 };
 
 /*

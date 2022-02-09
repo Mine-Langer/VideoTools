@@ -20,6 +20,7 @@ bool CVideoEncoder::Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, in
 	if (!m_pCodecCtx)
 		return false;
 
+	m_pCodecCtx->flags |= AV_CODEC_FLAG_QSCALE;
 	m_pCodecCtx->width = width;
 	m_pCodecCtx->height = height;
 	m_pCodecCtx->codec_id = codec_id;
@@ -27,6 +28,10 @@ bool CVideoEncoder::Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, in
 	m_pCodecCtx->time_base = { 1, 25 };
 	m_pCodecCtx->gop_size = 12;
 	m_pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+
+	av_opt_set(m_pCodecCtx->priv_data, "b-pyramid", "none", 0);
+	av_opt_set(m_pCodecCtx->priv_data, "preset", "superfast", 0);
+	av_opt_set(m_pCodecCtx->priv_data, "tune", "zerolatency", 0);
 
 	if (outFmtCtx->oformat->flags & AVFMT_GLOBALHEADER)
 		m_pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;

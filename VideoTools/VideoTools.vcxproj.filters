@@ -82,6 +82,9 @@
     <ClCompile Include="AudioEncoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="capture\captureScreen.cpp">
+      <Filter>capture</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -119,6 +122,9 @@
     </ClInclude>
     <ClInclude Include="AudioEncoder.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="capture\captureScreen.h">
+      <Filter>capture</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

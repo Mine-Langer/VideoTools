@@ -102,6 +102,7 @@
     <ClCompile Include="AudioDecoder.cpp" />
     <ClCompile Include="AVTools.cpp" />
     <ClCompile Include="AudioEncoder.cpp" />
+    <ClCompile Include="capture\captureScreen.cpp" />
     <ClCompile Include="Composition\AVTextureBar.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
@@ -122,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioEncoder.h" />
+    <ClInclude Include="capture\captureScreen.h" />
     <ClInclude Include="VideoEncoder.h" />
     <QtMoc Include="Composition\AVTextureBar.h" />
     <ClInclude Include="AudioDecoder.h" />
