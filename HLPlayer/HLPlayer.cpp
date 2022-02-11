@@ -8,12 +8,13 @@ HLPlayer::HLPlayer(QWidget *parent)
 {
     ui.setupUi(this);
     
+	m_timer = new QTimer(this);
 	ui.sliderPlay->installEventFilter(this);
 	ui.sliderVolumn->installEventFilter(this);
 	connect(ui.btnPlay, SIGNAL(clicked()), this, SLOT(OnBtnPlayClicked()));
 	connect(ui.btnOpenFile, SIGNAL(clicked()), this, SLOT(OnBtnOpenFile()));
-	connect(ui.sliderPlay, SIGNAL(sliderMoved(int)), this, SLOT(OnSliderPlayMoved(int)));
 	connect(this, SIGNAL(PlayStatus(int)), this, SLOT(OnPlayerStatus(int)));
+	connect(m_timer, SIGNAL(timeout()), this, SLOT(OnTestTimerout()));
 }
 
 void HLPlayer::showEvent(QShowEvent* event)
@@ -49,7 +50,11 @@ bool HLPlayer::eventFilter(QObject* watched, QEvent* event)
 				int dur = pSlider->maximum() - pSlider->minimum();
 				int pos = pSlider->minimum() + dur * ((double)mouseEvent->x() / pSlider->width());
 				if (pos != pSlider->sliderPosition())
-					pSlider->setValue(pos);
+				{
+					m_nPos = pos;
+					pSlider->setValue(m_nPos);
+					m_player.SetPosition();
+				}
 			}
 		}
 	}
@@ -94,19 +99,19 @@ void HLPlayer::OnBtnPlayClicked()
 		ui.btnPlay->setStyleSheet(tr("QPushButton{ border-image: url(:/HLPlayer/res/play_normal.png); } \
 								  QPushButton:hover { border-image: url(:/HLPlayer/res/play_hover.png); }\
 								  QPushButton:pressed { border-image: url(:/HLPlayer/res/play_clicked.png);}"));
+		ui.sliderPlay->setMinimum(0);
+		ui.sliderPlay->setMaximum(180);
+		m_nPos = 0;
+		m_timer->start(1000);
 	}
 	else
 	{
 		ui.btnPlay->setStyleSheet(tr("QPushButton{ border-image: url(:/HLPlayer/res/pause_normal.png); } \
 								  QPushButton:hover { border-image: url(:/HLPlayer/res/pause_hover.png); }\
 								  QPushButton:pressed { border-image: url(:/HLPlayer/res/pause_clicked.png);}"));
+		m_timer->stop();
 	}
-}
-
-void HLPlayer::OnSliderPlayMoved(int value)
-{
-
-	return;
+	
 }
 
 void HLPlayer::OnBtnOpenFile()
@@ -142,4 +147,10 @@ void HLPlayer::OnPlayerStatus(int iStatus)
 		ui.btnOpenFile->setVisible(true);
 		ui.PlayView->update();
 	}
+}
+
+void HLPlayer::OnTestTimerout()
+{
+	ui.sliderPlay->setSliderPosition(m_nPos);
+	m_nPos++;
 }

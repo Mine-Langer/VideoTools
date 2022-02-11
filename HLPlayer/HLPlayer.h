@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 #pragma execution_character_set("utf-8")
 
 #include <QtWidgets/QWidget>
+#include <QTimer>
 #include "ui_HLPlayer.h"
 #include "CPlayer.h"
 
@@ -25,9 +26,9 @@ private:
 
 private slots:
     void OnBtnPlayClicked();
-    void OnSliderPlayMoved(int);
     void OnBtnOpenFile();
     void OnPlayerStatus(int iStatus);
+    void OnTestTimerout();
 
 signals:
     void PlayStatus(int iStatus);
@@ -38,4 +39,8 @@ private:
     CPlayer m_player;
     bool m_bPlay = false;
     bool m_bShow = false;
+
+    // ceshi del
+    QTimer* m_timer = nullptr;
+    int m_nPos = 0;
 };

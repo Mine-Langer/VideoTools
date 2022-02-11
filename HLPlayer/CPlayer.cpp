@@ -73,6 +73,11 @@ void CPlayer::Start(IPlayerEvent* pEvent)
 	m_playThread = std::thread(&CPlayer::OnPlayFunction, this);
 }
 
+void CPlayer::SetPosition()
+{
+	m_demux.SetPosition();
+}
+
 bool CPlayer::InitAudio()
 {
 	m_audioDecoder.InitAudioSpec(m_audioSpec);

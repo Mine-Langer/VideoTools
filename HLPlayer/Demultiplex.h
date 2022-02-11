@@ -22,6 +22,8 @@ public:
 	// 关闭
 	void Close();
 
+	void SetPosition(uint64_t seekPos);
+
 	AVStream* VideoStream();
 	AVStream* AudioStream();
 	AVStream* SubtitleStream();
@@ -38,7 +40,9 @@ private:
 	int m_subtitleIndex = -1;
 
 	std::thread m_demuxThread;
-
+	uint64_t m_curPosition = 0;	// 当前播放位置
+	int64_t m_seekTargetPos = 0;
+	bool m_bSeek = false;
 	eAVStatus m_avStatus = eStop; // 默认为终止状态
 };
 

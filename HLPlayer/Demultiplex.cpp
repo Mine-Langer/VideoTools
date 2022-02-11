@@ -47,6 +47,12 @@ void CDemultiplex::Close()
 	}
 }
 
+void CDemultiplex::SetPosition(uint64_t seekPos)
+{
+	m_seekTargetPos = seekPos;
+	m_bSeek = true;
+}
+
 AVStream* CDemultiplex::VideoStream()
 {
 	if (m_videoIndex < 0)
@@ -79,6 +85,16 @@ void CDemultiplex::OnDemuxThread()
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 		else
 		{
+			if (m_bSeek)
+			{
+				int64_t seek_min = is->seek_rel > 0 ? m_seekTargetPos - is->seek_rel + 2 : INT64_MIN;
+				int64_t seek_max = is->seek_rel < 0 ? m_seekTargetPos - is->seek_rel - 2 : INT64_MAX;
+				avformat_seek_file(m_pFormatCtx, -1, );
+
+
+				m_bSeek = false;
+			}
+
 			AVPacket pkt;
 			if (0 > av_read_frame(m_pFormatCtx, &pkt))
 			{

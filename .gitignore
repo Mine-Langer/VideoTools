@@ -149,3 +149,11 @@ VideoTools/x64/Release/moc/moc_CompositeView.cpp
 VideoTools/x64/Release/uic/ui_CompositeView.h
 VideoTools/x64/Debug/moc/moc_AVTextureBar.cpp
 VideoTools/x64/Release/moc/moc_AVTextureBar.cpp
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/Makefile.Release
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/Makefile.Debug
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/Makefile
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/qrc_HLPlayer.cpp
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/moc_predefs.h
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/moc_HLPlayer.cpp
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/HLPlayer.vc.pdb
+build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/.qmake.stash
