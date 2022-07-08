@@ -10,12 +10,12 @@ CRecoder::~CRecoder()
 
 }
 
-void CRecoder::SetConfig(int nSamples, int nBit, int nChannel)
+void CRecoder::SetWaveFormat(int nSamplesRate, int nBit, int nChannel)
 {
 	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
 	waveFormat.nChannels = nChannel;
-	waveFormat.nSamplesPerSec = nSamples;
-	waveFormat.nAvgBytesPerSec = nSamples * nChannel * nBit / 8;
+	waveFormat.nSamplesPerSec = nSamplesRate;
+	waveFormat.nAvgBytesPerSec = nSamplesRate * nChannel * nBit / 8;
 	waveFormat.nBlockAlign = nChannel * nBit / 8;
 	waveFormat.wBitsPerSample = nBit;
 	waveFormat.cbSize = 0;
@@ -25,35 +25,36 @@ bool CRecoder::Init()
 {
 	if (GetMicrophone())
 	{
-		SetConfig(44100, 16, 2);
+		SetWaveFormat(44100, 16, 2);
 		
 		// 初始化设备缓冲区
 		for (int i = 0; i < 2; i++)
 		{
 			whdr[i].lpData = (LPSTR)malloc(4096);
+			memset(whdr[i].lpData, 0, sizeof(4096));
 			whdr[i].dwBufferLength = 4096;
 			whdr[i].dwBytesRecorded = 0;
 			whdr[i].dwUser = 0;
 			whdr[i].dwFlags = 0;
 			whdr[i].dwLoops = 0;
 		}
+		return true;
 	}
-	return true;
+	return false;
 }
 
-void CRecoder::Start()
+bool CRecoder::Start()
 {
 	try
 	{
 		MMRESULT mr = waveInOpen(&hWaveIn, WAVE_MAPPER, &waveFormat, (DWORD_PTR)RecoderFunction, (DWORD_PTR)this, CALLBACK_FUNCTION);
 		if (mr != MMSYSERR_NOERROR)
 		{
-			return;
+			return false;
 		}
 
 		waveInPrepareHeader(hWaveIn, &whdr[0], sizeof(WAVEHDR));	//配置数据块
 		waveInPrepareHeader(hWaveIn, &whdr[1], sizeof(WAVEHDR));
-
 
 		//部署缓存
 		waveInAddBuffer(hWaveIn, &whdr[0], sizeof(WAVEHDR));		//压入缓冲区
@@ -64,10 +65,12 @@ void CRecoder::Start()
 		IsStop = FALSE;
 
 		printf("开始录音\n");
+		return true;
 	}
 	catch (...)
 	{
-
+		printf("启动失败\n");
+		return false;
 	}
 }
 
@@ -83,10 +86,11 @@ void CRecoder::Stop()
 		waveInUnprepareHeader(hWaveIn, &whdr[1], sizeof(WAVEHDR));
 
 		waveInClose(hWaveIn);
+		printf("录音停止！\r\n");
 	}
 	catch (...)
 	{
-
+		printf("停止失败！\r\n");
 	}
 }
 
@@ -104,8 +108,10 @@ void CRecoder::Play()
 			{
 				if (whdr[i].dwUser != 1)
 				{
-					char szBuffer[4096] = { 0 };
+					char szBuffer[4096] = { 0 }; // 音频流
 					
+					memcpy(whdr[i].lpData, szBuffer, 4096);
+					whdr[i].dwUser = 1;
 
 					waveOutPrepareHeader(hWaveOut, &whdr[i], sizeof(WAVEHDR));
 					waveOutWrite(hWaveOut, &whdr[i], sizeof(WAVEHDR));
@@ -121,18 +127,18 @@ void CRecoder::Play()
 
 bool CRecoder::GetMicrophone()
 {
+	// 获取音频设备数量
 	int nCount = waveInGetNumDevs();
 	if (nCount == 0)
 	{
 		return false;
 	}
 
+	// 获取设备信息
 	WAVEINCAPS waveCaps = { 0 };
 	MMRESULT mr = waveInGetDevCaps(0, &waveCaps, sizeof(WAVEINCAPS));
 	if (mr != MMSYSERR_NOERROR)
-	{
 		return false;
-	}
 
 	return true;
 }
@@ -174,5 +180,18 @@ void CALLBACK CRecoder::RecoderFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst
 
 void CALLBACK CRecoder::PlayFunction(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInst, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
-
+	LPWAVEHDR phdr = (LPWAVEHDR)dwParam1;
+	switch (uMsg)
+	{
+	case WOM_OPEN:
+		printf("播放设备启动！\r\n");
+		break;
+	case WOM_DONE:
+		// 播放完了 使缓冲区重新读取数据
+		phdr->dwUser = 0;
+		break;
+	case WOM_CLOSE:
+		printf("播放设备关闭！\r\n");
+		break;
+	}
 }

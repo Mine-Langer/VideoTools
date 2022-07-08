@@ -15,14 +15,14 @@ public:
 
 	bool Init();
 	
-	void Start();
+	bool Start();
 
 	void Stop();
 
 	void Play();
 
 private:
-	void SetConfig(int nSamples, int nBit, int nChannel);
+	void SetWaveFormat(int nSamples, int nBit, int nChannel);
 
 	bool GetMicrophone();
 

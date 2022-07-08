@@ -157,3 +157,7 @@ build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/moc_predefs.h
 build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/moc_HLPlayer.cpp
 build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/debug/HLPlayer.vc.pdb
 build-HLPlayer-Desktop_Qt_5_12_10_MSVC2015_64bit-Debug/.qmake.stash
+VideoTools/x64/Debug/qmake/temp/moc_predefs.h.cbt
+VideoTools/x64/Debug/qmake/temp/qtvars.vcxproj
+VideoTools/x64/Debug/qmake/temp/qtvars.vcxproj.filters
+VideoTools/x64/Debug/qt.natvis
