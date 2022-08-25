@@ -3,7 +3,11 @@
 
 #include "demos.h"
 
-int main()
+int main(int argc, char* argv[])
 {
-    std::cout << "Hello World!\n";
+    CScaleImage scale;
+    scale.Scale("scale_test.mp4", "320x240");
+
+    system("pause");
+    return 0;
 }
