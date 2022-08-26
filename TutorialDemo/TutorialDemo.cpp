@@ -5,8 +5,10 @@
 
 int main(int argc, char* argv[])
 {
-    CScaleImage scale;
-    scale.Scale("scale_test.mp4", "320x240");
+//    CScaleImage scale;
+//    scale.Scale("scale_test.yuv", "320x240");
+
+    ExtractMvs e("D:/documents/OneDrive/video/tbbjszwb.mp4");
 
     system("pause");
     return 0;

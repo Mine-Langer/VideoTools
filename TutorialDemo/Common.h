@@ -3,9 +3,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 #include <libavutil/imgutils.h>
 #include <libavutil/parseutils.h>
 #include <libswscale/swscale.h>
+#include <libavutil/motion_vector.h>
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavformat/avio.h>
+#include <libavutil/file.h>
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,21 +1,51 @@
 #pragma once
 #include "Common.h"
 
-class CScaleImage
+struct buffer_data
 {
-public:
-	bool Scale(const char* szFile, const char* nSize);
-
-private:
-	void fill_yuv_image(int frame_index);
-
-private:
-
-	int m_srcWidth = 320;
-	int m_srcHeight = 240;
-	AVPixelFormat m_srcPixelFmt = AV_PIX_FMT_YUV420P;
-	uint8_t *m_srcData[4], *m_dstData[4];
-	int m_srcLinesize[4], m_dstLineSize[4];
-	int m_dstBufSize = 0;
+	uint8_t* ptr;
+	size_t size;
 };
 
+class CDemos
+{
+public:
+	~CDemos();
+
+	void ExtractMvs(const char* szFile);
+
+	void AvioReading(const char* szFile);
+
+private:
+	static int read_packet(void* opaque, uint8_t* buf, int buf_size);
+
+private:
+	AVFormatContext* fmt_ctx = nullptr;
+	AVIOContext* avio_ctx = nullptr;
+
+	uint8_t* buffer = nullptr;
+	uint8_t* avio_ctx_buffer = nullptr;
+	size_t buffer_size, avio_ctx_buffer_size = 4096;
+	buffer_data buf_data = { 0 };
+
+};
+
+class ExtractMvs
+{
+public:
+	ExtractMvs(const char* szFile);
+	~ExtractMvs();
+
+private:
+	bool Open(const char* szFile);
+	void Run();
+	bool DecodePacket(AVPacket* pkt);
+
+private:
+	AVFormatContext* _format_ctx = nullptr;
+	AVCodecContext* _video_codec_ctx = nullptr;
+	AVStream* _video_stream = nullptr;
+	AVFrame* _frame = nullptr;
+	int stream_video_index = -1;
+	int video_frame_count = 0;
+};
