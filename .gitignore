@@ -161,3 +161,6 @@ VideoTools/x64/Debug/qmake/temp/moc_predefs.h.cbt
 VideoTools/x64/Debug/qmake/temp/qtvars.vcxproj
 VideoTools/x64/Debug/qmake/temp/qtvars.vcxproj.filters
 VideoTools/x64/Debug/qt.natvis
+HLPlayer/x64/Debug/qmake/temp/qtvars.vcxproj.filters
+HLPlayer/x64/Debug/qmake/temp/qtvars.vcxproj
+HLPlayer/x64/Debug/qmake/temp/moc_predefs.h.cbt
