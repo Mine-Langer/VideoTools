@@ -8,7 +8,13 @@ int main(int argc, char* argv[])
 //    CScaleImage scale;
 //    scale.Scale("scale_test.yuv", "320x240");
 
-    ExtractMvs e("D:/documents/OneDrive/video/tbbjszwb.mp4");
+//    ExtractMvs e("D:/documents/OneDrive/video/tbbjszwb.mp4");
+
+//    CDemos demo;
+//    demo.AvioReading("D:/documents/OneDrive/video/tbbjszwb.mp4");
+
+    TAAC aac;
+    aac.OpenInput("D:/CloudMusic/The Titan.mp3");
 
     system("pause");
     return 0;

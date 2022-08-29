@@ -12,6 +12,13 @@ extern "C" {
 #include <libavformat/avformat.h>
 #include <libavformat/avio.h>
 #include <libavutil/file.h>
+#include <libavutil/audio_fifo.h>
+#include <libavutil/avassert.h>
+#include <libavutil/avstring.h>
+#include <libavutil/channel_layout.h>
+#include <libavutil/frame.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
 
 #ifdef __cplusplus
 }

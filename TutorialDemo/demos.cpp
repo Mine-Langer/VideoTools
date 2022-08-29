@@ -107,6 +107,10 @@ bool ExtractMvs::DecodePacket(AVPacket* pkt)
 	return true;
 }
 
+CDemos::~CDemos()
+{
+}
+
 /********************************************************************************/
 void CDemos::AvioReading(const char* szFile)
 {
@@ -119,11 +123,113 @@ void CDemos::AvioReading(const char* szFile)
 	
 	fmt_ctx = avformat_alloc_context();
 	avio_ctx_buffer = (uint8_t*)av_malloc(avio_ctx_buffer_size);
-	avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, &buf_data, &read_packet, nullptr, nullptr);
+	avio_ctx = avio_alloc_context(avio_ctx_buffer, avio_ctx_buffer_size, 0, this, &read_packet, nullptr, nullptr);
 	fmt_ctx->pb = avio_ctx;
+
+	ret = avformat_open_input(&fmt_ctx, nullptr, nullptr, nullptr);
+	if (ret < 0)
+		return;
+
+	ret = avformat_find_stream_info(fmt_ctx, nullptr);
+	if (ret < 0)
+		return;
+
+	av_dump_format(fmt_ctx, 0, szFile, 0);
+
+ends:
+	avformat_close_input(&fmt_ctx);
+	if (avio_ctx)
+		av_freep(&avio_ctx->buffer);
+	avio_context_free(&avio_ctx);
+	
+	av_file_unmap(buffer, buffer_size);
 }
 
 int CDemos::read_packet(void* opaque, uint8_t* buf, int buf_size)
 {
-	return 0;
+	CDemos* pThis = (CDemos*)opaque;
+	buf_size =FFMIN(buf_size, pThis->buf_data.size);
+	if (!buf_size)
+		return AVERROR_EOF;
+
+	printf("ptr:%p, size:%zu\r\n", pThis->buf_data.ptr, pThis->buf_data.size);
+	
+	memcpy(buf, pThis->buf_data.ptr, buf_size);
+	pThis->buf_data.ptr += buf_size;
+	pThis->buf_data.size += buf_size;
+
+	return buf_size;
+}
+
+/***********************************************************************************/
+#define OUTPUT_CHANNEL 2
+
+TAAC::~TAAC()
+{
+}
+
+bool TAAC::OpenInput(const char* szInput)
+{
+	if (0 > avformat_open_input(&input_fmt_ctx, szInput, nullptr, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(input_fmt_ctx, nullptr))
+		return false;
+
+	audio_stream_idx = av_find_best_stream(input_fmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+	if (0 > audio_stream_idx)
+		return false;
+
+	AVStream* pStream = input_fmt_ctx->streams[audio_stream_idx];
+
+	const AVCodec* pCodec = avcodec_find_decoder(pStream->codecpar->codec_id);
+	if (!pCodec)
+		return false;
+
+	input_codec_ctx = avcodec_alloc_context3(pCodec);
+	if (!input_codec_ctx)
+		return false;
+
+	if (0 > avcodec_parameters_to_context(input_codec_ctx, pStream->codecpar))
+		return false;
+
+	if (0 > avcodec_open2(input_codec_ctx, pCodec, nullptr))
+		return false;
+
+	// set the packet timebase for the decoder
+	input_codec_ctx->pkt_timebase = pStream->time_base;
+
+	return true;
+}
+
+bool TAAC::OpenOutput(const char* szOutput)
+{
+	AVIOContext* output_io_ctx = nullptr;
+
+	if (0 > avio_open(&output_io_ctx, szOutput, AVIO_FLAG_WRITE))
+		return false;
+
+	output_fmt_ctx = avformat_alloc_context();
+	if (!output_fmt_ctx)
+		return false;
+
+	output_fmt_ctx->pb = output_io_ctx;
+	output_fmt_ctx->oformat = av_guess_format(nullptr, szOutput, nullptr);
+	if (!output_fmt_ctx)
+		return false;
+
+	output_fmt_ctx->url = av_strdup(szOutput);
+
+	const AVCodec* pCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+
+	AVStream* pStream = avformat_new_stream(output_fmt_ctx, nullptr);
+
+	output_codec_ctx = avcodec_alloc_context3(pCodec);
+	if (!output_codec_ctx)
+		return false;
+
+	av_channel_layout_default(&output_codec_ctx->ch_layout, OUTPUT_CHANNEL);
+
+
+	return true;
 }

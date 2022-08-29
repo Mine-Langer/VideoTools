@@ -49,3 +49,25 @@ private:
 	int stream_video_index = -1;
 	int video_frame_count = 0;
 };
+
+class TAAC
+{
+public:
+	~TAAC();
+
+	bool OpenInput(const char* szInput);
+
+	bool OpenOutput(const char* szOutput);
+
+
+	
+private:
+	AVFormatContext* input_fmt_ctx = nullptr;
+	AVFormatContext* output_fmt_ctx = nullptr;
+	AVCodecContext* input_codec_ctx = nullptr;
+	AVCodecContext* output_codec_ctx = nullptr;
+	SwrContext* swr_ctx = nullptr;
+	AVAudioFifo* fifo = nullptr;
+
+	int audio_stream_idx = -1;
+};
