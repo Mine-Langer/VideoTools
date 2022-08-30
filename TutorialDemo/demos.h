@@ -55,11 +55,29 @@ class TAAC
 public:
 	~TAAC();
 
+	bool Run(const char* szInput, const char* szOutput);
+
+private:
 	bool OpenInput(const char* szInput);
 
 	bool OpenOutput(const char* szOutput);
 
+	bool InitSwr();
 
+	bool InitFifo();
+
+	bool ReadDecodeConvertStore(bool* finished);
+
+	bool InitConvertSamples(int frameSize);
+
+	bool LoadEncodeAndWrite();
+
+	bool ConvertSamples(AVFrame* frame);
+
+	bool AddSamplesToFifo(int nbSamples);
+		 
+
+	void Release();
 	
 private:
 	AVFormatContext* input_fmt_ctx = nullptr;
@@ -68,6 +86,30 @@ private:
 	AVCodecContext* output_codec_ctx = nullptr;
 	SwrContext* swr_ctx = nullptr;
 	AVAudioFifo* fifo = nullptr;
+	uint8_t** converted_samples = nullptr;
 
 	int audio_stream_idx = -1;
+	int64_t _pts = 0;
+};
+/***************************************************************/
+class CTransAAC
+{
+public:
+	~CTransAAC();
+
+	bool Run(const char* szInput, const char* szOutput);
+
+private:
+	bool OpenInput(const char* szInput);
+
+	bool OpenOutput(const char* szOutput);
+
+private:
+	AVFormatContext* input_fmt_ctx = nullptr;
+	AVFormatContext* output_fmt_ctx = nullptr;
+	AVCodecContext* input_codec_ctx = nullptr;
+	AVCodecContext* output_codec_ctx = nullptr;
+	SwrContext* swr_ctx = nullptr;
+	AVAudioFifo* fifo = nullptr;
+	int audio_index = -1;
 };
