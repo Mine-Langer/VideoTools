@@ -465,6 +465,7 @@ void TAAC::Release()
 /***********************************************************************/
 CTransAAC::~CTransAAC()
 {
+	Release();
 }
 
 bool CTransAAC::Run(const char* szInput, const char* szOutput)
@@ -474,6 +475,19 @@ bool CTransAAC::Run(const char* szInput, const char* szOutput)
 
 	if (!OpenOutput(szOutput))
 		return false;
+
+	if (!InitConfig())
+		return false;
+
+	printf("work:\r\n");
+
+	int ret = avformat_write_header(output_fmt_ctx, nullptr);
+
+	dowork();
+
+	ret = av_write_trailer(output_fmt_ctx);
+
+	Release();
 
 	return true;
 }
@@ -536,4 +550,156 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 		return false;
 
 	return true;
+}
+
+void CTransAAC::Release()
+{
+	if (fifo) {
+		av_audio_fifo_free(fifo);
+		fifo = nullptr;
+	}
+
+	if (swr_ctx) {
+		swr_free(&swr_ctx);
+		swr_ctx = nullptr;
+	}
+
+	if (output_codec_ctx) {
+		avcodec_close(output_codec_ctx);
+		avcodec_free_context(&output_codec_ctx);
+		output_codec_ctx = nullptr;
+	}
+
+	if (output_fmt_ctx) {
+		avformat_close_input(&output_fmt_ctx);
+		avformat_free_context(output_fmt_ctx);
+		output_fmt_ctx = nullptr;
+	}
+
+	if (input_codec_ctx) {
+		avcodec_close(input_codec_ctx);
+		avcodec_free_context(&input_codec_ctx);
+		input_codec_ctx = nullptr;
+	}
+
+	if (input_fmt_ctx) {
+		avformat_close_input(&input_fmt_ctx);
+		avformat_free_context(input_fmt_ctx);
+		input_fmt_ctx = nullptr;
+	}
+}
+
+bool CTransAAC::InitConfig()
+{
+	if (0 > swr_alloc_set_opts2(&swr_ctx, 
+								&output_codec_ctx->ch_layout,
+								output_codec_ctx->sample_fmt,
+								output_codec_ctx->sample_rate, 
+								&input_codec_ctx->ch_layout, 
+								input_codec_ctx->sample_fmt,
+								input_codec_ctx->sample_rate,
+								0, nullptr))
+		return false;
+
+	if (0 > swr_init(swr_ctx))
+		return false;
+
+	fifo = av_audio_fifo_alloc(output_codec_ctx->sample_fmt, output_codec_ctx->ch_layout.nb_channels, 1);
+	if (!fifo)
+		return false;
+
+	input_frame = av_frame_alloc();
+	input_packet = av_packet_alloc();
+	output_packet = av_packet_alloc();
+
+	return true;
+}
+
+void CTransAAC::dowork()
+{
+	int err = 0;
+	while (true)
+	{
+		err = av_read_frame(input_fmt_ctx, input_packet);
+		if (err < 0)
+		{
+			if (err == AVERROR_EOF)
+				break;
+			break;
+		}
+
+		if (input_packet->stream_index == audio_index)
+		{
+			if (0 == avcodec_send_packet(input_codec_ctx, input_packet))
+			{
+				if (0 == avcodec_receive_frame(input_codec_ctx, input_frame))
+				{
+					printf("pts:%lld  framesize:%d\r\n", input_frame->pts, input_frame->nb_samples);
+					
+					PushFrameToFifo((const uint8_t**)input_frame->extended_data, input_frame->nb_samples);
+
+					av_frame_unref(input_frame);
+				}
+			}	
+
+			PopFrameToEncodeAndWrite();
+		}
+		av_packet_unref(input_packet);
+	}
+}
+
+void CTransAAC::PushFrameToFifo(const uint8_t** framedata, int framesize)
+{
+	int err = 0;
+	uint8_t** cvtSamplesBuf = (uint8_t**)calloc(output_codec_ctx->ch_layout.nb_channels, sizeof(uint8_t*));
+
+	err = av_samples_alloc(cvtSamplesBuf, 0, output_codec_ctx->ch_layout.nb_channels, framesize, output_codec_ctx->sample_fmt, 0);
+	
+	err = swr_convert(swr_ctx, cvtSamplesBuf, framesize, framedata, framesize);
+
+	int fifo_size = av_audio_fifo_size(fifo);
+	err = av_audio_fifo_realloc(fifo, fifo_size+framesize);
+
+	int wsize = av_audio_fifo_write(fifo, (void**)cvtSamplesBuf, framesize);
+
+	av_freep(&cvtSamplesBuf[0]);
+	free(cvtSamplesBuf);
+}
+
+void CTransAAC::PopFrameToEncodeAndWrite()
+{
+	int err = 0;
+	while (true)
+	{
+		int fifosize = av_audio_fifo_size(fifo);
+		if (fifosize < output_codec_ctx->frame_size)
+			break;
+
+		const int framesize = FFMIN(fifosize, output_codec_ctx->frame_size);
+		
+		AVFrame* outFrame = av_frame_alloc();
+		outFrame->nb_samples = framesize;
+		outFrame->format = output_codec_ctx->sample_fmt;
+		outFrame->sample_rate = output_codec_ctx->sample_rate;
+		err = av_channel_layout_copy(&outFrame->ch_layout, &output_codec_ctx->ch_layout);
+		err = av_frame_get_buffer(outFrame, 0);
+		
+		err = av_audio_fifo_read(fifo, (void**)outFrame->data, framesize);
+
+		outFrame->pts = _pts;
+		_pts += outFrame->nb_samples;
+
+		err = avcodec_send_frame(output_codec_ctx, outFrame);
+		if (err == 0)
+		{
+			err = avcodec_receive_packet(output_codec_ctx, output_packet);
+			if (err == 0)
+			{
+				err = av_write_frame(output_fmt_ctx, output_packet);
+			}
+			av_packet_unref(output_packet);
+		}
+
+		av_frame_free(&outFrame);
+	}
 }

@@ -104,6 +104,17 @@ private:
 
 	bool OpenOutput(const char* szOutput);
 
+	void Release();
+
+	bool InitConfig();
+
+	void dowork();
+
+	void PushFrameToFifo(const uint8_t** framedata, int framesize);
+	void PopFrameToEncodeAndWrite();
+
+
+
 private:
 	AVFormatContext* input_fmt_ctx = nullptr;
 	AVFormatContext* output_fmt_ctx = nullptr;
@@ -111,5 +122,10 @@ private:
 	AVCodecContext* output_codec_ctx = nullptr;
 	SwrContext* swr_ctx = nullptr;
 	AVAudioFifo* fifo = nullptr;
+	AVPacket* input_packet = nullptr;
+	AVFrame* input_frame = nullptr;
+	AVPacket* output_packet = nullptr;
+
 	int audio_index = -1;
+	int64_t _pts = 0;
 };
