@@ -111,7 +111,7 @@ private:
 	void dowork();
 
 	void PushFrameToFifo(const uint8_t** framedata, int framesize);
-	void PopFrameToEncodeAndWrite();
+	void PopFrameToEncodeAndWrite(bool bFinished = false);
 
 
 

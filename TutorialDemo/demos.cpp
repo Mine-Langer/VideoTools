@@ -522,11 +522,17 @@ bool CTransAAC::OpenInput(const char* szInput)
 
 bool CTransAAC::OpenOutput(const char* szOutput)
 {
+	// 初始化输出码流的AVFormatContext
 	if (0 > avformat_alloc_output_context2(&output_fmt_ctx, nullptr, nullptr, szOutput))
 		return false;
 
+	// 打开输出文件
+	if (0 > avio_open(&output_fmt_ctx->pb, szOutput, AVIO_FLAG_WRITE))
+		return false;
+
+	// 查找编码器
 	const AVOutputFormat* out_fmt = output_fmt_ctx->oformat;
-	const AVCodec* pCodec = avcodec_find_decoder(out_fmt->audio_codec);
+	const AVCodec* pCodec = avcodec_find_encoder(out_fmt->audio_codec);
 	if (!pCodec)
 		return false;
 
@@ -536,6 +542,7 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 	output_codec_ctx->sample_rate = input_codec_ctx->sample_rate;
 	output_codec_ctx->bit_rate = 96000;
 
+	// 创建输出码流的AVStream
 	AVStream* pStream = avformat_new_stream(output_fmt_ctx, pCodec);
 	pStream->time_base.den = input_codec_ctx->sample_rate;
 	pStream->time_base.num = 1;
@@ -543,10 +550,11 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 	if (out_fmt->flags & AVFMT_GLOBALHEADER)
 		output_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-	if (0 > avcodec_parameters_from_context(pStream->codecpar, output_codec_ctx))
+	// 打开编码器
+	if (0 > avcodec_open2(output_codec_ctx, pCodec, nullptr))
 		return false;
 
-	if (0 > avcodec_open2(output_codec_ctx, pCodec, nullptr))
+	if (0 > avcodec_parameters_from_context(pStream->codecpar, output_codec_ctx))
 		return false;
 
 	return true;
@@ -646,35 +654,34 @@ void CTransAAC::dowork()
 		}
 		av_packet_unref(input_packet);
 	}
+	
+	PopFrameToEncodeAndWrite();
 }
 
 void CTransAAC::PushFrameToFifo(const uint8_t** framedata, int framesize)
 {
-	int err = 0;
-	uint8_t** cvtSamplesBuf = (uint8_t**)calloc(output_codec_ctx->ch_layout.nb_channels, sizeof(uint8_t*));
+	AVFrame* pFrame = av_frame_alloc();
+	pFrame->format = output_codec_ctx->sample_fmt;
+	pFrame->ch_layout = output_codec_ctx->ch_layout;
+	pFrame->nb_samples = framesize;
+	av_frame_get_buffer(pFrame, 0);
 
-	err = av_samples_alloc(cvtSamplesBuf, 0, output_codec_ctx->ch_layout.nb_channels, framesize, output_codec_ctx->sample_fmt, 0);
-	
-	err = swr_convert(swr_ctx, cvtSamplesBuf, framesize, framedata, framesize);
+	int err = swr_convert(swr_ctx, pFrame->data, framesize, framedata, framesize);
 
 	int fifo_size = av_audio_fifo_size(fifo);
 	err = av_audio_fifo_realloc(fifo, fifo_size+framesize);
 
-	int wsize = av_audio_fifo_write(fifo, (void**)cvtSamplesBuf, framesize);
+	int wsize = av_audio_fifo_write(fifo, (void**)pFrame->data, framesize);
 
-	av_freep(&cvtSamplesBuf[0]);
-	free(cvtSamplesBuf);
+	av_frame_free(&pFrame);
 }
 
-void CTransAAC::PopFrameToEncodeAndWrite()
+void CTransAAC::PopFrameToEncodeAndWrite(bool bFinished)
 {
 	int err = 0;
-	while (true)
+	int fifosize = 0;
+	while ((fifosize = av_audio_fifo_size(fifo)) >= output_codec_ctx->frame_size || (bFinished && fifosize > 0))
 	{
-		int fifosize = av_audio_fifo_size(fifo);
-		if (fifosize < output_codec_ctx->frame_size)
-			break;
-
 		const int framesize = FFMIN(fifosize, output_codec_ctx->frame_size);
 		
 		AVFrame* outFrame = av_frame_alloc();
