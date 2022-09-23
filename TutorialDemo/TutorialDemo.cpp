@@ -2,6 +2,7 @@
 //
 
 #include "demos.h"
+#include <Windows.h>
 
 int main(int argc, char* argv[])
 {
@@ -12,9 +13,11 @@ int main(int argc, char* argv[])
 
 //    CDemos demo;
 //    demo.AvioReading("D:/documents/OneDrive/video/tbbjszwb.mp4");
+    int iSec = GetDoubleClickTime();
 
-    //TAAC aac;
-    CTransAAC aac;
+
+    TAAC aac;
+    //CTransAAC aac;
     aac.Run("D:/CloudMusic/The Titan.mp3", "output.aac");
     
     system("pause");

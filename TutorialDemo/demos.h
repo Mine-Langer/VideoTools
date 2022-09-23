@@ -91,6 +91,7 @@ private:
 	int audio_stream_idx = -1;
 	int64_t _pts = 0;
 };
+
 /***************************************************************/
 class CTransAAC
 {
