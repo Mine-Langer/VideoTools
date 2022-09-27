@@ -165,154 +165,6 @@ int CDemos::read_packet(void* opaque, uint8_t* buf, int buf_size)
 #define OUTPUT_CHANNEL 2
 #define OUTPUT_BITRATE 96000
 
-TAAC::~TAAC()
-{
-}
-
-bool TAAC::Run(const char* szInput, const char* szOutput)
-{
-	if (!OpenInput(szInput))
-		return false;
-
-	if (!OpenOutput(szOutput))
-		return false;
-
-	if (!InitSwr())
-		return false;
-
-	AVPacket packet;
-	AVFrame* frame = av_frame_alloc();
-	while (true)
-	{
-		if (0 > av_read_frame(input_fmt_ctx, &packet))
-			break;
-		
-		if (packet.stream_index != audio_stream_idx)
-		{
-			av_packet_unref(&packet);
-			continue;
-		}
-
-		if (0 == avcodec_send_packet(input_codec_ctx, &packet))
-		{
-			if (0 == avcodec_receive_frame(input_codec_ctx, frame))
-			{
-				printf("frame pts:%lld  time:%.2f \n", packet.pts, packet.pts * av_q2d(input_codec_ctx->time_base));
-				av_frame_unref(frame);
-			}
-			av_packet_unref(&packet);
-		}
-	}
-	av_frame_free(&frame);
-
-	Release();
-
-	return true;
-}
-
-bool TAAC::OpenInput(const char* szInput)
-{
-	if (0!=avformat_open_input(&input_fmt_ctx, szInput, nullptr, nullptr))
-		return false;
-	
-	if (0 > avformat_find_stream_info(input_fmt_ctx, nullptr))
-		return false;
-
-	audio_stream_idx = av_find_best_stream(input_fmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-	if (audio_stream_idx < 0)
-		return false;
-
-	AVStream* pStream = input_fmt_ctx->streams[audio_stream_idx];
-	const AVCodec* pCodec = avcodec_find_decoder(pStream->codecpar->codec_id);
-	if (!pCodec)
-		return false;
-
-	input_codec_ctx = avcodec_alloc_context3(pCodec);
-	avcodec_parameters_to_context(input_codec_ctx, pStream->codecpar);
-
-	if (0 > avcodec_open2(input_codec_ctx, pCodec, nullptr))
-		return false;
-
-	double timebase = av_q2d(input_codec_ctx->time_base);
-	double duration = timebase * pStream->duration;
-	double rate = input_codec_ctx->sample_rate;
-
-	return true;
-}
-
-bool TAAC::OpenOutput(const char* szOutput)
-{
-	if (0 > avformat_alloc_output_context2(&output_fmt_ctx, nullptr, nullptr, szOutput))
-		return false;
-
-	if (0 > avio_open(&output_fmt_ctx->pb, szOutput, AVIO_FLAG_WRITE))
-		return false;
-
-	const AVCodec* pCodec = avcodec_find_encoder(output_fmt_ctx->oformat->audio_codec);
-	if (!pCodec)
-		return false;
-
-	output_codec_ctx = avcodec_alloc_context3(nullptr);
-	output_codec_ctx->ch_layout = input_codec_ctx->ch_layout;
-	output_codec_ctx->sample_fmt = pCodec->sample_fmts[0];
-	output_codec_ctx->sample_rate = input_codec_ctx->sample_rate;
-	output_codec_ctx->bit_rate = input_codec_ctx->bit_rate;
-
-	AVStream* pStream = avformat_new_stream(output_fmt_ctx, nullptr);
-	pStream->time_base.den = output_codec_ctx->sample_rate;
-	pStream->time_base.num = 1;
-
-	if (output_fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
-		output_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-
-	if (0 > avcodec_open2(output_codec_ctx, pCodec, nullptr))
-		return false;
-
-	if (0 > avcodec_parameters_from_context(pStream->codecpar, output_codec_ctx))
-		return false;
-
-	return true;
-}
-
-bool TAAC::InitSwr()
-{
-	int ret =swr_alloc_set_opts2(
-		&swr_ctx, 
-		&output_codec_ctx->ch_layout,
-		output_codec_ctx->sample_fmt,
-		output_codec_ctx->sample_rate,
-		&input_codec_ctx->ch_layout,
-		input_codec_ctx->sample_fmt,
-		input_codec_ctx->sample_rate,
-		0, nullptr);
-	if (ret < 0)
-		return false;
-	return true;
-}
-
-
-void TAAC::Release()
-{
-	if (input_fmt_ctx) {
-		avformat_close_input(&input_fmt_ctx);
-		avformat_free_context(input_fmt_ctx);
-		input_fmt_ctx = nullptr;
-	}
-	if (input_codec_ctx) {
-		avcodec_free_context(&input_codec_ctx);
-		input_codec_ctx = nullptr;
-	}
-	if (output_fmt_ctx) {
-		avformat_free_context(output_fmt_ctx);
-		output_fmt_ctx = nullptr;
-	}
-	if (output_codec_ctx) {
-		avcodec_free_context(&output_codec_ctx);
-		output_codec_ctx = nullptr;
-	}
-}
-
-
 /***********************************************************************/
 CTransAAC::~CTransAAC()
 {
@@ -388,10 +240,12 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 		return false;
 
 	output_codec_ctx = avcodec_alloc_context3(pCodec);
-	av_channel_layout_default(&output_codec_ctx->ch_layout, 2);
+	//av_channel_layout_default(&output_codec_ctx->ch_layout, 2);
+	output_codec_ctx->ch_layout = input_codec_ctx->ch_layout;
 	output_codec_ctx->sample_fmt = pCodec->sample_fmts[0];
 	output_codec_ctx->sample_rate = input_codec_ctx->sample_rate;
-	output_codec_ctx->bit_rate = 96000;
+	output_codec_ctx->bit_rate = input_codec_ctx->bit_rate;
+	//output_codec_ctx->bit_rate = 96000;
 
 	// 创建输出码流的AVStream
 	AVStream* pStream = avformat_new_stream(output_fmt_ctx, pCodec);
@@ -561,4 +415,25 @@ void CTransAAC::PopFrameToEncodeAndWrite(bool bFinished)
 
 		av_frame_free(&outFrame);
 	}
+}
+
+/***********************************************************************/
+bool CAudioTranslate::OpenInput(const char* szInput)
+{
+	if (0 != avformat_open_input(&input_fmt_ctx, szInput, nullptr, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(input_fmt_ctx, nullptr))
+		return false;
+
+	audio_index = av_find_best_stream(input_fmt_ctx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+	if (audio_index < 0)
+		return false;
+	
+	AVStream* pStream = input_fmt_ctx->streams[audio_index];
+	input_codec_ctx = avcodec_alloc_context3(nullptr);
+	if (0 > avcodec_parameters_to_context(input_codec_ctx, pStream->codecpar))
+		return false;
+
+	return true;
 }

@@ -50,11 +50,9 @@ private:
 	int video_frame_count = 0;
 };
 
-class TAAC
+class CAudioTranslate
 {
 public:
-	~TAAC();
-
 	bool Run(const char* szInput, const char* szOutput);
 
 private:
@@ -62,23 +60,12 @@ private:
 
 	bool OpenOutput(const char* szOutput);
 
-	bool InitSwr();
+	bool InitCvt();
 
-	bool InitFifo();
-
-	bool ReadDecodeConvertStore(bool* finished);
-
-	bool InitConvertSamples(int frameSize);
-
-	bool LoadEncodeAndWrite();
-
-	bool ConvertSamples(AVFrame* frame);
-
-	bool AddSamplesToFifo(int nbSamples);
-		 
+	void DoWork();
 
 	void Release();
-	
+
 private:
 	AVFormatContext* input_fmt_ctx = nullptr;
 	AVFormatContext* output_fmt_ctx = nullptr;
@@ -86,9 +73,8 @@ private:
 	AVCodecContext* output_codec_ctx = nullptr;
 	SwrContext* swr_ctx = nullptr;
 	AVAudioFifo* fifo = nullptr;
-	uint8_t** converted_samples = nullptr;
 
-	int audio_stream_idx = -1;
+	int audio_index = -1;
 	int64_t _pts = 0;
 };
 

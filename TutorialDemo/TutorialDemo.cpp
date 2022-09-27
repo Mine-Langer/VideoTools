@@ -16,8 +16,8 @@ int main(int argc, char* argv[])
     int iSec = GetDoubleClickTime();
 
 
-    TAAC aac;
-    //CTransAAC aac;
+    //TAAC aac;
+    CTransAAC aac;
     aac.Run("D:/CloudMusic/The Titan.mp3", "output.aac");
     
     system("pause");
