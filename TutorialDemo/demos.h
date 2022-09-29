@@ -66,6 +66,9 @@ private:
 
 	void Release();
 
+	void Decode2PCM(AVPacket* pkt);
+	void Encode2AAC();
+
 private:
 	AVFormatContext* input_fmt_ctx = nullptr;
 	AVFormatContext* output_fmt_ctx = nullptr;
@@ -73,6 +76,10 @@ private:
 	AVCodecContext* output_codec_ctx = nullptr;
 	SwrContext* swr_ctx = nullptr;
 	AVAudioFifo* fifo = nullptr;
+
+	AVPacket* srcPacket = nullptr;
+	AVFrame* srcFrame = nullptr;
+	AVPacket* dstPacket = nullptr;
 
 	int audio_index = -1;
 	int64_t _pts = 0;
@@ -115,4 +122,26 @@ private:
 
 	int audio_index = -1;
 	int64_t _pts = 0;
+};
+
+class CFilterAudio
+{
+public:
+#define INPUT_SAMPLERATE     48000
+#define INPUT_FORMAT         AV_SAMPLE_FMT_FLTP
+#define INPUT_CHANNEL_LAYOUT (AVChannelLayout)AV_CHANNEL_LAYOUT_5POINT0
+#define VOLUME_VAL			0.90
+#define FRAME_SIZE			1024
+
+	void Run(float fDuration);
+
+private:
+	bool InitFilterGraph();
+
+private:
+	AVMD5* _md5 = nullptr;
+	AVFilterGraph* _graph = nullptr;
+	AVFilterContext* _src_ctx = nullptr;
+	AVFilterContext* _sink_ctx = nullptr;
+	AVFrame* _frame = nullptr;
 };

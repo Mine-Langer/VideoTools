@@ -16,9 +16,17 @@ extern "C" {
 #include <libavutil/avassert.h>
 #include <libavutil/avstring.h>
 #include <libavutil/channel_layout.h>
+#include <libavutil/md5.h>
+#include <libavutil/mem.h>
+#include <libavutil/samplefmt.h>
 #include <libavutil/frame.h>
 #include <libavutil/opt.h>
 #include <libswresample/swresample.h>
+#include <libavutil/hwcontext.h>
+
+#include <libavfilter/avfilter.h>
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
 
 #ifdef __cplusplus
 }

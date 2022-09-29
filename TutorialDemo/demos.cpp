@@ -1,6 +1,5 @@
 #include "demos.h"
 
-
 /********************************************************************************/
 ExtractMvs::ExtractMvs(const char* szFile)
 {
@@ -418,6 +417,24 @@ void CTransAAC::PopFrameToEncodeAndWrite(bool bFinished)
 }
 
 /***********************************************************************/
+bool CAudioTranslate::Run(const char* szInput, const char* szOutput)
+{
+	if (!OpenInput(szInput))
+		return false;
+	
+	if (!OpenOutput(szOutput))
+		return false;
+
+	if (!InitCvt())
+		return false;
+
+	DoWork();
+
+	Release();
+
+	return true;
+}
+
 bool CAudioTranslate::OpenInput(const char* szInput)
 {
 	if (0 != avformat_open_input(&input_fmt_ctx, szInput, nullptr, nullptr))
@@ -435,5 +452,180 @@ bool CAudioTranslate::OpenInput(const char* szInput)
 	if (0 > avcodec_parameters_to_context(input_codec_ctx, pStream->codecpar))
 		return false;
 
+	const AVCodec* pCodec = avcodec_find_decoder(input_codec_ctx->codec_id);
+	if (!pCodec)
+		return false;
+
+	if (0 > avcodec_open2(input_codec_ctx, pCodec, nullptr))
+		return false;
+
 	return true;
+}
+
+bool CAudioTranslate::OpenOutput(const char* szOutput)
+{
+	if (0 > avformat_alloc_output_context2(&output_fmt_ctx, nullptr, nullptr, szOutput))
+		return false;
+
+	const AVCodec* pCodec = avcodec_find_encoder(output_fmt_ctx->oformat->audio_codec);
+	if (!pCodec)
+		return false;
+
+	output_codec_ctx = avcodec_alloc_context3(pCodec);
+	output_codec_ctx->ch_layout = input_codec_ctx->ch_layout;
+	output_codec_ctx->sample_fmt = pCodec->sample_fmts[0];
+	output_codec_ctx->sample_rate = input_codec_ctx->sample_rate;
+	output_codec_ctx->bit_rate = OUTPUT_BITRATE;
+
+	AVStream* pStream = avformat_new_stream(output_fmt_ctx, nullptr);
+	pStream->time_base.den = output_codec_ctx->sample_rate;
+	pStream->time_base.num = 1;
+
+	if (output_fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+		output_codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+	if (0 > avcodec_open2(output_codec_ctx, pCodec, nullptr))
+		return false;
+
+	if (0 > avcodec_parameters_from_context(pStream->codecpar, output_codec_ctx))
+		return false;
+
+	if (0 > avio_open2(&output_fmt_ctx->pb, szOutput, AVIO_FLAG_WRITE, nullptr, nullptr))
+		return false;
+
+	return true;
+}
+
+bool CAudioTranslate::InitCvt()
+{
+	fifo = av_audio_fifo_alloc(output_codec_ctx->sample_fmt, output_codec_ctx->ch_layout.nb_channels, output_codec_ctx->frame_size);
+	if (!fifo)
+		return false;
+	
+	srcPacket = av_packet_alloc();
+	srcFrame = av_frame_alloc();
+	dstPacket = av_packet_alloc();
+
+	return true;
+}
+
+void CAudioTranslate::DoWork()
+{
+	int err = 0;
+	if (0 > avformat_write_header(output_fmt_ctx, nullptr))
+		return;
+
+	while (true)
+	{
+		err = av_read_frame(input_fmt_ctx, srcPacket);
+		if (err < 0)
+			break;
+
+		Decode2PCM(srcPacket);
+
+		Encode2AAC();
+	}
+
+	av_write_trailer(output_fmt_ctx);
+
+}
+
+void CAudioTranslate::Release()
+{
+	if (input_fmt_ctx) {
+		avformat_free_context(input_fmt_ctx);
+	}
+	avformat_free_context(output_fmt_ctx);
+	avcodec_free_context(&input_codec_ctx);
+	avcodec_free_context(&output_codec_ctx);
+	av_audio_fifo_free(fifo);
+	av_packet_free(&dstPacket);
+	av_frame_free(&srcFrame);
+	av_packet_free(&srcPacket);
+}
+
+void CAudioTranslate::Decode2PCM(AVPacket* pkt)
+{
+	if (pkt->stream_index == audio_index)
+	{
+		if (0 == avcodec_send_packet(input_codec_ctx, pkt))
+		{
+			if (0 == avcodec_receive_frame(input_codec_ctx, srcFrame))
+			{
+				int fifosize = av_audio_fifo_size(fifo);
+				av_audio_fifo_realloc(fifo, fifosize + srcFrame->nb_samples);
+
+				av_audio_fifo_write(fifo, (void**)srcFrame->data, srcFrame->nb_samples);
+			}
+			av_packet_unref(pkt);
+		}
+	}
+}
+
+void CAudioTranslate::Encode2AAC()
+{
+	while (true)
+	{
+		int fifosize = av_audio_fifo_size(fifo);
+		if (fifosize < output_codec_ctx->frame_size)
+			break;
+		int nSize = FFMIN(fifosize, output_codec_ctx->frame_size);
+		AVFrame* frame = av_frame_alloc();
+		frame->nb_samples = output_codec_ctx->frame_size;
+		frame->format = output_codec_ctx->sample_fmt;
+		frame->ch_layout = output_codec_ctx->ch_layout;
+		av_frame_get_buffer(frame, 0);
+
+		av_audio_fifo_read(fifo, (void**)frame->data, nSize);
+
+		frame->pts = _pts;
+		_pts += frame->nb_samples;
+
+		if (0 == avcodec_send_frame(output_codec_ctx, frame))
+		{
+			if (0 == avcodec_receive_packet(output_codec_ctx, dstPacket))
+			{
+				av_write_frame(output_fmt_ctx, dstPacket);
+				
+				av_packet_unref(dstPacket);
+			}
+		}
+
+		av_frame_free(&frame);
+	}
+}
+
+/*****************************************************************************/
+void CFilterAudio::Run(float fDuration)
+{
+	int nb_frames = fDuration * INPUT_SAMPLERATE / FRAME_SIZE;
+	if (nb_frames <= 0)
+		return;
+
+	_frame = av_frame_alloc();
+	_md5 = av_md5_alloc();
+
+}
+
+bool CFilterAudio::InitFilterGraph()
+{
+	char ch_layout[64] = { 0 };
+
+	_graph = avfilter_graph_alloc();
+	if (!_graph)
+		return false;
+
+	const AVFilter* abuffer = avfilter_get_by_name("abuffer");
+	if (!abuffer)
+		return false;
+
+	_src_ctx = avfilter_graph_alloc_filter(_graph, abuffer, "src");
+	if (!_src_ctx)
+		return false;
+
+	av_channel_layout_describe(&INPUT_CHANNEL_LAYOUT, ch_layout, sizeof(ch_layout));
+
+
+
+	return false;
 }
