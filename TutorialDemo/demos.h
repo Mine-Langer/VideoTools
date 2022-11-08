@@ -1,5 +1,7 @@
 #pragma once
 #include "Common.h"
+#include "PcmPlay.h"
+#define _CRT_SECURE_NO_WARNINGS 1 
 
 struct buffer_data
 {
@@ -50,40 +52,6 @@ private:
 	int video_frame_count = 0;
 };
 
-class CAudioTranslate
-{
-public:
-	bool Run(const char* szInput, const char* szOutput);
-
-private:
-	bool OpenInput(const char* szInput);
-
-	bool OpenOutput(const char* szOutput);
-
-	bool InitCvt();
-
-	void DoWork();
-
-	void Release();
-
-	void Decode2PCM(AVPacket* pkt);
-	void Encode2AAC();
-
-private:
-	AVFormatContext* input_fmt_ctx = nullptr;
-	AVFormatContext* output_fmt_ctx = nullptr;
-	AVCodecContext* input_codec_ctx = nullptr;
-	AVCodecContext* output_codec_ctx = nullptr;
-	SwrContext* swr_ctx = nullptr;
-	AVAudioFifo* fifo = nullptr;
-
-	AVPacket* srcPacket = nullptr;
-	AVFrame* srcFrame = nullptr;
-	AVPacket* dstPacket = nullptr;
-
-	int audio_index = -1;
-	int64_t _pts = 0;
-};
 
 /***************************************************************/
 class CTransAAC
@@ -124,6 +92,41 @@ private:
 	int64_t _pts = 0;
 };
 
+class CAudioConvert
+{
+public:
+	virtual ~CAudioConvert();
+
+	bool Open(const char* szfile);
+
+	bool Save(const char* szfile);
+
+	void SetOption(int nChannel, int bitRate);
+
+	void Start();
+
+	void Close();
+
+private:
+	bool SetOutputOpt();
+
+private:
+	AVFormatContext *InputFormatCtx = nullptr, *OutputFormatCtx = nullptr;
+	AVCodecContext *InputCodecCtx = nullptr, *OutputCodecCtx = nullptr;
+
+	SwrContext* SwrCtx = nullptr;
+	AVAudioFifo* Fifo = nullptr;
+
+	AVFrame *SrcFrame = nullptr, *DestFrame = nullptr;
+	AVPacket *SrcPacket = nullptr, *DestPacket = nullptr;
+
+	int AudioIndex = -1;
+
+	int OutputBitRate = 96000;
+	int OutputChannels = 2;
+
+};
+
 class CFilterAudio
 {
 public:
@@ -145,3 +148,7 @@ private:
 	AVFilterContext* _sink_ctx = nullptr;
 	AVFrame* _frame = nullptr;
 };
+
+int OnFilterAudio(const char* szDur);
+
+int OnFilteringAudio(const char* szInput);
