@@ -51,3 +51,46 @@ private:
 	std::mutex			m_mux;
 };
 
+
+
+//////////////////////////////////////////////////////////////////////
+typedef struct PLAYER {
+	PLAYER() {
+		device = NULL;
+		primaryBuffer = NULL;
+		secondaryBuffer = NULL;
+		started = false;
+		bytes_per_notif_ptr = NULL;
+
+		fp = NULL;
+
+	}
+	LPDIRECTSOUND device;
+	LPDIRECTSOUNDBUFFER primaryBuffer;
+	LPDIRECTSOUNDBUFFER secondaryBuffer;
+	HANDLE notifEvents[20];
+	bool started;
+	size_t bytes_per_notif_size;
+	uint8_t* bytes_per_notif_ptr;
+	HANDLE tid[2];
+
+	FILE* fp;
+
+} Player;
+
+/*播放准备*/
+int prepare(Player* ds);
+/*开始播放*/
+int startPlayer(Player* ds);
+/*挂起播放*/
+int suspendPlayer(Player* ds);
+/*唤醒播放*/
+int resumePlayer(Player* ds);
+/*停止播放*/
+int stopPlayer(Player* ds);
+/*释放内存资源*/
+int unprepare(Player* ds);
+
+DWORD WINAPI playerThreadImpl(LPVOID params);
+int openFile(Player* ds);
+int closeFile(Player* ds);
