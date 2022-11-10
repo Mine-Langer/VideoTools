@@ -42,17 +42,14 @@ int main(int argc, char* argv[])
 
     audioCvt.Close();*/
 
-	Player player;
-	/*开始录制*/
-    if (startPlayer(&player)) {
-        printf("start player error.\n");
-        return -1;
-    }
 
-    Sleep(-1);
+    //DSPlayer player;
+    //player.Start();
+
+    //Sleep(-1);
 
     DemuxAudio demux;
-    if (demux.Open("G:/CloudMusic/The Titan.mp3"))
+    if (demux.Open("d:/CloudMusic/The Titan.mp3"))
         demux.Run();
     demux.Release();
 

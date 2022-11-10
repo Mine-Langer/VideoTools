@@ -1,5 +1,7 @@
 #include "DemuxAudio.h"
 
+#define WFILE 0
+
 DemuxAudio::~DemuxAudio()
 {
     Release();
@@ -33,11 +35,11 @@ bool DemuxAudio::Open(const char* szinput)
     InputPkt = av_packet_alloc();
 
     AVChannelLayout OutChannelLayout;
+    av_channel_layout_default(&OutChannelLayout, 2);
     OutChannelLayout.nb_channels = 2; // AV_CH_LAYOUT_STEREO;
-    int OutputLayout = AV_CH_LAYOUT_STEREO;
     AVSampleFormat OutputSample = AV_SAMPLE_FMT_S16;
     int OutputRate = 44100;
-    if (0 > swr_alloc_set_opts2(&SwrCtx, &InputCodecCtx->ch_layout, OutputSample, OutputRate,
+    if (0 > swr_alloc_set_opts2(&SwrCtx, &OutChannelLayout, OutputSample, OutputRate,
         &InputCodecCtx->ch_layout, InputCodecCtx->sample_fmt, InputCodecCtx->sample_rate, 0, nullptr))
         return false;
     if (!SwrCtx)
@@ -49,7 +51,11 @@ bool DemuxAudio::Open(const char* szinput)
     return true;
 }
 
-#define WFILE
+void DemuxAudio::SetOutput(const char* szOutput)
+{
+}
+
+
 void DemuxAudio::Run()
 {
     int err = 0;
@@ -58,10 +64,11 @@ void DemuxAudio::Run()
 
     AudioPlayer.Start();
 
-#ifdef WFILE
+#if WFILE
     DWORD dwRet = 0;
     HANDLE hFile = CreateFile(_T("Titan.pcm"), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 #endif
+
     uint8_t* outBuf = (uint8_t*)av_malloc(2 * 2 * 44100);
     while (true)
     {
@@ -89,7 +96,7 @@ void DemuxAudio::Run()
         int outChannels = 2;// AV_CH_LAYOUT_STEREO;// av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
         int data_size = swrSize * outChannels * av_get_bytes_per_sample(AV_SAMPLE_FMT_S16);
 
-#ifdef WFILE
+#if WFILE
         WriteFile(hFile, outBuf, data_size, &dwRet, nullptr);
 #endif
 
@@ -100,7 +107,7 @@ void DemuxAudio::Run()
         av_packet_unref(InputPkt);
     }
 
-#ifdef WFILE
+#if WFILE
     CloseHandle(hFile);
 #endif
 

@@ -19,39 +19,35 @@ DSPlayer::~DSPlayer()
 
 bool DSPlayer::Start()
 {
+	LPDIRECTSOUNDNOTIFY lpDSNotify = nullptr;
+	DSBPOSITIONNOTIFY arrPosNotify[10] = { 0 };
+
 	if (!Init())
 		return false;
 
-	LPDIRECTSOUNDNOTIFY pDSNotify = nullptr;
-	LPDSBPOSITIONNOTIFY pDSPositionNotify = new DSBPOSITIONNOTIFY[m_nBufNum]();
-	if (!pDSPositionNotify)
+	if (FAILED(m_secondaryBuf->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&lpDSNotify)))
 		return false;
-	m_phEvents = new HANDLE[m_nBufNum]();
-
-
-	if (FAILED(m_secondaryBuf->QueryInterface(IID_IDirectSoundNotify, (LPVOID*)&pDSNotify))) {
-		delete[] pDSPositionNotify;
-		return false;
-	}
 
 	for (int i = 0; i < m_nBufNum; i++)
 	{
 		m_phEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		pDSPositionNotify[i].dwOffset = (m_bytesPerNotifySize * i) + (m_bytesPerNotifySize >> 1);
-		pDSPositionNotify[i].hEventNotify = m_phEvents[i];
+		arrPosNotify[i].dwOffset = (m_bytesPerNotifySize * i) + (m_bytesPerNotifySize >> 1);
+		arrPosNotify[i].hEventNotify = m_phEvents[i];
 	}
 
-	if (FAILED(pDSNotify->SetNotificationPositions(m_nBufNum, pDSPositionNotify))) {
-		pDSNotify->Release();
-		delete[] pDSPositionNotify;
+	if (FAILED(lpDSNotify->SetNotificationPositions(m_nBufNum, arrPosNotify))) {
+		lpDSNotify->Release();
 		return false;
 	}
 
-	pDSNotify->Release();
-	delete[] pDSPositionNotify;
+	lpDSNotify->Release();
 
 	if (FAILED(m_secondaryBuf->Play(0, 0, DSBPLAY_LOOPING)))
 		return false;
+
+	//m_hFile = CreateFile(_T("Titan.pcm"), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	//if (m_hFile == INVALID_HANDLE_VALUE)
+	//	return false;
 
 	m_bRun = true;
 	m_threadPlay = std::thread(&DSPlayer::PlayThread, this);
@@ -62,430 +58,153 @@ bool DSPlayer::Start()
 void DSPlayer::PushPCMBuf(uint8_t* pBuf, int nSize)
 {
 	std::lock_guard<std::mutex> lock(m_mux);
-
 	PCM_BUF pcm = { 0 };
-	pcm.size = nSize;
+	
 	pcm.buf = new uint8_t[nSize]();
+	pcm.size = nSize;
 	memcpy(pcm.buf, pBuf, nSize);
 
 	m_pcmQueue.push(pcm);
 }
 
+void DSPlayer::Stop()
+{
+	m_bRun = false;
+	if (m_threadPlay.joinable())
+		m_threadPlay.join();
+
+	m_secondaryBuf->Stop();
+
+	m_secondaryBuf->SetCurrentPosition(0);
+
+	Release();
+}
+
 bool DSPlayer::Init()
 {
-	DSBUFFERDESC dsBufDesc = { 0 };
-	WAVEFORMATEX waveFormat = { 0 };
-
-	if (FAILED(DirectSoundCreate(nullptr, &m_device, nullptr)))
+	// 创建播放设备
+	if (FAILED(DirectSoundCreate(nullptr, &m_pDevice, nullptr)))
 		return false;
 
-	if (FAILED(m_device->SetCooperativeLevel(::GetDesktopWindow(), DSSCL_PRIORITY)))
+	// 设置协调级别
+	if (FAILED(m_pDevice->SetCooperativeLevel(::GetForegroundWindow(), DSSCL_PRIORITY)))
 		return false;
-
-	dsBufDesc.dwSize = sizeof(DSBUFFERDESC);
-	dsBufDesc.dwFlags = DSBCAPS_PRIMARYBUFFER; // 表示主缓冲区
-	dsBufDesc.dwBufferBytes = 0;			// 主缓冲区必须设置为0
-	dsBufDesc.lpwfxFormat = nullptr;		// 主缓冲区必须设置为null
 
 	// 创建主缓冲区
-	if (FAILED(m_device->CreateSoundBuffer(&dsBufDesc, &m_primaryBuf, nullptr))) 
+	WAVEFORMATEX waveFormat = { 0 };
+	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+	waveFormat.nChannels = 2;
+	waveFormat.nSamplesPerSec = 44100;
+	waveFormat.wBitsPerSample = 16;
+	waveFormat.nBlockAlign = waveFormat.nChannels * waveFormat.wBitsPerSample / 8;
+	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+
+	m_bytesPerNotifySize = waveFormat.nAvgBytesPerSec * 60 / 1000;
+	m_bytesNotifyPtr = new uint8_t[m_bytesPerNotifySize*3]();
+
+	// 创建主缓冲区
+	DSBUFFERDESC dsBufDesc = { 0 };
+	dsBufDesc.dwSize = sizeof(DSBUFFERDESC);
+	dsBufDesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+	if (FAILED(m_pDevice->CreateSoundBuffer(&dsBufDesc, &m_primaryBuf, nullptr)))
 		return false;
 
-	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
-	waveFormat.nChannels = 2;			// 声道数
-	waveFormat.nSamplesPerSec = 44100;	// 采样频率
-	waveFormat.wBitsPerSample = 16;		// 采样精度
-	waveFormat.nBlockAlign = waveFormat.wBitsPerSample * waveFormat.nChannels / 8; // 采样块对齐大小
-	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;// 平均每秒采样字节数
-
-	// 设置缓冲区格式
-	if (FAILED(m_primaryBuf->SetFormat(&waveFormat))) 
+	if (FAILED(m_primaryBuf->SetFormat(&waveFormat)))
 		return false;
 
 	// 创建次缓冲区
-	m_bytesPerNotifySize = waveFormat.nAvgBytesPerSec * 60 / 1000;
-	dsBufDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GLOBALFOCUS | DSBCAPS_STATIC | DSBCAPS_CTRLVOLUME;
-	dsBufDesc.dwBufferBytes = m_bytesPerNotifySize * m_nBufNum;
+	dsBufDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLVOLUME;
+	dsBufDesc.dwBufferBytes = m_nBufNum * m_bytesPerNotifySize;
 	dsBufDesc.lpwfxFormat = &waveFormat;
-	if (FAILED(m_device->CreateSoundBuffer(&dsBufDesc, &m_secondaryBuf, nullptr)))
+	if (FAILED(m_pDevice->CreateSoundBuffer(&dsBufDesc, &m_secondaryBuf, nullptr)))
 		return false;
-
-	m_bytesNotifyPtr = new uint8_t[m_bytesPerNotifySize*3]();
 
 	return true;
 }
 
+void DSPlayer::Release()
+{
+	if (m_primaryBuf)
+	{
+		m_primaryBuf->Release();
+		m_primaryBuf = nullptr;
+	}
+
+	if (m_secondaryBuf)
+	{
+		m_secondaryBuf->Release();
+		m_secondaryBuf = nullptr;
+	}
+
+	if (m_pDevice)
+	{
+		m_pDevice->Release();
+		m_pDevice = nullptr;
+	}
+
+	for (int i = 0; i < m_nBufNum; i++)
+	{
+		if (m_phEvents[i])
+		{
+			CloseHandle(m_phEvents[i]);
+			m_phEvents[i] = nullptr;
+		}
+	}
+}
+
 void DSPlayer::PlayThread()
 {
-	LPVOID pAudio1 = nullptr, pAudio2 = nullptr;
-	DWORD dwAudio1 = 0, dwAudio2 = 0;
+	LPVOID lpAudio1, lpAudio2;
+	DWORD dwAudio1, dwAudio2;
+	DWORD dwBytes = 0;
+	int nIdx = 0;
+	DWORD dwOffset = 0, dwSendSize = 0;;
 
 	while (m_bRun)
 	{
 		DWORD dwRet = WaitForMultipleObjects(m_nBufNum, m_phEvents, FALSE, INFINITE);
 
-		if (m_mux.try_lock())
-		{
-			if (!m_pcmQueue.empty())
-			{
-				PCM_BUF pcm_buf = m_pcmQueue.front();
-
-				if (FAILED(m_secondaryBuf->Lock(0, m_bytesPerNotifySize, &pAudio1, &dwAudio1, 0, 0, DSBLOCK_ENTIREBUFFER))) {
-					printf("m_secondaryBuf->Lock failed.\n");
-					continue;
-				}
-
-				if (m_offset < m_bytesPerNotifySize)
-				{
-					memcpy(m_bytesNotifyPtr + m_offset, pcm_buf.buf, pcm_buf.size);
-					m_offset += pcm_buf.size;
-
-					delete[] pcm_buf.buf;
-					m_pcmQueue.pop();
-				}
-				else
-				{
-					int iOffset = m_offset - m_bytesPerNotifySize;
-
-					memcpy(pAudio1, m_bytesNotifyPtr, m_bytesPerNotifySize);
-
-					m_offset -= m_bytesPerNotifySize;
-				}
-
-			
-
-				m_secondaryBuf->Unlock(pAudio1, dwAudio1, 0, 0);
-			}
-
-			m_mux.unlock();
-		}		
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/*
-功能：释放资源
-*/
-int unprepare(Player* ds) {
-	printf("unprepare in.\n");
-	if (!ds) {
-		return -1;
-	}
-	/*主缓冲*/
-	if (ds->primaryBuffer) {
-		IDirectSoundBuffer_Release(ds->primaryBuffer);
-		ds->primaryBuffer = NULL;
-	}
-	/*辅助缓冲*/
-	if (ds->secondaryBuffer) {
-		IDirectSoundBuffer_Release(ds->secondaryBuffer);
-		ds->secondaryBuffer = NULL;
-	}
-	/*声卡设备对象*/
-	if (ds->device) {
-		IDirectSound_Release(ds->device);
-		ds->device = NULL;
-	}
-	/*通知事件*/
-	for (size_t i = 0; i < sizeof(ds->notifEvents) / sizeof(ds->notifEvents[0]); i++) {
-		if (ds->notifEvents[i]) {
-			CloseHandle(ds->notifEvents[i]);
-			ds->notifEvents[i] = NULL;
-		}
-	}
-	return 0;
-}
-
-/*
-功能：录音准备
-*/
-int prepare(Player* ds) {
-	printf("prepare in.\n");
-	HRESULT hr;
-	HWND hWnd;
-	WAVEFORMATEX wfx = { 0 };
-	DSBUFFERDESC dsbd = { 0 };
-
-	if (ds->device || ds->primaryBuffer || ds->secondaryBuffer) {
-		return -1;
-	}
-
-	/* 创建播放设备 */
-	if ((hr = DirectSoundCreate(NULL, &ds->device, NULL) != DS_OK)) {
-		return -3;
-	}
-
-	/* 设置协调级别 */
-	if ((hWnd = GetForegroundWindow()) || (hWnd = GetDesktopWindow()) || (hWnd = GetConsoleWindow())) {
-		if ((hr = IDirectSound_SetCooperativeLevel(ds->device, hWnd, DSSCL_PRIORITY)) != DS_OK) {
-			return -4;
-		}
-	}
-
-	/* 创建主缓冲区、格式设置 */
-	wfx.wFormatTag = WAVE_FORMAT_PCM;
-	wfx.nChannels = 2;
-	wfx.nSamplesPerSec = 44100;
-	wfx.wBitsPerSample = 16;
-	wfx.nBlockAlign = (wfx.nChannels * wfx.wBitsPerSample / 8);
-	wfx.nAvgBytesPerSec = (wfx.nSamplesPerSec * wfx.nBlockAlign);
-
-	/* 计算通知数据包大小，开辟缓冲区 */
-	ds->bytes_per_notif_size = ((wfx.nAvgBytesPerSec * 60) / 1000);
-	if (!(ds->bytes_per_notif_ptr = (uint8_t*)realloc(ds->bytes_per_notif_ptr, ds->bytes_per_notif_size))) {
-		//DEBUG_ERROR("Failed to allocate buffer with size = %u", _bytes_per_notif_size);
-		return -5;
-	}
-
-	dsbd.dwSize = sizeof(DSBUFFERDESC);
-	dsbd.dwFlags = DSBCAPS_PRIMARYBUFFER;
-	dsbd.dwBufferBytes = 0;
-	dsbd.lpwfxFormat = NULL;
-
-	if ((hr = IDirectSound_CreateSoundBuffer(ds->device, &dsbd, &ds->primaryBuffer, NULL)) != DS_OK) {
-		return -6;
-	}
-
-	if ((hr = IDirectSoundBuffer_SetFormat(ds->primaryBuffer, &wfx)) != DS_OK) {
-		return -7;
-	}
-
-	/* 创建次缓冲区、格式设置 */
-	dsbd.dwFlags = (DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLVOLUME);
-	dsbd.dwBufferBytes = (DWORD)(20 * ds->bytes_per_notif_size);
-	dsbd.lpwfxFormat = &wfx;
-
-	if ((hr = IDirectSound_CreateSoundBuffer(ds->device, &dsbd, &ds->secondaryBuffer, NULL)) != DS_OK) {
-		return -8;
-	}
-
-#if 0
-	/* 设置音量 [-10000,0]*/
-	if (IDirectSoundBuffer_SetVolume(_secondaryBuffer, 0/*_convert_volume(0)*/) != DS_OK) {
-		printf("setVolume error\n");
-	}
-#endif
-
-	return 0;
-}
-
-/*
-功能：开始录音
-*/
-int startPlayer(Player* ds) {
-	printf("startPlayer in.\n");
-	HRESULT hr;
-	LPDIRECTSOUNDNOTIFY lpDSBNotify;
-	DSBPOSITIONNOTIFY pPosNotify[20] = { 0 };
-
-	static DWORD dwMajorVersion = -1;
-
-	if (!ds) {
-		return -1;
-	}
-	if (ds->started) {
-		return 0;
-	}
-
-	// Get OS version
-	if (dwMajorVersion == -1) {
-		OSVERSIONINFO osvi;
-		ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-#pragma warning (disable: 4996) //屏蔽警告，GetVersionEx已弃用
-		GetVersionEx(&osvi);
-		dwMajorVersion = osvi.dwMajorVersion;
-	}
-	/*播放准备*/
-	if (prepare(ds)) {
-		return -2;
-	}
-
-	if (!ds->device || !ds->primaryBuffer || !ds->secondaryBuffer) {
-		return -3;
-	}
-
-	if ((hr = IDirectSoundBuffer_QueryInterface(ds->secondaryBuffer, IID_IDirectSoundNotify, (LPVOID*)&lpDSBNotify)) != DS_OK) {
-		return -4;
-	}
-
-	/* 相关事件通知点 */
-	for (size_t i = 0; i < 20; i++) {
-		ds->notifEvents[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
-		/*在Windows Vista及更高版本的缓冲区开始处设置通知点偏移量，并在XP和之前的缓冲区的一半设置通知点偏移量
-		win7 dwMajorVersion = 6*/
-		pPosNotify[i].dwOffset = (DWORD)((ds->bytes_per_notif_size * i) + (dwMajorVersion > 5 ? (ds->bytes_per_notif_size >> 1) : 1));
-		pPosNotify[i].hEventNotify = ds->notifEvents[i];
-	}
-	if ((hr = IDirectSoundNotify_SetNotificationPositions(lpDSBNotify, 20, pPosNotify)) != DS_OK) {
-		IDirectSoundNotify_Release(lpDSBNotify);
-		return -5;
-	}
-
-	if ((hr = IDirectSoundNotify_Release(lpDSBNotify))) {
-
-	}
-
-	/* 开始播放缓冲区
-	将次缓冲区的声音数据送到混声器中,与其他声音进行混合,最后输到主缓冲区自动播放.*/
-	if ((hr = IDirectSoundBuffer_Play(ds->secondaryBuffer, 0, 0, DSBPLAY_LOOPING)) != DS_OK) {
-		return -6;
-	}
-
-
-	if (openFile(ds)) {
-		return -2;
-	}
-
-
-	ds->tid[0] = ::CreateThread(NULL, 0, playerThreadImpl, ds, 0, NULL);
-	if (!ds->tid[0]) {
-		printf("thread create error.\n");
-	}
-	/* 启动线程 */
-	ds->started = true;
-
-	return 0;
-}
-
-/*
-功能：暂停播放
-*/
-int suspendPlayer(Player* ds) {
-	return 0;
-}
-
-/*
-功能：重新播放
-*/
-int resumePlayer(Player* ds) {
-	return 0;
-}
-
-/*
-功能：停止播放
-*/
-int stopPlayer(Player* ds) {
-	printf("stopPlayer in.\n");
-	HRESULT hr;
-
-	if (!ds || !ds->started) {
-		return 0;
-	}
-	ds->started = false;
-	if (ds->tid[0]) {
-		if (0 == (WaitForSingleObject(ds->tid[0], INFINITE) == WAIT_FAILED) ? -1 : 0) {
-			::CloseHandle(ds->tid[0]);
-			ds->tid[0] = NULL;
-		}
-	}
-
-	if ((hr = IDirectSoundBuffer_Stop(ds->secondaryBuffer)) != DS_OK) {
-
-	}
-
-	if ((hr = IDirectSoundBuffer_SetCurrentPosition(ds->secondaryBuffer, 0)) != DS_OK) {
-
-	}
-
-	if (closeFile(ds)) {
-		return -2;
-	}
-
-	// unprepare
-	// will be prepared again before calling next start()
-	unprepare(ds);
-
-	return 0;
-}
-
-/*
-功能：线程执行体
-*/
-DWORD WINAPI playerThreadImpl(LPVOID params) {
-	printf("playerThreadImpl in.\n");
-	HRESULT hr;
-	LPVOID lpvAudio1, lpvAudio2;
-	DWORD dwBytesAudio1, dwBytesAudio2, dwEvent;
-	static const DWORD dwWriteCursor = 0;
-	size_t out_size = 0;
-
-	Player* ds = (Player*)(params);
-	if (!ds) {
-		return NULL;
-	}
-	SetThreadPriority(GetCurrentThread(), THREAD_BASE_PRIORITY_MAX);
-
-	while (ds->started) {
-		dwEvent = WaitForMultipleObjects(20, ds->notifEvents, FALSE, INFINITE);
-		if (!ds->started) {
-			break;
-		}
-		// lock
-		if (hr = IDirectSoundBuffer_Lock(ds->secondaryBuffer,
-			dwWriteCursor/* Ignored because of DSBLOCK_FROMWRITECURSOR */,
-			(DWORD)ds->bytes_per_notif_size,
-			&lpvAudio1, &dwBytesAudio1,
-			&lpvAudio2, &dwBytesAudio2,
-			DSBLOCK_FROMWRITECURSOR) != DS_OK) {
-			printf("IDirectSoundBuffer_Lock error\n");
+		if (FAILED(m_secondaryBuf->Lock(0, m_bytesPerNotifySize, &lpAudio1, &dwAudio1, &lpAudio2, &dwAudio2, DSBLOCK_FROMWRITECURSOR)))
 			continue;
-		}
-
-
-		if ((out_size = fread(ds->bytes_per_notif_ptr, 1, ds->bytes_per_notif_size, ds->fp)) != ds->bytes_per_notif_size) {
-			//ds->started = false;//停止播放
-			printf("player finish.\n");
-			stopPlayer(ds);
-		}
-
-		if (out_size < ds->bytes_per_notif_size) {
-			// fill with silence
-			memset(&ds->bytes_per_notif_ptr[out_size], 0, (ds->bytes_per_notif_size - out_size));
-		}
-		if ((dwBytesAudio1 + dwBytesAudio2) == ds->bytes_per_notif_size) {
-			memcpy(lpvAudio1, ds->bytes_per_notif_ptr, dwBytesAudio1);
-			if (lpvAudio2 && dwBytesAudio2) {
-				memcpy(lpvAudio2, &ds->bytes_per_notif_ptr[dwBytesAudio1], dwBytesAudio2);
+		
+		//if (!ReadFile(m_hFile, m_bytesNotifyPtr, m_bytesPerNotifySize, &dwBytes, nullptr))
+		//	break;
+		while (true)
+		{
+			if (dwOffset < m_bytesPerNotifySize)
+			{
+				std::lock_guard<std::mutex> lock(m_mux);
+				if (!m_pcmQueue.empty())
+				{
+					PCM_BUF pcmbuf = m_pcmQueue.front();
+					memcpy(m_bytesNotifyPtr + dwOffset, pcmbuf.buf, pcmbuf.size);
+					delete[] pcmbuf.buf;
+					m_pcmQueue.pop();
+					dwOffset += pcmbuf.size;
+				}
+			}
+			else
+			{
+				memcpy(lpAudio1, m_bytesNotifyPtr, m_bytesPerNotifySize);
+				dwOffset -= m_bytesPerNotifySize;
+				memcpy(m_bytesNotifyPtr, m_bytesNotifyPtr + m_bytesPerNotifySize, dwOffset);
+				break;
 			}
 		}
-		else {
-			//DEBUG_ERROR("Not expected: %d+%d#%d", dwBytesAudio1, dwBytesAudio2, dsound->bytes_per_notif_size);
-		}
+		//printf("read size:%d, index:%d\n", dwBytes, nIdx++);
 
-		// unlock
-		if ((hr = IDirectSoundBuffer_Unlock(ds->secondaryBuffer, lpvAudio1, dwBytesAudio1, lpvAudio2, dwBytesAudio2)) != DS_OK) {
+		//if (dwAudio1 + dwAudio2 == m_bytesPerNotifySize)
+		//{
+		//	memcpy(lpAudio1, m_bytesNotifyPtr, dwAudio1);
+		//	if (lpAudio2 && dwAudio1)
+		//		memcpy(lpAudio2, m_bytesNotifyPtr + dwAudio1, dwAudio2);
+		//}
 
-		}
+		m_secondaryBuf->Unlock(lpAudio1, dwAudio1, lpAudio2, dwAudio2);
 	}
+	CloseHandle(m_hFile);
 
-	return NULL;
+	Stop();
 }
 
 
-int openFile(Player* ds) {
-	printf("openFile in.\n");
-	if (!ds) {
-		return -1;
-	}
-	if (!(ds->fp)) {
-		fopen_s(&(ds->fp), "./Titan.pcm", "rb");
-		if (ds->fp == NULL) {
-			printf("cannot open PCM file.\n");
-			return -2;
-		}
-	}
-	return 0;
-}
-
-int closeFile(Player* ds) {
-	printf("closeFile in.\n");
-	if (!ds) {
-		return -1;
-	}
-	if (ds->fp) {
-		fclose(ds->fp);
-		ds->fp = NULL;
-	}
-	return 0;
-}
