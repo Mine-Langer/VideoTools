@@ -51,8 +51,28 @@ bool DemuxAudio::Open(const char* szinput)
     return true;
 }
 
-void DemuxAudio::SetOutput(const char* szOutput)
+bool DemuxAudio::SetOutput(const char* szOutput)
 {
+    if (0 > avformat_alloc_output_context2(&OutputFormatCtx, nullptr, nullptr, szOutput))
+        return false;
+
+    const AVOutputFormat* OutputFormat = OutputFormatCtx->oformat;
+    if (!OutputFormat->audio_codec)
+        return false;
+
+    const AVCodec* pCodec = avcodec_find_encoder(OutputFormat->audio_codec);
+    if (!pCodec)
+        return false;
+
+    OutputCodecCtx = avcodec_alloc_context3(pCodec);
+    OutputCodecCtx->sample_rate = InputCodecCtx->sample_rate;
+    OutputCodecCtx->sample_fmt = pCodec->sample_fmts[0];
+    av_channel_layout_default(&OutputCodecCtx->ch_layout, 2);
+    OutputCodecCtx->time_base.den = OutputCodecCtx->sample_rate;
+    OutputCodecCtx->time_base.num = 1;
+
+
+    return true;
 }
 
 

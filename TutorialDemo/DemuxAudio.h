@@ -9,7 +9,7 @@ public:
 
 	bool Open(const char* szinput);
 
-	void SetOutput(const char* szOutput);
+	bool SetOutput(const char* szOutput);
 
 	void Run();
 
