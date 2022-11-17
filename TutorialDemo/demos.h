@@ -149,6 +149,20 @@ private:
 	AVFrame* _frame = nullptr;
 };
 
+class CM3u8Test
+{
+public:
+	CM3u8Test();
+	~CM3u8Test();
+
+	bool OpenUrl(const char* szUrl);
+
+
+private:
+	AVFormatContext* m_pFormatCtx = nullptr;
+	AVCodecContext* m_pCodecCtx = nullptr;
+};
+
 int OnFilterAudio(const char* szDur);
 
 int OnFilteringAudio(const char* szInput);

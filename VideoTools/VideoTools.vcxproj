@@ -61,15 +61,15 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;.\Composition;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../library/include;.\;.\Composition;.\Conversion;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>../library/FFmpeg/lib/win64;../library/SDL2-2.0.12/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../library/lib/win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;.\Composition;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../library/FFmpeg/include;../library/SDL2-2.0.12/include;.\;.\Composition;.\Conversion;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>../library/FFmpeg/lib/win64;../library/SDL2-2.0.12/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -107,6 +107,9 @@
     <ClCompile Include="AudioEncoder.cpp" />
     <ClCompile Include="capture\captureScreen.cpp" />
     <ClCompile Include="Composition\AVTextureBar.cpp" />
+    <ClCompile Include="Conversion\qaudioconversion.cpp" />
+    <ClCompile Include="Conversion\qvideoconversion.cpp" />
+    <ClCompile Include="Conversion\qvideoinfo.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
     <ClCompile Include="VideoDecoder.cpp" />
@@ -123,10 +126,16 @@
     <ClCompile Include="main.cpp" />
     <QtUic Include="capture\hlcapture.ui" />
     <QtUic Include="Composition\CompositeView.ui" />
+    <QtUic Include="Conversion\qaudioconversion.ui" />
+    <QtUic Include="Conversion\qvideoconversion.ui" />
+    <QtUic Include="Conversion\qvideoinfo.ui" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioEncoder.h" />
     <ClInclude Include="capture\captureScreen.h" />
+    <QtMoc Include="Conversion\qvideoconversion.h" />
+    <QtMoc Include="Conversion\qaudioconversion.h" />
+    <QtMoc Include="Conversion\qvideoinfo.h" />
     <ClInclude Include="VideoEncoder.h" />
     <QtMoc Include="Composition\AVTextureBar.h" />
     <ClInclude Include="AudioDecoder.h" />

@@ -283,3 +283,15 @@ HLPlayer/x64/Debug/qmake/temp/qtvars.vcxproj
 .vs/VideoTools/FileContentIndex/e76889d6-2bc0-471c-92c0-779fb2f786b2.vsidx
 .vs/VideoTools/FileContentIndex/5d0c5b46-09f6-4593-bbea-c77ed8000e99.vsidx
 .vs/VideoTools/FileContentIndex/12d50e52-15c5-461a-80cc-f1c2ce470b7c.vsidx
+VideoTools/x64/Debug/moc/moc_qaudioconversion.cpp
+VideoTools/x64/Debug/moc/moc_qvideoconversion.cpp
+VideoTools/x64/Debug/moc/moc_qvideoinfo.cpp
+VideoTools/x64/Debug/uic/ui_qaudioconversion.h
+VideoTools/x64/Debug/uic/ui_qvideoconversion.h
+VideoTools/x64/Debug/uic/ui_qvideoinfo.h
+VideoTools/x64/Release/moc/moc_qaudioconversion.cpp
+VideoTools/x64/Release/moc/moc_qvideoconversion.cpp
+VideoTools/x64/Release/moc/moc_qvideoinfo.cpp
+VideoTools/x64/Release/uic/ui_qaudioconversion.h
+VideoTools/x64/Release/uic/ui_qvideoconversion.h
+VideoTools/x64/Release/uic/ui_qvideoinfo.h

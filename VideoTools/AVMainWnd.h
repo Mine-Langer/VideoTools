@@ -4,6 +4,7 @@
 #include "ui_AVMainWnd.h"
 #include "capture/hlcapture.h"
 #include "Composition/CompositeView.h"
+#include "Conversion/qvideoconversion.h"
 
 class AVMainWnd : public QWidget
 {
@@ -21,5 +22,6 @@ private:
 	Ui::AVMainWnd ui;
 	HLCapture m_capture; //录屏
 	CompositeView m_compositeView; // 合成
+	QVideoConversion m_conversion; // 格式转换
 	QWidget* m_pCurrentWidget = nullptr;
 };

@@ -31,6 +31,9 @@ bool DemuxAudio::Open(const char* szinput)
     if (0 > avcodec_open2(InputCodecCtx, pCodec, nullptr))
         return false;
 
+    InputCodecCtx->pkt_timebase = pStream->time_base;
+
+    // ---------------------------------------------------------------------
     InputFrame = av_frame_alloc();
     InputPkt = av_packet_alloc();
 
@@ -56,6 +59,9 @@ bool DemuxAudio::SetOutput(const char* szOutput)
     if (0 > avformat_alloc_output_context2(&OutputFormatCtx, nullptr, nullptr, szOutput))
         return false;
 
+    if (0 > avio_open(&OutputFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
+        return false;
+
     const AVOutputFormat* OutputFormat = OutputFormatCtx->oformat;
     if (!OutputFormat->audio_codec)
         return false;
@@ -65,12 +71,31 @@ bool DemuxAudio::SetOutput(const char* szOutput)
         return false;
 
     OutputCodecCtx = avcodec_alloc_context3(pCodec);
+    av_channel_layout_default(&OutputCodecCtx->ch_layout, 2);
     OutputCodecCtx->sample_rate = InputCodecCtx->sample_rate;
     OutputCodecCtx->sample_fmt = pCodec->sample_fmts[0];
-    av_channel_layout_default(&OutputCodecCtx->ch_layout, 2);
-    OutputCodecCtx->time_base.den = OutputCodecCtx->sample_rate;
-    OutputCodecCtx->time_base.num = 1;
+    OutputCodecCtx->bit_rate = 96000;
 
+    AVStream* pStream = avformat_new_stream(OutputFormatCtx, pCodec);
+    if (!pStream)
+        return false;
+
+    pStream->time_base.den = OutputCodecCtx->sample_rate;
+    pStream->time_base.num = 1;
+
+    if (0 > avcodec_parameters_from_context(pStream->codecpar, OutputCodecCtx))
+        return false;
+
+    if (OutputFormat->flags & AVFMT_GLOBALHEADER)
+        OutputCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+    if (0 > avcodec_open2(OutputCodecCtx, pCodec, nullptr))
+        return false;
+
+    m_bOutput = true;
+    AudioFifo = av_audio_fifo_alloc(OutputCodecCtx->sample_fmt, OutputCodecCtx->ch_layout.nb_channels, 1);
+    if (!AudioFifo)
+        return false;
 
     return true;
 }
@@ -88,6 +113,9 @@ void DemuxAudio::Run()
     DWORD dwRet = 0;
     HANDLE hFile = CreateFile(_T("Titan.pcm"), GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 #endif
+    if (m_bOutput)
+        if (0 > avformat_write_header(OutputFormatCtx, nullptr))
+            return;
 
     uint8_t* outBuf = (uint8_t*)av_malloc(2 * 2 * 44100);
     while (true)
@@ -107,7 +135,6 @@ void DemuxAudio::Run()
 
         printf("packet timestamp:%.2f duration:%.2f\t", av_q2d(pStream->time_base) * InputPkt->pts, av_q2d(pStream->time_base)*InputPkt->duration);
 
-
         // convert
         int swrSize = swr_convert(SwrCtx, &outBuf, InputFrame->nb_samples, (const uint8_t**)InputFrame->extended_data, InputFrame->nb_samples);
         if (0 > swrSize)
@@ -120,6 +147,9 @@ void DemuxAudio::Run()
         WriteFile(hFile, outBuf, data_size, &dwRet, nullptr);
 #endif
 
+        if (m_bOutput) 
+            PushFrame2Fifo(&outBuf, InputFrame->nb_samples);
+
         printf("frame index:%d,  frame size:%d pts:%lld datasize:%d \n", idx++, InputFrame->nb_samples, InputFrame->pts, data_size);
         AudioPlayer.PushPCMBuf(outBuf, data_size);
 
@@ -130,6 +160,8 @@ void DemuxAudio::Run()
 #if WFILE
     CloseHandle(hFile);
 #endif
+    if (m_bOutput)
+        av_write_trailer(OutputFormatCtx);
 
     av_free(outBuf);
 }
@@ -155,4 +187,17 @@ void DemuxAudio::Release()
         av_packet_free(&InputPkt);
         InputPkt = nullptr;
     }
+}
+
+bool DemuxAudio::PushFrame2Fifo(uint8_t** ppcmData, int frameSize)
+{
+    int retSize = 0;
+    int fifoSize = av_audio_fifo_size(AudioFifo);
+    if (0 > (retSize = av_audio_fifo_realloc(AudioFifo, fifoSize+frameSize)))
+        return false;
+
+    if (0 > (retSize = av_audio_fifo_write(AudioFifo, (void**)ppcmData, frameSize)))
+        return false;
+
+    return true;
 }

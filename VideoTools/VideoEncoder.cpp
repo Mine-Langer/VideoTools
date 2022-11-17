@@ -12,7 +12,7 @@ CVideoEncoder::~CVideoEncoder()
 
 bool CVideoEncoder::Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, int width, int height)
 {
-	AVCodec* pCodec = avcodec_find_encoder(codec_id);
+	const AVCodec* pCodec = avcodec_find_encoder(codec_id);
 	if (!pCodec)
 		return false;
 

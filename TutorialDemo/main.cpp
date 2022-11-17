@@ -19,9 +19,9 @@ int main(int argc, char* argv[])
     int a = 64 / 8;
     int b = 64 >> 3;
 
-    /*CAudioTranslate aac;
+    //CAudioTranslate aac;
     //CTransAAC aac;
-    aac.Run("D:/CloudMusic/The Titan.mp3", "output.aac");*/
+    //aac.Run("D:/CloudMusic/The Titan.mp3", "output.aac");
 
     //OnFilterAudio("64.89");
 
@@ -48,10 +48,17 @@ int main(int argc, char* argv[])
 
     //Sleep(-1);
 
-    DemuxAudio demux;
+    /*DemuxAudio demux;
     if (demux.Open("d:/CloudMusic/The Titan.mp3"))
+    {
+        demux.SetOutput("Titan.aac");
         demux.Run();
+    }
     demux.Release();
+    */
+
+    CM3u8Test m;
+    m.OpenUrl("https://mnkwxsheem9.haifengsports.club/20221018/rt0EzjWF/index.m3u8");
 
     system("pause");
     return 0;

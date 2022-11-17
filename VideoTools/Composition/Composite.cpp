@@ -2,8 +2,8 @@
 
 Composite::Composite()
 {
-	SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER);
-	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+	//SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER);
+	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 }
 
 Composite::~Composite()
@@ -49,13 +49,13 @@ bool Composite::OpenAudio(const char* szFile)
 	m_audioDecoder.Start(this);
 
 	// 播放参数
-	m_audioSpec.freq = sample_rate;
-	m_audioSpec.format = AUDIO_S16SYS;
-	m_audioSpec.channels = av_get_channel_layout_nb_channels(ch_layout);
-	m_audioSpec.silence = 0;
-	m_audioSpec.samples = nb_sample;
-	m_audioSpec.userdata = this;
-	m_audioSpec.callback = OnSDLAudioFunction;
+	//m_audioSpec.freq = sample_rate;
+	//m_audioSpec.format = AUDIO_S16SYS;
+	//m_audioSpec.channels = av_get_channel_layout_nb_channels(ch_layout);
+	//m_audioSpec.silence = 0;
+	//m_audioSpec.samples = nb_sample;
+	//m_audioSpec.userdata = this;
+	//m_audioSpec.callback = OnSDLAudioFunction;
 
 	return true;
 }
@@ -79,55 +79,55 @@ void Composite::Close()
 
 void Composite::Play()
 {
-	m_type = E_Play;
-	if (m_state == NotStarted)
-	{
-		// 打开音频
-		if (!OpenAudio(m_szAudioFile))
-			return;
-		// 打开图像
-		if (!OpenImage(m_szVideoFile))
-			return;
-		// 置为开始播放
-		m_state = Started;
-		if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
-			return;
-
-		SDL_PauseAudio(0);
-		m_playThread = std::thread(&Composite::OnPlayFunction, this);
-	}
-	else if (m_state == Started)
-	{
-		// 置为暂停状态
-		SDL_PauseAudio(1);
-		m_state = Paused;
-	}
-	else if (m_state == Paused)
-	{
-		SDL_PauseAudio(0);
-		m_state = Started;
-	}
+	//m_type = E_Play;
+	//if (m_state == NotStarted)
+	//{
+	//	// 打开音频
+	//	if (!OpenAudio(m_szAudioFile))
+	//		return;
+	//	// 打开图像
+	//	if (!OpenImage(m_szVideoFile))
+	//		return;
+	//	// 置为开始播放
+	//	m_state = Started;
+	//	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
+	//		return;
+	//
+	//	SDL_PauseAudio(0);
+	//	m_playThread = std::thread(&Composite::OnPlayFunction, this);
+	//}
+	//else if (m_state == Started)
+	//{
+	//	// 置为暂停状态
+	//	SDL_PauseAudio(1);
+	//	m_state = Paused;
+	//}
+	//else if (m_state == Paused)
+	//{
+	//	SDL_PauseAudio(0);
+	//	m_state = Started;
+	//}
 }
 
 bool Composite::InitWnd(void* pWnd, int width, int height)
 {
-	m_window = SDL_CreateWindowFrom(pWnd);
-	if (!m_window)
-		return false;
-
-	m_render = SDL_CreateRenderer(m_window, -1, 0);
-	if (!m_render)
-		return false;
-
-	m_texture = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
-	if (!m_texture)
-		return false;
-
-	m_videoWidth = width;
-	m_videoHeight = height;
-	m_rect.x = m_rect.y = 0;
-	m_rect.w = m_videoWidth;
-	m_rect.h = m_videoHeight;
+	//m_window = SDL_CreateWindowFrom(pWnd);
+	//if (!m_window)
+	//	return false;
+	//
+	//m_render = SDL_CreateRenderer(m_window, -1, 0);
+	//if (!m_render)
+	//	return false;
+	//
+	//m_texture = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
+	//if (!m_texture)
+	//	return false;
+	//
+	//m_videoWidth = width;
+	//m_videoHeight = height;
+	//m_rect.x = m_rect.y = 0;
+	//m_rect.w = m_videoWidth;
+	//m_rect.h = m_videoHeight;
 
 	return true;
 }
@@ -201,60 +201,60 @@ bool Composite::AudioEvent(AVFrame* frame)
 	return true;
 }
 
-void Composite::OnSDLAudioFunction(void* userdata, Uint8* stream, int len)
-{
-	Composite* pThis = (Composite*)userdata;
-	
-	if (pThis->m_state != Started)
-		return;
-
-	if (pThis->m_audioQueue.Empty())
-	{
-		SDL_memset(stream, 0, len);
-	}
-	else
-	{
-		AVFrame* frame = nullptr;
-		pThis->m_audioQueue.Pop(frame);
-		if (frame != nullptr)
-		{
-			int wLen = len < frame->linesize[0] ? len : frame->linesize[0];
-			SDL_memset(stream, 0, len);
-			SDL_MixAudio(stream, frame->data[0], wLen, SDL_MIX_MAXVOLUME);
-
-			av_frame_free(&frame);
-		}
-	}
-	
-}
+//void Composite::OnSDLAudioFunction(void* userdata, Uint8* stream, int len)
+//{
+//	Composite* pThis = (Composite*)userdata;
+//	
+//	if (pThis->m_state != Started)
+//		return;
+//
+//	if (pThis->m_audioQueue.Empty())
+//	{
+//		SDL_memset(stream, 0, len);
+//	}
+//	else
+//	{
+//		AVFrame* frame = nullptr;
+//		pThis->m_audioQueue.Pop(frame);
+//		if (frame != nullptr)
+//		{
+//			int wLen = len < frame->linesize[0] ? len : frame->linesize[0];
+//			SDL_memset(stream, 0, len);
+//			SDL_MixAudio(stream, frame->data[0], wLen, SDL_MIX_MAXVOLUME);
+//
+//			av_frame_free(&frame);
+//		}
+//	}
+//	
+//}
 
 void Composite::OnPlayFunction()
 {
-	while (m_state != Stopped)
-	{
-		if (m_state == Paused)
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		else
-		{
-			if (m_videoQueue.Empty())
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
-			else
-			{
-				AVFrame* frame = m_videoQueue.Front();
-				AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
-
-				SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
-					swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
-				SDL_RenderClear(m_render);
-				SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
-				SDL_RenderPresent(m_render);
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(40));
-
-				av_frame_free(&swsFrame);
-			}
-		}
-	}
+	//while (m_state != Stopped)
+	//{
+	//	if (m_state == Paused)
+	//		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	//	else
+	//	{
+	//		if (m_videoQueue.Empty())
+	//			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+	//		else
+	//		{
+	//			AVFrame* frame = m_videoQueue.Front();
+	//			AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
+	//
+	//			SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
+	//				swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
+	//			SDL_RenderClear(m_render);
+	//			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
+	//			SDL_RenderPresent(m_render);
+	//
+	//			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+	//
+	//			av_frame_free(&swsFrame);
+	//		}
+	//	}
+	//}
 }
 
 void Composite::OnSaveFunction()

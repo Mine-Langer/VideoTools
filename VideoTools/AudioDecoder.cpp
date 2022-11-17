@@ -26,7 +26,7 @@ bool CAudioDecoder::Open(const char* szInput)
 	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
 		return false;
 
-	AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
 	if (!pCodec)
 		return false;
 
@@ -38,7 +38,7 @@ bool CAudioDecoder::Open(const char* szInput)
 
 bool CAudioDecoder::OpenMicrophone(const char* szUrl)
 {
-	AVInputFormat* ifmt = av_find_input_format("dshow");
+	const AVInputFormat* ifmt = av_find_input_format("dshow");
 	if (!ifmt)
 		return false;
 
@@ -56,7 +56,7 @@ bool CAudioDecoder::OpenMicrophone(const char* szUrl)
 	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
 		return false;
 
-	AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
 	if (!pCodec)
 		return false;
 

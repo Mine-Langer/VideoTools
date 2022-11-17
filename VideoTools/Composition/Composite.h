@@ -38,7 +38,7 @@ private:
 	bool InitAudioEnc(enum AVCodecID codec_id);
 
 private:
-	static void OnSDLAudioFunction(void* userdata, Uint8* stream, int len);
+	//static void OnSDLAudioFunction(void* userdata, Uint8* stream, int len);
 	void OnPlayFunction(); // 
 	void OnSaveFunction(); // 保存文件
 
@@ -55,11 +55,11 @@ private:
 	CFilterVideo m_filter;
 
 	// 播放
-	SDL_AudioSpec m_audioSpec;
-	SDL_Window* m_window = nullptr;
-	SDL_Texture* m_texture = nullptr;
-	SDL_Renderer* m_render = nullptr;
-	SDL_Rect m_rect;
+	//SDL_AudioSpec m_audioSpec;
+	//SDL_Window* m_window = nullptr;
+	//SDL_Texture* m_texture = nullptr;
+	//SDL_Renderer* m_render = nullptr;
+	//SDL_Rect m_rect;
 
 	int m_videoWidth = 0;
 	int m_videoHeight = 0;

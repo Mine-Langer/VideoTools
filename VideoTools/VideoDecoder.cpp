@@ -25,7 +25,7 @@ bool CVideoDecoder::Open(const char* szInput)
 	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
 		return false;
 
-	AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
 	if (!pCodec)
 		return false;
 
@@ -50,7 +50,7 @@ bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 	sprintf(szTemp, "%dx%d", sWidth, sHeight);
 	av_dict_set(&options, "video_size", szTemp, 0);
 
-	AVInputFormat* ifmt = av_find_input_format("gdigrab");
+	const AVInputFormat* ifmt = av_find_input_format("gdigrab");
 	if (ifmt == nullptr)
 		return false;
 
@@ -67,7 +67,7 @@ bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
 		return false;
 
-	AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
 	if (!pCodec)
 		return false;
 
@@ -83,7 +83,7 @@ bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 
 bool CVideoDecoder::OpenCamera()
 {
-	AVInputFormat* ifmt = av_find_input_format("vfwcap");
+	const AVInputFormat* ifmt = av_find_input_format("vfwcap");
 	if (ifmt == nullptr)
 		return false;
 
@@ -100,7 +100,7 @@ bool CVideoDecoder::OpenCamera()
 	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
 		return false;
 
-	AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
 	if (!pCodec)
 		return false;
 

@@ -2,12 +2,12 @@
 
 CDemultiplexer::CDemultiplexer()
 {
-
+	avformat_network_init();
 }
 
 CDemultiplexer::~CDemultiplexer()
 {
-
+	avformat_network_deinit();
 }
 
 bool CDemultiplexer::Open(const char* szInput)
@@ -33,7 +33,7 @@ bool CDemultiplexer::Open(const char* szInput)
 	return true;
 }
 
-bool CDemultiplexer::Open(const char* szInput, AVInputFormat* ifmt, AVDictionary** pDict)
+bool CDemultiplexer::Open(const char* szInput, const AVInputFormat* ifmt, AVDictionary** pDict)
 {
 	if (0 != avformat_open_input(&m_pFormatCtx, szInput, ifmt, pDict))
 		return false;

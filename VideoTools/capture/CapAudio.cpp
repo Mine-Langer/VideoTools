@@ -23,7 +23,7 @@ bool CCapAudio::Init(enum AVSampleFormat sample_fmt, int nChannels, int channel_
 	m_outChannelLayout = channel_layout;
 	m_outSampleFmt = sample_fmt;
 
-	AVInputFormat* ifmt = av_find_input_format("dshow");
+	const AVInputFormat* ifmt = av_find_input_format("dshow");
 	if (ifmt == nullptr)
 		return false;
 
@@ -33,7 +33,7 @@ bool CCapAudio::Init(enum AVSampleFormat sample_fmt, int nChannels, int channel_
 	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
 		return false;
 
-	AVCodec* audioCodec = nullptr;
+	const AVCodec* audioCodec = nullptr;
 	m_audioIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, &audioCodec, 0);
 	if (m_audioIndex == -1)
 		return false;

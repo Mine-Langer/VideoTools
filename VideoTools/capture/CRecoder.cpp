@@ -349,7 +349,7 @@ bool CRecoder::InitOutput()
 	if (0 > avformat_alloc_output_context2(&m_pFormatCtx, nullptr, nullptr, m_szFile.c_str()))
 		return false;
 
-	AVOutputFormat* pOutputFmt = m_pFormatCtx->oformat;
+	const AVOutputFormat* pOutputFmt = m_pFormatCtx->oformat;
 	if (pOutputFmt->video_codec != AV_CODEC_ID_NONE)
 	{
 		if (!m_videoEncoder.Init(m_pFormatCtx, pOutputFmt->video_codec, m_w, m_h))

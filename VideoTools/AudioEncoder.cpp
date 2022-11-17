@@ -12,7 +12,7 @@ CAudioEncoder::~CAudioEncoder()
 
 bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, int srcChannelLayout, enum AVSampleFormat srcSampleFmt, int srcSampleRate)
 {
-	AVCodec* pCodec = avcodec_find_encoder(codecId);
+	const AVCodec* pCodec = avcodec_find_encoder(codecId);
 	if (pCodec == nullptr)
 		return false;
 

@@ -570,3 +570,26 @@ void CAudioConvert::Close()
 	}
 }
 
+CM3u8Test::CM3u8Test()
+{
+	avformat_network_init();
+}
+
+CM3u8Test::~CM3u8Test()
+{
+	avformat_network_deinit();
+}
+
+bool CM3u8Test::OpenUrl(const char* szUrl)
+{
+	if (0 != avformat_open_input(&m_pFormatCtx, szUrl, nullptr, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
+		return false;
+
+	int AudioIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+	int VideoIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+
+	return true;
+}

@@ -33,7 +33,6 @@ bool DxRender::Init(HWND hWnd, int nWidth, int nHeight, bool isYuv)
 			return false;
 	}
 
-
 	return true;
 }
 

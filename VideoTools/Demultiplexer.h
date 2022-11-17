@@ -18,7 +18,7 @@ public:
 	bool Open(const char* szInput);
 
 	// ∂¡»°…Ë±∏
-	bool Open(const char* szInput, AVInputFormat* ifmt, AVDictionary** pDict);
+	bool Open(const char* szInput, const AVInputFormat* ifmt, AVDictionary** pDict);
 
 	void Start(IDemuxEvent* pEvt);
 
