@@ -7,7 +7,7 @@ public:
 	CAudioEncoder();
 	~CAudioEncoder();
 
-	bool InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, int srcChannelLayout, enum AVSampleFormat srcSampleFmt, int srcSampleRate);
+	bool InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVChannelLayout srcChLayout, enum AVSampleFormat srcSampleFmt, int srcSampleRate);
 
 	void BindAudioData(SafeQueue<AVFrame*> *audioQueue);
 

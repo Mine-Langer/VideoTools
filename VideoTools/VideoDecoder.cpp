@@ -12,6 +12,7 @@ CVideoDecoder::~CVideoDecoder()
 
 bool CVideoDecoder::Open(const char* szInput)
 {
+#if 0
 	if (!m_demux.Open(szInput))
 		return false;
 
@@ -32,15 +33,42 @@ bool CVideoDecoder::Open(const char* szInput)
 	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
+	m_pCodecCtx->pkt_timebase = pStream->time_base;
+
 	m_srcWidth = m_pCodecCtx->width / 2 * 2;
 	m_srcHeight = m_pCodecCtx->height / 2 * 2;
 	m_srcFormat = m_pCodecCtx->pix_fmt;
+#endif
+	return true;
+}
+
+bool CVideoDecoder::Open(CDemultiplexer* pDemux)
+{
+	AVStream* pStream = pDemux->FormatContext()->streams[pDemux->VideoStreamIndex()];
+	if (!pStream)
+		return false;
+
+	if (!(m_pCodecCtx = avcodec_alloc_context3(nullptr)))
+		return false;
+
+	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
+		return false;
+
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	if (!pCodec)
+		return false;
+
+	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
+		return false;
+
+	m_pCodecCtx->pkt_timebase = pStream->time_base;
 
 	return true;
 }
 
 bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 {
+#if 0
 	char szTemp[32] = { 0 };
 	AVDictionary* options = nullptr;
 	av_dict_set(&options, "framerate", "25", 0);
@@ -77,12 +105,13 @@ bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
 	m_srcWidth = m_pCodecCtx->width / 2 * 2;
 	m_srcHeight = m_pCodecCtx->height / 2 * 2;
 	m_srcFormat = m_pCodecCtx->pix_fmt;
-	
+#endif
 	return true;
 }
 
 bool CVideoDecoder::OpenCamera()
 {
+#if 0
 	const AVInputFormat* ifmt = av_find_input_format("vfwcap");
 	if (ifmt == nullptr)
 		return false;
@@ -110,7 +139,7 @@ bool CVideoDecoder::OpenCamera()
 	m_srcWidth = m_pCodecCtx->width / 2 * 2;
 	m_srcHeight = m_pCodecCtx->height / 2 * 2;
 	m_srcFormat = m_pCodecCtx->pix_fmt;
-
+#endif
 	return true;
 }
 
@@ -119,7 +148,8 @@ bool CVideoDecoder::Start(IDecoderEvent* pEvt)
 	if (!(m_pEvent = pEvt))
 		return false;
 	
-	m_demux.Start(this);
+	//m_demux.Start(this);
+	m_bRun = true;
 	m_state = Started;
 	m_thread = std::thread(&CVideoDecoder::OnDecodeFunction, this);
 
@@ -133,9 +163,18 @@ void CVideoDecoder::Stop()
 		m_thread.join();
 }
 
+bool CVideoDecoder::SendPacket(AVPacket* pkt)
+{
+	AVPacket* tpkt = av_packet_clone(pkt);
+	if (!tpkt)
+		return false;
+	m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
+	return true;
+}
+
 void CVideoDecoder::Release()
 {
-	m_demux.Stop();
+	//m_demux.Stop();
 
 	if (m_pCodecCtx)
 	{
@@ -202,7 +241,7 @@ void CVideoDecoder::OnDecodeFunction()
 	AVPacket* packet = nullptr;
 	AVFrame* srcFrame = av_frame_alloc();
 
-	while (m_state != Stopped)
+	while (m_state != Stopped && m_bRun)
 	{
 		if (m_state == Paused)
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));

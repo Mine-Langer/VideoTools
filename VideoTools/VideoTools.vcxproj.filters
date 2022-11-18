@@ -91,11 +91,11 @@
     <ClCompile Include="Conversion\qvideoconversion.cpp">
       <Filter>Conversion</Filter>
     </ClCompile>
-    <ClCompile Include="Conversion\qaudioconversion.cpp">
-      <Filter>Conversion</Filter>
-    </ClCompile>
     <ClCompile Include="Conversion\qvideoinfo.cpp">
       <Filter>Conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="Remultiplexer.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -138,6 +138,9 @@
     <ClInclude Include="capture\captureScreen.h">
       <Filter>capture</Filter>
     </ClInclude>
+    <ClInclude Include="Remultiplexer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="AVMainWnd.h">
@@ -158,9 +161,6 @@
     <QtMoc Include="Conversion\qvideoconversion.h">
       <Filter>Conversion</Filter>
     </QtMoc>
-    <QtMoc Include="Conversion\qaudioconversion.h">
-      <Filter>Conversion</Filter>
-    </QtMoc>
     <QtMoc Include="Conversion\qvideoinfo.h">
       <Filter>Conversion</Filter>
     </QtMoc>
@@ -176,9 +176,6 @@
       <Filter>Composition</Filter>
     </QtUic>
     <QtUic Include="Conversion\qvideoconversion.ui">
-      <Filter>Conversion</Filter>
-    </QtUic>
-    <QtUic Include="Conversion\qaudioconversion.ui">
       <Filter>Conversion</Filter>
     </QtUic>
     <QtUic Include="Conversion\qvideoinfo.ui">

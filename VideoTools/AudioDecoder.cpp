@@ -12,6 +12,7 @@ CAudioDecoder::~CAudioDecoder()
 
 bool CAudioDecoder::Open(const char* szInput)
 {
+#if 0
 	if (!m_demux.Open(szInput))
 		return false;
 
@@ -33,11 +34,40 @@ bool CAudioDecoder::Open(const char* szInput)
 	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
+	m_pCodecCtx->pkt_timebase = pStream->time_base;
+#endif
+
+	return true;
+}
+
+bool CAudioDecoder::Open(CDemultiplexer* pDemux)
+{
+	AVStream* pStream = pDemux->FormatContext()->streams[pDemux->AudioStreamIndex()];
+	if (!pStream)
+		return false;
+
+	m_pCodecCtx = avcodec_alloc_context3(nullptr);
+	if (!m_pCodecCtx)
+		return false;
+
+	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
+		return false;
+
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	if (!pCodec)
+		return false;
+
+	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
+		return false;
+
+	m_pCodecCtx->pkt_timebase = pStream->time_base;
+
 	return true;
 }
 
 bool CAudioDecoder::OpenMicrophone(const char* szUrl)
 {
+#if 0
 	const AVInputFormat* ifmt = av_find_input_format("dshow");
 	if (!ifmt)
 		return false;
@@ -62,7 +92,7 @@ bool CAudioDecoder::OpenMicrophone(const char* szUrl)
 
 	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
-
+#endif
 	return true;
 }
 
@@ -72,8 +102,9 @@ bool CAudioDecoder::Start(IDecoderEvent* pEvt)
 	if (!m_pEvent)
 		return false;
 
-	m_demux.Start(this);
+	//m_demux.Start(this);
 
+	m_bRun = true;
 	m_state = Started;
 	m_thread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
 
@@ -87,9 +118,19 @@ void CAudioDecoder::Stop()
 		m_thread.join();
 }
 
+bool CAudioDecoder::SendPacket(AVPacket* pkt)
+{
+	AVPacket* tpkt = av_packet_clone(pkt);
+	if (!tpkt)
+		return false;
+
+	m_srcAPktQueue.MaxSizePush(tpkt, &m_bRun);
+	return true;
+}
+
 void CAudioDecoder::Release()
 {
-	m_demux.Stop();
+	//m_demux.Stop();
 
 	if (m_pCodecCtx)
 	{
@@ -113,25 +154,24 @@ void CAudioDecoder::Release()
 	}
 }
 
-void CAudioDecoder::GetSrcParameter(int& sample_rate, int& nb_sample, int64_t& ch_layout, enum AVSampleFormat& sample_fmt)
+void CAudioDecoder::GetSrcParameter(int& sample_rate, int& nb_sample, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt)
 {
 	if (m_pCodecCtx->channel_layout == 0)
 		m_pCodecCtx->channel_layout = av_get_default_channel_layout(m_pCodecCtx->channels);
 	sample_rate = m_pCodecCtx->sample_rate;
 	nb_sample = m_pCodecCtx->frame_size;
-	ch_layout = m_pCodecCtx->channel_layout;
+	ch_layout = m_pCodecCtx->ch_layout;
 	sample_fmt = m_pCodecCtx->sample_fmt;
 }
 
-bool CAudioDecoder::SetSwrContext(int64_t ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
+bool CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
 {
-	m_channelLayout = ch_layout;
+	//m_channelLayout = ch_layout;
 	m_sampleFormat = sample_fmt;
 	m_sampleRate = sample_rate;
 
-	m_pSwrCtx = swr_alloc_set_opts(nullptr, m_channelLayout, m_sampleFormat, m_sampleRate,
-		m_pCodecCtx->channel_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr);
-	if (!m_pSwrCtx)
+	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &ch_layout, m_sampleFormat, m_sampleRate,
+		&m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr))
 		return false;
 
 	if (0 > swr_init(m_pSwrCtx))
@@ -148,6 +188,11 @@ void CAudioDecoder::SetSaveEnable(bool isSave)
 	m_bIsSave = isSave;
 }
 
+AVChannelLayout CAudioDecoder::GetChannelLayout()
+{
+	return m_pCodecCtx->ch_layout;
+}
+
 void CAudioDecoder::OnDecodeFunction()
 {
 	int error = 0;
@@ -156,7 +201,7 @@ void CAudioDecoder::OnDecodeFunction()
 	if (!m_bIsSave)
 		srcFrame = av_frame_alloc();
 
-	while (m_state != Stopped)
+	while (m_state != Stopped && m_bRun)
 	{
 		if (m_state == Paused)
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));

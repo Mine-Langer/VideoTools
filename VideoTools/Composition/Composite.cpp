@@ -42,7 +42,7 @@ bool Composite::OpenAudio(const char* szFile)
 
 	int sample_rate = -1;
 	int nb_sample = -1; 
-	int64_t ch_layout = -1; 
+	AVChannelLayout ch_layout = { };
 	enum AVSampleFormat sample_fmt = AV_SAMPLE_FMT_NONE;
 	m_audioDecoder.GetSrcParameter(sample_rate, nb_sample, ch_layout, sample_fmt);
 	m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
@@ -157,7 +157,7 @@ bool Composite::SaveFile(const char* szOutput, int type)
 	
 	int sample_rate;
 	int nb_sample;
-	int64_t ch_layout;
+	AVChannelLayout ch_layout;
 	enum AVSampleFormat sample_fmt;
 	m_audioDecoder.GetSrcParameter(sample_rate, nb_sample, ch_layout, sample_fmt);
 

@@ -10,7 +10,7 @@ CAudioEncoder::~CAudioEncoder()
 
 }
 
-bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, int srcChannelLayout, enum AVSampleFormat srcSampleFmt, int srcSampleRate)
+bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVChannelLayout srcChLayout, enum AVSampleFormat srcSampleFmt, int srcSampleRate)
 {
 	const AVCodec* pCodec = avcodec_find_encoder(codecId);
 	if (pCodec == nullptr)
@@ -23,6 +23,7 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, int
 	m_pCodecCtx->codec_id = codecId;
 	m_pCodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
 	m_pCodecCtx->channels = av_get_channel_layout_nb_channels(m_pCodecCtx->channel_layout);
+	av_channel_layout_default(&m_pCodecCtx->ch_layout, 2);
 	m_pCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
 	m_pCodecCtx->sample_rate = 44100;
 	m_pCodecCtx->bit_rate = 96000;
@@ -41,9 +42,8 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, int
 	if (0 > avcodec_parameters_from_context(m_pStream->codecpar, m_pCodecCtx))
 		return false;
 
-	m_pSwrCtx = swr_alloc_set_opts(nullptr, m_pCodecCtx->channel_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate,
-		srcChannelLayout, srcSampleFmt, srcSampleRate, 0, nullptr);
-	if (m_pSwrCtx == nullptr)
+	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate,
+		&srcChLayout, srcSampleFmt, srcSampleRate, 0, nullptr))
 		return false;
 
 	if (0 > swr_init(m_pSwrCtx))
@@ -65,18 +65,6 @@ void CAudioEncoder::BindAudioData(SafeQueue<AVFrame*>* audioQueue)
 	m_pAudioQueue = audioQueue;
 }
 
-// void CAudioEncoder::Start(IEncoderEvent* pEvt)
-// {
-// 	m_event = pEvt;
-// 	
-// 	m_bRun = true;
-// 	m_encodeThread = std::thread(&CAudioEncoder::OnEncodeThread, this);
-// }
-// 
-// void CAudioEncoder::PushFrame(AVFrame* frame)
-// {
-// 	m_audioFrameQueue.Push(frame);
-// }
 
 void CAudioEncoder::Release()
 {

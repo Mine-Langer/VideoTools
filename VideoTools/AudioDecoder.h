@@ -11,6 +11,8 @@ public:
 	// 打开指定音频文件
 	bool Open(const char* szInput);
 
+	bool Open(CDemultiplexer* pDemux);
+
 	// 打开音频设备
 	bool OpenMicrophone(const char* szUrl);
 
@@ -18,11 +20,16 @@ public:
 
 	void Stop();
 
-	void GetSrcParameter(int& sample_rate, int& nb_sample, int64_t& ch_layout, enum AVSampleFormat& sample_fmt);
-	bool SetSwrContext(int64_t ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
+	bool SendPacket(AVPacket* pkt);
+
+	void GetSrcParameter(int& sample_rate, int& nb_sample, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
+	bool SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
 
 	void SetSaveEnable(bool isSave);
 	
+
+	AVChannelLayout GetChannelLayout();
+
 	// 转码
 	AVFrame* ConvertFrame(AVFrame* frame);
 
@@ -34,7 +41,7 @@ protected:
 	void Release();
 
 private:
-	CDemultiplexer m_demux;
+	//CDemultiplexer m_demux;
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwrContext* m_pSwrCtx = nullptr;
 	IDecoderEvent* m_pEvent = nullptr;
@@ -44,8 +51,10 @@ private:
 	int m_sampleRate = 0;
 	int m_nbSamples = 0;
 
+	bool m_bRun = false;
 	enum AVState m_state = NotStarted;
 	std::thread m_thread;
+
 
 	bool m_bIsSave = false;
 	SafeQueue<AVPacket*> m_srcAPktQueue;

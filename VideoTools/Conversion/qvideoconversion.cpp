@@ -17,9 +17,29 @@ QVideoConversion::~QVideoConversion()
 {
 }
 
-bool QVideoConversion::ParseFile(const QString& szFile)
+
+bool QVideoConversion::DemuxPacket(AVPacket* pkt, int type)
 {
-	return false;
+	if (type == AVMEDIA_TYPE_VIDEO) {
+		m_videoDecoder.SendPacket(pkt);
+	}
+	else if (type == AVMEDIA_TYPE_AUDIO) {
+		m_audioDecoder.SendPacket(pkt);
+	}
+	return true;
+}
+
+bool QVideoConversion::VideoEvent(AVFrame* frame)
+{
+	m_remux.SendFrame(frame, AVMEDIA_TYPE_VIDEO);
+
+	return true;
+}
+
+bool QVideoConversion::AudioEvent(AVFrame* frame)
+{
+	m_remux.SendFrame(frame, AVMEDIA_TYPE_AUDIO);
+	return true;
 }
 
 
@@ -28,8 +48,6 @@ void QVideoConversion::OnBtnAddFileClick()
 	QString szFileName = QFileDialog::getOpenFileName(this, QStringLiteral("请选择视频文件"), "", "All Format (*.swf *.webm *.avi *.mp4 *.mov *.flv *.mpeg *.rm *.rmvb *.asf *.f4v *.mkv *.wmv)");
 	if (szFileName.isEmpty())
 		return;
-
-	ParseFile(szFileName);
 
 	QListWidgetItem* pItem = new QListWidgetItem(ui.videoListWnd);
 	QVideoInfo* videoInfo = new QVideoInfo(szFileName, ui.videoListWnd);
@@ -46,7 +64,25 @@ void QVideoConversion::OnBtnStartClick()
 	{
 		std::string szFile = m_vecFiles[i].toStdString();
 		const char* cfilename = szFile.c_str();
-		m_demux.Open(cfilename);
-	}
-	
+		if (!m_demux.Open(cfilename))
+			return;
+
+		m_demux.Start(this);
+
+		if (m_videoDecoder.Open(&m_demux))
+			m_videoDecoder.Start(this);
+
+		if (m_audioDecoder.Open(&m_demux))
+			m_audioDecoder.Start(this);
+
+		int sample_rate, nb_sample;
+		AVChannelLayout ch_layout; 
+		AVSampleFormat sample_fmt;
+		m_audioDecoder.GetSrcParameter(sample_rate, nb_sample, ch_layout, sample_fmt);
+		std::string strName = m_szOutName.toStdString();
+		if (!m_remux.SetOutput(strName.c_str(), m_nOutWidth, m_nOutHeight, ch_layout, sample_fmt, sample_rate))
+			return;
+
+		m_remux.Start();
+	}	
 }

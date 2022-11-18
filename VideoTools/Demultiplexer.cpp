@@ -18,18 +18,9 @@ bool CDemultiplexer::Open(const char* szInput)
 	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
 		return false;
 
-	for (int i = 0; i < m_pFormatCtx->nb_streams; i++)
-	{
-		if (m_pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
-		{
-			m_videoIndex = i;
-		}
-		else if (m_pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
-		{
-			m_audioIndex = i;
-		}
-	}
-
+	m_videoIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+	m_audioIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+	
 	return true;
 }
 
@@ -96,8 +87,8 @@ AVFormatContext* CDemultiplexer::FormatContext()
 
 void CDemultiplexer::OnDemuxFunction()
 {
-	AVPacket* pkt = av_packet_alloc();
 
+	AVPacket* pkt = av_packet_alloc();
 	while (m_bRun)
 	{
 		if (0 > av_read_frame(m_pFormatCtx, pkt))
