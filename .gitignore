@@ -295,3 +295,7 @@ VideoTools/x64/Release/moc/moc_qvideoinfo.cpp
 VideoTools/x64/Release/uic/ui_qaudioconversion.h
 VideoTools/x64/Release/uic/ui_qvideoconversion.h
 VideoTools/x64/Release/uic/ui_qvideoinfo.h
+.vs/VideoTools/FileContentIndex/a5d5fa6c-4eef-4138-8c94-d67270351ed3.vsidx
+.vs/VideoTools/FileContentIndex/cd2d324d-cf8c-4fee-a12c-50f2e3517fea.vsidx
+x64/Debug/TutorialDemo.exp
+x64/Debug/TutorialDemo.lib
