@@ -1,13 +1,23 @@
 #pragma once
-class AVTools
+//test
+#include "Demultiplexer.h"
+//#include "AudioDecoder.h"
+//#include "AudioEncoder.h"
+
+class AVTools :public IDemuxEvent
 {
 public:
 	AVTools();
 	~AVTools();
 
-	// ²¥·Å
-	// ºÏ³É
-	// Â¼ÆÁ
-	// Â¼Ïñ
+	bool run();
+	
+private:
+	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
+
+
+private:
+	CDemultiplexer*	_demux = nullptr;
+	//CAudioDecoder	_audioDecoder;
 };
 

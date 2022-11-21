@@ -12,7 +12,7 @@ CDemultiplexer::~CDemultiplexer()
 
 bool CDemultiplexer::Open(const char* szInput)
 {
-	if (0 != avformat_open_input(&m_pFormatCtx, szInput, nullptr, nullptr))
+	if (0 != avformat_open_input(&m_pFormatCtx, szInput, NULL, NULL))
 		return false;
 
 	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
@@ -87,7 +87,6 @@ AVFormatContext* CDemultiplexer::FormatContext()
 
 void CDemultiplexer::OnDemuxFunction()
 {
-
 	AVPacket* pkt = av_packet_alloc();
 	while (m_bRun)
 	{

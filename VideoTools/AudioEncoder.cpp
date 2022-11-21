@@ -21,11 +21,9 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVC
 		return false;
 
 	m_pCodecCtx->codec_id = codecId;
-	m_pCodecCtx->channel_layout = AV_CH_LAYOUT_STEREO;
-	m_pCodecCtx->channels = av_get_channel_layout_nb_channels(m_pCodecCtx->channel_layout);
 	av_channel_layout_default(&m_pCodecCtx->ch_layout, 2);
 	m_pCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-	m_pCodecCtx->sample_rate = 44100;
+	m_pCodecCtx->sample_rate = srcSampleRate;
 	m_pCodecCtx->bit_rate = 96000;
 	m_pCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 	m_pCodecCtx->time_base = { 1, m_pCodecCtx->sample_rate };
@@ -49,7 +47,7 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVC
 	if (0 > swr_init(m_pSwrCtx))
 		return false;
 
-	m_pAudioFifo = av_audio_fifo_alloc(m_pCodecCtx->sample_fmt, m_pCodecCtx->channels, 1);
+	m_pAudioFifo = av_audio_fifo_alloc(m_pCodecCtx->sample_fmt, m_pCodecCtx->ch_layout.nb_channels, 1);
 	if (m_pAudioFifo == nullptr)
 		return false;
 
@@ -103,6 +101,61 @@ AVRational CAudioEncoder::GetTimeBase()
 	return m_pCodecCtx->time_base;
 }
 
+bool CAudioEncoder::PushFrameToFifo(const uint8_t** frameData, int framesize)
+{
+	AVFrame* pFrame = AllocOutputFrame(framesize);
+	if (!pFrame)
+		return false;
+	
+	if (0 > swr_convert(m_pSwrCtx, pFrame->data, framesize, frameData, framesize))
+		return false;
+
+	int fifoSize = av_audio_fifo_size(m_pAudioFifo);
+
+	int err = av_audio_fifo_realloc(m_pAudioFifo, fifoSize + framesize);
+
+	int wsize = av_audio_fifo_write(m_pAudioFifo, (void**)pFrame->data, framesize);
+	
+	av_frame_free(&pFrame);
+
+	return true;
+}
+
+AVPacket* CAudioEncoder::GetPacketFromFifo(int* aIdx)
+{
+	int fifosize = av_audio_fifo_size(m_pAudioFifo);
+	if (fifosize >= m_pCodecCtx->frame_size)
+	{
+		const int framesize = FFMIN(fifosize, m_pCodecCtx->frame_size);
+
+		AVFrame* pFrame = AllocOutputFrame(framesize);
+
+		av_audio_fifo_read(m_pAudioFifo, (void**)pFrame->data, framesize);
+		pFrame->pts = m_frameIndex;
+		m_frameIndex += pFrame->nb_samples;
+		*aIdx = m_frameIndex;
+
+		if (0 > avcodec_send_frame(m_pCodecCtx, pFrame)) {
+			av_frame_free(&pFrame);
+			return nullptr;
+		}
+
+		AVPacket* pkt = av_packet_alloc();
+		if (0 > avcodec_receive_packet(m_pCodecCtx, pkt)) {
+			av_frame_free(&pFrame);
+			av_packet_free(&pkt);
+			return nullptr;
+		}
+		av_frame_free(&pFrame);
+
+		av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
+		pkt->stream_index = m_pStream->index;
+
+		return pkt;
+	}
+	return nullptr;
+}
+
 bool CAudioEncoder::PushAudioToFifo()
 {
 	AVFrame* frame = nullptr;
@@ -150,19 +203,31 @@ ends:
 	return bRet;
 }
 
+AVFrame* CAudioEncoder::AllocOutputFrame(int nbSize)
+{
+	AVFrame* outputFrame = av_frame_alloc();
+	if (!outputFrame)
+		return nullptr;
+
+	outputFrame->nb_samples = nbSize;
+	outputFrame->ch_layout = m_pCodecCtx->ch_layout;
+	outputFrame->format = m_pCodecCtx->sample_fmt;
+	outputFrame->sample_rate = m_pCodecCtx->sample_rate;
+	if (0 > av_frame_get_buffer(outputFrame, 0)) {
+		av_frame_free(&outputFrame);
+		return nullptr;
+	}
+
+	return outputFrame;
+}
 bool CAudioEncoder::ReadPacketFromFifo(AVPacket* pkt)
 {
 	int error = 0;
 	if (av_audio_fifo_size(m_pAudioFifo) >= m_nbSamples || (m_bFinished && av_audio_fifo_size(m_pAudioFifo) > 0))
 	{
 		const int frameSize = FFMIN(av_audio_fifo_size(m_pAudioFifo), m_nbSamples);
-		AVFrame* outputFrame = av_frame_alloc();
-		outputFrame->nb_samples = frameSize;
-		outputFrame->channel_layout = m_pCodecCtx->channel_layout;
-		outputFrame->format = m_pCodecCtx->sample_fmt;
-		outputFrame->sample_rate = m_pCodecCtx->sample_rate;
-		av_frame_get_buffer(outputFrame, 0);
-
+		AVFrame* outputFrame = AllocOutputFrame(frameSize);
+	
 		av_audio_fifo_read(m_pAudioFifo, (void**)outputFrame->data, frameSize);
 		outputFrame->pts = m_frameIndex;
 		m_frameIndex += outputFrame->nb_samples;

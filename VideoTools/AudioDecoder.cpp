@@ -102,8 +102,6 @@ bool CAudioDecoder::Start(IDecoderEvent* pEvt)
 	if (!m_pEvent)
 		return false;
 
-	//m_demux.Start(this);
-
 	m_bRun = true;
 	m_state = Started;
 	m_thread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
@@ -154,19 +152,15 @@ void CAudioDecoder::Release()
 	}
 }
 
-void CAudioDecoder::GetSrcParameter(int& sample_rate, int& nb_sample, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt)
+void CAudioDecoder::GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt)
 {
-	if (m_pCodecCtx->channel_layout == 0)
-		m_pCodecCtx->channel_layout = av_get_default_channel_layout(m_pCodecCtx->channels);
 	sample_rate = m_pCodecCtx->sample_rate;
-	nb_sample = m_pCodecCtx->frame_size;
 	ch_layout = m_pCodecCtx->ch_layout;
 	sample_fmt = m_pCodecCtx->sample_fmt;
 }
 
 bool CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
 {
-	//m_channelLayout = ch_layout;
 	m_sampleFormat = sample_fmt;
 	m_sampleRate = sample_rate;
 
@@ -183,10 +177,6 @@ bool CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat
 	return true;
 }
 
-void CAudioDecoder::SetSaveEnable(bool isSave)
-{
-	m_bIsSave = isSave;
-}
 
 AVChannelLayout CAudioDecoder::GetChannelLayout()
 {
@@ -197,9 +187,7 @@ void CAudioDecoder::OnDecodeFunction()
 {
 	int error = 0;
 	AVPacket* pkt = nullptr;
-	AVFrame* srcFrame = nullptr;
-	if (!m_bIsSave)
-		srcFrame = av_frame_alloc();
+	AVFrame* srcFrame = av_frame_alloc();
 
 	while (m_state != Stopped && m_bRun)
 	{
@@ -222,35 +210,18 @@ void CAudioDecoder::OnDecodeFunction()
 					if (error < 0)
 						continue;
 
-					if (m_bIsSave)
-						srcFrame = av_frame_alloc();
-
 					error = avcodec_receive_frame(m_pCodecCtx, srcFrame);
 					if (error < 0)
 					{
-						if (m_bIsSave)
-							av_frame_free(&srcFrame);
 						continue;
 					}
 
-					// ×ªÂë(²¥·ÅÓÃ)
-					if (!m_bIsSave)
-					{
-						AVFrame* dstFrame = ConvertFrame(srcFrame);
-						m_pEvent->AudioEvent(dstFrame);
-					}
-					else
-					{
-						m_pEvent->AudioEvent(srcFrame);
-					}
-					if (!m_bIsSave)
-						av_frame_unref(srcFrame);
+					m_pEvent->AudioEvent(srcFrame);
 				}
 			}
 		}
 	}
-	if (!m_bIsSave)
-		av_frame_free(&srcFrame);
+	av_frame_free(&srcFrame);
 
 	Release();
 }

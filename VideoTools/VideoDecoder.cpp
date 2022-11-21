@@ -148,7 +148,6 @@ bool CVideoDecoder::Start(IDecoderEvent* pEvt)
 	if (!(m_pEvent = pEvt))
 		return false;
 	
-	//m_demux.Start(this);
 	m_bRun = true;
 	m_state = Started;
 	m_thread = std::thread(&CVideoDecoder::OnDecodeFunction, this);
@@ -213,9 +212,9 @@ bool CVideoDecoder::SetSwsConfig(int width, int height, enum AVPixelFormat pix_f
 
 void CVideoDecoder::GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat)
 {
-	srcWidth = m_srcWidth;
-	srcHeight = m_srcHeight;
-	srcFormat = m_srcFormat;
+	srcWidth = m_pCodecCtx->width;
+	srcHeight = m_pCodecCtx->height;
+	srcFormat = m_pCodecCtx->pix_fmt;
 }
 
 AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)
@@ -251,8 +250,7 @@ void CVideoDecoder::OnDecodeFunction()
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			else
 			{
-				if (packet == nullptr) {
-					// 结束标志
+				if (packet == nullptr) { // 结束标志					
 					break;
 				}
 				else
