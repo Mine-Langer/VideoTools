@@ -17,12 +17,18 @@ public:
 
 	AVRational GetTimeBase();
 
+	bool PushFrameToFifo(const uint8_t** frameData, int framesize);
+
+	AVPacket* GetPacketFromFifo(int* aIdx);
+
 private:
 	bool PushAudioToFifo();
 
 	bool ReadFrame2Fifo(AVFrame* frame);
 
 	bool ReadPacketFromFifo(AVPacket* pkt);
+
+	AVFrame* AllocOutputFrame(int nbSize);
 
 private:
 	AVCodecContext* m_pCodecCtx = nullptr;

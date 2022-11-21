@@ -22,26 +22,22 @@ public:
 
 	bool SendPacket(AVPacket* pkt);
 
-	void GetSrcParameter(int& sample_rate, int& nb_sample, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
+	void GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
 	bool SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
-
-	void SetSaveEnable(bool isSave);
 	
-
 	AVChannelLayout GetChannelLayout();
 
 	// зЊТы
 	AVFrame* ConvertFrame(AVFrame* frame);
 
-
 protected:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
+
 	void OnDecodeFunction();
 
 	void Release();
 
 private:
-	//CDemultiplexer m_demux;
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwrContext* m_pSwrCtx = nullptr;
 	IDecoderEvent* m_pEvent = nullptr;
@@ -56,7 +52,6 @@ private:
 	std::thread m_thread;
 
 
-	bool m_bIsSave = false;
 	SafeQueue<AVPacket*> m_srcAPktQueue;
 };
 

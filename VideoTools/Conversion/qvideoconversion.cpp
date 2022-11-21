@@ -67,21 +67,31 @@ void QVideoConversion::OnBtnStartClick()
 		if (!m_demux.Open(cfilename))
 			return;
 
-		m_demux.Start(this);
-
+		int srcWidth, srcHeight; 
+		AVPixelFormat srcFormat;
 		if (m_videoDecoder.Open(&m_demux))
-			m_videoDecoder.Start(this);
+		{
+			m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
+		}
 
-		if (m_audioDecoder.Open(&m_demux))
-			m_audioDecoder.Start(this);
-
-		int sample_rate, nb_sample;
-		AVChannelLayout ch_layout; 
+		int sample_rate;
+		AVChannelLayout ch_layout;
 		AVSampleFormat sample_fmt;
-		m_audioDecoder.GetSrcParameter(sample_rate, nb_sample, ch_layout, sample_fmt);
+		if (m_audioDecoder.Open(&m_demux))
+		{			
+			m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
+			m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
+		}
+				
 		std::string strName = m_szOutName.toStdString();
 		if (!m_remux.SetOutput(strName.c_str(), m_nOutWidth, m_nOutHeight, ch_layout, sample_fmt, sample_rate))
 			return;
+
+		m_demux.Start(this);
+
+		m_videoDecoder.Start(this);
+
+		m_audioDecoder.Start(this);
 
 		m_remux.Start();
 	}	
