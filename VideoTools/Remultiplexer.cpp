@@ -36,23 +36,36 @@ void CRemultiplexer::SendFrame(AVFrame* frame, int nType)
 {
     if (nType == AVMEDIA_TYPE_VIDEO)
     {
-        AVFrame* tframe = av_frame_clone(frame);
+        AVFrame* tframe = nullptr;
+        if (frame)
+            tframe = av_frame_clone(frame);
         m_videoFrameQueue.MaxSizePush(tframe, &m_bRun);
     }
     else if (nType == AVMEDIA_TYPE_AUDIO)
     {
-        m_audioEncoder.PushFrameToFifo((const uint8_t**)frame->data, frame->nb_samples);
-        //m_audioFrameQueue.MaxSizePush(tframe, &m_bRun);
+        if (frame)
+            m_audioEncoder.PushFrameToFifo((const uint8_t**)frame->data, frame->nb_samples);
     }
 }
 
 void CRemultiplexer::Release()
 {
-
+    if (m_pFormatCtx) {
+        avio_closep(&m_pFormatCtx->pb);
+        avformat_free_context(m_pFormatCtx);
+        m_pFormatCtx = nullptr;
+    }
+    m_audioEncoder.Release();
+    m_videoEncoder.Release();
 }
 
-bool CRemultiplexer::Start()
+bool CRemultiplexer::Start(IRemuxEvent* pEvt)
 {
+    if (!pEvt)
+        return false;
+
+    m_pEvent = pEvt;
+
     m_bRun = true;
     m_thread = std::thread(&CRemultiplexer::OnWork, this);
 
@@ -68,21 +81,25 @@ void CRemultiplexer::OnWork()
     bool endV = false, endA = false;
     while (m_bRun)
     {
+        if (m_videoFrameQueue.Empty()){
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            continue;
+        }
         // ÅÐ¶ÏÒôÊÓÆµÖ¡Ê±Ðò
         if (0 > av_compare_ts(videoIdx, m_videoEncoder.GetTimeBase(), audioIdx, m_audioEncoder.GetTimeBase()))
         {
-            AVFrame* videoFrame = m_videoFrameQueue.Front();
-            if (videoFrame) {
-                AVFrame* cvtFrame = m_videoDecoder.ConvertFrame(videoFrame);
-                if (!cvtFrame) continue;
-                cvtFrame->pts = videoIdx++;
+            AVFrame* videoFrame = nullptr;
+            m_videoFrameQueue.Pop(videoFrame);
 
-                AVPacket* pkt_v = m_videoEncoder.Encode(cvtFrame);
+            if (videoFrame) {
+                videoFrame->pts = videoIdx++;
+
+                AVPacket* pkt_v = m_videoEncoder.Encode(videoFrame);
                 if (!pkt_v) continue;
 
                 av_interleaved_write_frame(m_pFormatCtx, pkt_v);
                 av_packet_free(&pkt_v);
-                av_frame_free(&cvtFrame);
+                av_frame_free(&videoFrame);
             }
             else
                 endV = true;
@@ -103,4 +120,8 @@ void CRemultiplexer::OnWork()
     }
 
     av_write_trailer(m_pFormatCtx);
+
+    Release();
+
+    m_pEvent->RemuxEvent(1);
 }

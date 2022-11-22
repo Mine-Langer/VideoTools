@@ -118,18 +118,22 @@ void CAudioDecoder::Stop()
 
 bool CAudioDecoder::SendPacket(AVPacket* pkt)
 {
-	AVPacket* tpkt = av_packet_clone(pkt);
-	if (!tpkt)
-		return false;
+	if (pkt == nullptr)
+		m_srcAPktQueue.MaxSizePush(pkt, &m_bRun);
+	else
+	{
+		AVPacket* tpkt = av_packet_clone(pkt);
+		if (!tpkt)
+			return false;
 
-	m_srcAPktQueue.MaxSizePush(tpkt, &m_bRun);
+		m_srcAPktQueue.MaxSizePush(tpkt, &m_bRun);
+	}
+	
 	return true;
 }
 
 void CAudioDecoder::Release()
 {
-	//m_demux.Stop();
-
 	if (m_pCodecCtx)
 	{
 		avcodec_close(m_pCodecCtx);
@@ -245,7 +249,7 @@ AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 	return dstFrame;
 }
 
-bool CAudioDecoder::DemuxPacket(AVPacket* pkt, int type)
+/*bool CAudioDecoder::DemuxPacket(AVPacket* pkt, int type)
 {
 	if (type == AVMEDIA_TYPE_AUDIO)
 	{
@@ -261,5 +265,5 @@ bool CAudioDecoder::DemuxPacket(AVPacket* pkt, int type)
 		}
 	}
 	return true;
-}
+}*/
 

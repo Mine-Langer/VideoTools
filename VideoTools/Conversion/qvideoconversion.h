@@ -6,7 +6,7 @@
 #include "../Demultiplexer.h"
 #include "../Remultiplexer.h"
 
-class QVideoConversion : public QWidget, public IDemuxEvent, public IDecoderEvent
+class QVideoConversion : public QWidget, public IDemuxEvent, public IDecoderEvent, public IRemuxEvent
 {
 	Q_OBJECT
 
@@ -23,9 +23,15 @@ private:
 
 	virtual bool AudioEvent(AVFrame* frame) override;
 
+	virtual void RemuxEvent(int nType) override;
+
+signals:
+	void CvtStatusSig(int ntype);
+
 private slots:
 	void OnBtnAddFileClick();
 	void OnBtnStartClick();
+	void CvtStatusSlot(int ntype);
 
 private:
 	Ui::QVideoConversion ui;
@@ -37,7 +43,7 @@ private:
 	CVideoDecoder	m_videoDecoder;
 	CAudioDecoder	m_audioDecoder;
 
-	QString m_szOutName = "output.mkv";		// 转换后文件名
+	QString m_szOutName = "output.flv";		// 转换后文件名
 	int m_nOutWidth = 1280;
 	int m_nOutHeight = 720;
 };

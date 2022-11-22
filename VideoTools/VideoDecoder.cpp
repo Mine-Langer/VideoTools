@@ -63,6 +63,10 @@ bool CVideoDecoder::Open(CDemultiplexer* pDemux)
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
 
+	m_srcWidth = m_pCodecCtx->width;
+	m_srcHeight = m_pCodecCtx->height;
+	m_srcFormat = m_pCodecCtx->pix_fmt;
+
 	return true;
 }
 
@@ -164,10 +168,16 @@ void CVideoDecoder::Stop()
 
 bool CVideoDecoder::SendPacket(AVPacket* pkt)
 {
-	AVPacket* tpkt = av_packet_clone(pkt);
-	if (!tpkt)
-		return false;
-	m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
+	if (pkt == nullptr)
+		m_srcVPktQueue.MaxSizePush(pkt, &m_bRun);
+	else 
+	{
+		AVPacket* tpkt = av_packet_clone(pkt);
+		if (!tpkt)
+			return false;
+		m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
+	}
+	
 	return true;
 }
 
@@ -250,7 +260,8 @@ void CVideoDecoder::OnDecodeFunction()
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			else
 			{
-				if (packet == nullptr) { // 结束标志					
+				if (packet == nullptr) { // 结束标志	
+					m_pEvent->VideoEvent(nullptr);
 					break;
 				}
 				else
@@ -282,7 +293,7 @@ void CVideoDecoder::OnDecodeFunction()
 	Release();
 }
 
-bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
+/*bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
 {
 	if (type == AVMEDIA_TYPE_VIDEO)
 	{
@@ -294,5 +305,5 @@ bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
 		}
 	}
 	return true;
-}
+}*/
 

@@ -2,7 +2,8 @@
 #include "qvideoinfo.h"
 #include <QFileDialog>
 #include <QTextCodec>
-#include <QListWidget.h>
+#include <QListWidget>
+#include <QMessageBox>
 
 QVideoConversion::QVideoConversion(QWidget *parent)
 	: QWidget(parent)
@@ -11,6 +12,7 @@ QVideoConversion::QVideoConversion(QWidget *parent)
 
 	connect(ui.btnAddFile, SIGNAL(clicked()), this, SLOT(OnBtnAddFileClick()));
 	connect(ui.btnStart, SIGNAL(clicked()), this, SLOT(OnBtnStartClick()));
+	connect(this, SIGNAL(CvtStatusSig(int)), this, SLOT(CvtStatusSlot(int)));
 }
 
 QVideoConversion::~QVideoConversion()
@@ -31,7 +33,11 @@ bool QVideoConversion::DemuxPacket(AVPacket* pkt, int type)
 
 bool QVideoConversion::VideoEvent(AVFrame* frame)
 {
-	m_remux.SendFrame(frame, AVMEDIA_TYPE_VIDEO);
+	AVFrame* cvtFrame = nullptr;
+	if (frame)
+		cvtFrame = m_videoDecoder.ConvertFrame(frame);
+
+	m_remux.SendFrame(cvtFrame, AVMEDIA_TYPE_VIDEO);
 
 	return true;
 }
@@ -40,6 +46,11 @@ bool QVideoConversion::AudioEvent(AVFrame* frame)
 {
 	m_remux.SendFrame(frame, AVMEDIA_TYPE_AUDIO);
 	return true;
+}
+
+void QVideoConversion::RemuxEvent(int nType)
+{
+	emit CvtStatusSig(nType);
 }
 
 
@@ -72,6 +83,7 @@ void QVideoConversion::OnBtnStartClick()
 		if (m_videoDecoder.Open(&m_demux))
 		{
 			m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
+			m_videoDecoder.SetSwsConfig();
 		}
 
 		int sample_rate;
@@ -93,6 +105,12 @@ void QVideoConversion::OnBtnStartClick()
 
 		m_audioDecoder.Start(this);
 
-		m_remux.Start();
+		m_remux.Start(this);
 	}	
+}
+
+void QVideoConversion::CvtStatusSlot(int ntype)
+{
+	if (ntype == 1)
+		QMessageBox::information(this, QStringLiteral("格式转换完成"), QStringLiteral("提示"));
 }

@@ -70,6 +70,15 @@ void CDemultiplexer::Stop()
 	}
 }
 
+void CDemultiplexer::Release()
+{
+	if (m_pFormatCtx) {
+		avformat_close_input(&m_pFormatCtx);
+		avformat_free_context(m_pFormatCtx);
+		m_pFormatCtx = nullptr;
+	}
+}
+
 int CDemultiplexer::AudioStreamIndex()
 {
 	return m_audioIndex;
@@ -87,6 +96,7 @@ AVFormatContext* CDemultiplexer::FormatContext()
 
 void CDemultiplexer::OnDemuxFunction()
 {
+	int idxArr[2] = { 0 };
 	AVPacket* pkt = av_packet_alloc();
 	while (m_bRun)
 	{
@@ -100,13 +110,21 @@ void CDemultiplexer::OnDemuxFunction()
 		{
 			if (pkt->stream_index == m_audioIndex)
 			{
+				idxArr[m_audioIndex]++;
 				m_pEvent->DemuxPacket(pkt, AVMEDIA_TYPE_AUDIO);
 			}
 			else if (pkt->stream_index == m_videoIndex)
 			{
+				idxArr[m_videoIndex]++;
 				m_pEvent->DemuxPacket(pkt, AVMEDIA_TYPE_VIDEO);
 			}
+			printf("pkt idx[%d][%d] pkt times:%.2f  duration:%.2f\n", pkt->stream_index, idxArr[pkt->stream_index],
+				av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base)*pkt->pts,
+				av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base) * pkt->duration
+				);
 		}
 	}
 	av_packet_free(&pkt);
+
+	Release();
 }

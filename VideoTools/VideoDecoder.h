@@ -11,7 +11,7 @@ public:
 	virtual bool AudioEvent(AVFrame* frame) = 0;
 };
 
-class CVideoDecoder :public IDemuxEvent
+class CVideoDecoder //:public IDemuxEvent
 {
 public:
 	CVideoDecoder();
@@ -39,7 +39,7 @@ public:
 	AVFrame* ConvertFrame(AVFrame* frame);
 
 protected:
-	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
+	//virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 	void OnDecodeFunction();
 
 	void Release();

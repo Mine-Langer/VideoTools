@@ -2,7 +2,7 @@
 #include "Demultiplexer.h"
 #include "VideoDecoder.h"
 
-class CAudioDecoder:public IDemuxEvent
+class CAudioDecoder //:public IDemuxEvent
 {
 public:
 	CAudioDecoder();
@@ -31,7 +31,7 @@ public:
 	AVFrame* ConvertFrame(AVFrame* frame);
 
 protected:
-	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
+	//virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 
 	void OnDecodeFunction();
 

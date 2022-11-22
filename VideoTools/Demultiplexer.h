@@ -24,6 +24,8 @@ public:
 
 	void Stop();
 
+	void Release();
+
 	int AudioStreamIndex();
 
 	int VideoStreamIndex();
