@@ -39,7 +39,6 @@ public:
 	AVFrame* ConvertFrame(AVFrame* frame);
 
 protected:
-	//virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 	void OnDecodeFunction();
 
 	void Release();

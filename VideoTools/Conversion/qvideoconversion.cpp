@@ -33,11 +33,7 @@ bool QVideoConversion::DemuxPacket(AVPacket* pkt, int type)
 
 bool QVideoConversion::VideoEvent(AVFrame* frame)
 {
-	AVFrame* cvtFrame = nullptr;
-	if (frame)
-		cvtFrame = m_videoDecoder.ConvertFrame(frame);
-
-	m_remux.SendFrame(cvtFrame, AVMEDIA_TYPE_VIDEO);
+	m_remux.SendFrame(frame, AVMEDIA_TYPE_VIDEO);
 
 	return true;
 }

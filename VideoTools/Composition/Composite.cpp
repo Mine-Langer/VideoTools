@@ -199,60 +199,11 @@ bool Composite::AudioEvent(AVFrame* frame)
 	return true;
 }
 
-//void Composite::OnSDLAudioFunction(void* userdata, Uint8* stream, int len)
-//{
-//	Composite* pThis = (Composite*)userdata;
-//	
-//	if (pThis->m_state != Started)
-//		return;
-//
-//	if (pThis->m_audioQueue.Empty())
-//	{
-//		SDL_memset(stream, 0, len);
-//	}
-//	else
-//	{
-//		AVFrame* frame = nullptr;
-//		pThis->m_audioQueue.Pop(frame);
-//		if (frame != nullptr)
-//		{
-//			int wLen = len < frame->linesize[0] ? len : frame->linesize[0];
-//			SDL_memset(stream, 0, len);
-//			SDL_MixAudio(stream, frame->data[0], wLen, SDL_MIX_MAXVOLUME);
-//
-//			av_frame_free(&frame);
-//		}
-//	}
-//	
-//}
+
 
 void Composite::OnPlayFunction()
 {
-	//while (m_state != Stopped)
-	//{
-	//	if (m_state == Paused)
-	//		std::this_thread::sleep_for(std::chrono::milliseconds(20));
-	//	else
-	//	{
-	//		if (m_videoQueue.Empty())
-	//			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-	//		else
-	//		{
-	//			AVFrame* frame = m_videoQueue.Front();
-	//			AVFrame* swsFrame = m_videoDecoder.ConvertFrame(frame);
-	//
-	//			SDL_UpdateYUVTexture(m_texture, nullptr, swsFrame->data[0], swsFrame->linesize[0],
-	//				swsFrame->data[1], swsFrame->linesize[1], swsFrame->data[2], swsFrame->linesize[2]);
-	//			SDL_RenderClear(m_render);
-	//			SDL_RenderCopy(m_render, m_texture, nullptr, &m_rect);
-	//			SDL_RenderPresent(m_render);
-	//
-	//			std::this_thread::sleep_for(std::chrono::milliseconds(40));
-	//
-	//			av_frame_free(&swsFrame);
-	//		}
-	//	}
-	//}
+
 }
 
 void Composite::OnSaveFunction()

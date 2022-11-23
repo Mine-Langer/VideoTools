@@ -63,8 +63,8 @@ bool CVideoDecoder::Open(CDemultiplexer* pDemux)
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
 
-	m_srcWidth = m_pCodecCtx->width;
-	m_srcHeight = m_pCodecCtx->height;
+	m_srcWidth = m_pCodecCtx->width / 2 * 2;
+	m_srcHeight = m_pCodecCtx->height / 2 * 2;
 	m_srcFormat = m_pCodecCtx->pix_fmt;
 
 	return true;
@@ -183,8 +183,6 @@ bool CVideoDecoder::SendPacket(AVPacket* pkt)
 
 void CVideoDecoder::Release()
 {
-	//m_demux.Stop();
-
 	if (m_pCodecCtx)
 	{
 		avcodec_close(m_pCodecCtx);
@@ -209,9 +207,15 @@ void CVideoDecoder::Release()
 
 bool CVideoDecoder::SetSwsConfig(int width, int height, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
 {
-	m_swsWidth = (width == -1 ? m_srcWidth : width);
-	m_swsHeight = (height == -1 ? m_srcHeight : height);
+	float ratio = m_srcWidth * 1.0 / (m_srcHeight * 1.0);
+
 	m_swsFormat = (pix_fmt == AV_PIX_FMT_NONE ? AV_PIX_FMT_YUV420P : pix_fmt);
+
+	m_swsWidth = width / 2 * 2;
+	m_swsHeight = m_swsWidth * 1.0 / ratio;
+	if (m_swsHeight > height)
+		m_swsWidth = height * ratio;
+
 	m_pSwsCtx = sws_getContext(m_srcWidth, m_srcHeight, m_srcFormat,
 		m_swsWidth, m_swsHeight, m_swsFormat, SWS_BICUBIC, nullptr, nullptr, nullptr);
 	if (!m_pSwsCtx)
@@ -280,7 +284,9 @@ void CVideoDecoder::OnDecodeFunction()
 						continue;
 					}
 
-					m_pEvent->VideoEvent(srcFrame);
+					AVFrame* cvtFrame = ConvertFrame(srcFrame);
+
+					m_pEvent->VideoEvent(cvtFrame);
 					
 					av_frame_unref(srcFrame);
 					av_packet_free(&packet);

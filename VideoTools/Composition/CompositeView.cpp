@@ -105,7 +105,17 @@ void CompositeView::OnActAudio()
 
 void CompositeView::OnBtnPlay()
 {
-	m_composite.Play();
+	if (!m_player.Open("D:/documents/OneDrive/video/QQÊÓÆµ¸ãÇ®.mp4"))
+		return;
+	int width = ui->playView->width();
+	int height = ui->playView->height();
+	HWND hWnd = (HWND)ui->playView->winId();
+
+	m_player.SetView(hWnd, width, height);
+
+	m_player.Start();
+
+	// m_composite.Play();
 }
 
 void CompositeView::OnBtnExport()

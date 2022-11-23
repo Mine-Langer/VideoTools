@@ -3,6 +3,10 @@
 #include <QWidget>
 #include <QMenu>
 #include "Composite.h"
+
+//test
+#include "../player.h"
+
 #pragma execution_character_set("utf-8")
 
 namespace Ui { class CompositeView; };
@@ -35,5 +39,6 @@ private:
 	QMenu* m_audioMenu = nullptr;
 
 	Composite m_composite;
+	CPlayer		m_player;
 	int m_comType = 0;
 };

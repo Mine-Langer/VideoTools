@@ -32,7 +32,7 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtInstall>5.12.10_msvc2017_64</QtInstall>
+    <QtInstall>5.12.12_msvc2017_64</QtInstall>
     <QtModules>core;gui;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
@@ -110,6 +110,8 @@
     <ClCompile Include="Conversion\qvideoconversion.cpp" />
     <ClCompile Include="Conversion\qvideoinfo.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
+    <ClCompile Include="DxAudioPlayer.cpp" />
+    <ClCompile Include="player.cpp" />
     <ClCompile Include="Remultiplexer.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
     <ClCompile Include="VideoDecoder.cpp" />
@@ -134,6 +136,8 @@
     <ClInclude Include="capture\captureScreen.h" />
     <QtMoc Include="Conversion\qvideoconversion.h" />
     <QtMoc Include="Conversion\qvideoinfo.h" />
+    <ClInclude Include="DxAudioPlayer.h" />
+    <ClInclude Include="player.h" />
     <ClInclude Include="Remultiplexer.h" />
     <ClInclude Include="VideoEncoder.h" />
     <QtMoc Include="Composition\AVTextureBar.h" />

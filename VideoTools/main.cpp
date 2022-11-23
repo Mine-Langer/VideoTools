@@ -17,17 +17,19 @@ int main(int argc, char *argv[])
 }
 #else
 
+#include <QCoreApplication>
 #include "AVTools.h"
 
-int _tmain(int argc, const TCHAR* argv[])
+int main(int argc, char* argv[])
 {
+    QCoreApplication a(argc, argv);
+
     AVTools t;
 
     t.run();
 
-    Sleep(-1);
 
-    return 0; 
+    return a.exec();
 }
 
 #endif
