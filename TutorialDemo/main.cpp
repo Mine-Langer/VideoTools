@@ -57,8 +57,8 @@ int main(int argc, char* argv[])
     demux.Release();
     */
 
-    CM3u8Test m;
-    m.OpenUrl("https://mnkwxsheem9.haifengsports.club/20221018/rt0EzjWF/index.m3u8");
+    //CM3u8Test m;
+    //m.OpenUrl("https://mnkwxsheem9.haifengsports.club/20221018/rt0EzjWF/index.m3u8");
 
     system("pause");
     return 0;

@@ -36,6 +36,12 @@
     <ClCompile Include="DxRender.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="DSound3D.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WaveFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -51,6 +57,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="DxRender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DSound3D.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WaveFile.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
