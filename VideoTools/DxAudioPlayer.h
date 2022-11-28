@@ -7,6 +7,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include "SafeQueue.h"
 
 #define BUF_NUM  20
 
@@ -37,8 +38,13 @@ private:
 	WAVEFORMATEX	m_WaveFormat;
 
 	uint32_t		m_notifySize = 0;
+	int				m_iOffset = 0;
 
 	bool			m_bRun = false;
 	std::thread		m_tPlay;
+
+	uint8_t* m_bytesNotifyPtr = nullptr;
+	typedef struct { uint8_t* buf; int size; } PCM_BUF;
+	SafeQueue<PCM_BUF> m_pcmQueue;
 };
 

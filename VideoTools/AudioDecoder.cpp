@@ -220,7 +220,11 @@ void CAudioDecoder::OnDecodeFunction()
 						continue;
 					}
 
-					m_pEvent->AudioEvent(srcFrame);
+					AVFrame* cvtFrame = ConvertFrame(srcFrame);
+
+					m_pEvent->AudioEvent(cvtFrame);
+
+					av_frame_unref(srcFrame);
 				}
 			}
 		}
@@ -234,7 +238,7 @@ AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 {
 	AVFrame* dstFrame = av_frame_alloc();
 	if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize,
-		av_get_channel_layout_nb_channels(m_channelLayout), m_nbSamples, m_sampleFormat, 1))
+		m_pCodecCtx->ch_layout.nb_channels, m_nbSamples, m_sampleFormat, 1))
 	{
 		av_frame_free(&dstFrame);
 		return nullptr;

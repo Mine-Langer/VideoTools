@@ -133,18 +133,22 @@
   <ItemGroup>
     <ClCompile Include="demos.cpp" />
     <ClCompile Include="DemuxAudio.cpp" />
+    <ClCompile Include="DSound3D.cpp" />
     <ClCompile Include="DxRender.cpp" />
     <ClCompile Include="FilterAudio.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="FilteringAudio.cpp" />
     <ClCompile Include="PcmPlay.cpp" />
+    <ClCompile Include="WaveFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="demos.h" />
     <ClInclude Include="DemuxAudio.h" />
+    <ClInclude Include="DSound3D.h" />
     <ClInclude Include="DxRender.h" />
     <ClInclude Include="PcmPlay.h" />
+    <ClInclude Include="WaveFile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

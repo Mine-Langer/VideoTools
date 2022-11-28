@@ -27,6 +27,7 @@ bool CPlayer::Open(const char* szInput)
 		AVSampleFormat sample_fmt;
 		m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
 		m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
+		m_dxAudio.Open(ch_layout.nb_channels, sample_rate);
 	}
 
 	return true;
@@ -65,7 +66,10 @@ void CPlayer::OnPlayProc()
 	{
 		m_audioFrameQueue.Pop(pFrame);
 		if (pFrame)
-			m_dxAudio.PushPCM(pFrame->extended_data[0], pFrame->nb_samples);
+		{
+			m_dxAudio.PushPCM(pFrame->extended_data[0], pFrame->linesize[0]);
+			av_frame_free(&pFrame);
+		}
 	}
 }
 

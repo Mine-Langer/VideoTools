@@ -18,10 +18,11 @@ bool DxAudioPlayer::Open(int nChannel, int nSamples)
 	m_WaveFormat.nChannels = nChannel;
 	m_WaveFormat.nSamplesPerSec = nSamples;
 	m_WaveFormat.wBitsPerSample = 16;
-	m_WaveFormat.nBlockAlign = m_WaveFormat.wBitsPerSample * m_WaveFormat.nSamplesPerSec / 8;
+	m_WaveFormat.nBlockAlign = m_WaveFormat.wBitsPerSample * m_WaveFormat.nChannels / 8;
 	m_WaveFormat.nAvgBytesPerSec = m_WaveFormat.nSamplesPerSec * m_WaveFormat.nBlockAlign;
 
 	m_notifySize = m_WaveFormat.nAvgBytesPerSec * 60 / 1000;
+	m_bytesNotifyPtr = new uint8_t[m_notifySize * 10]();
 
 	if (FAILED(DirectSoundCreate(nullptr, &m_pDevice, nullptr)))
 		return false;
@@ -37,7 +38,6 @@ bool DxAudioPlayer::Open(int nChannel, int nSamples)
 
 	if (FAILED(m_pMainBuff->SetFormat(&m_WaveFormat)))
 		return false;
-
 
 	bufDesc.dwFlags = DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLVOLUME;
 	bufDesc.dwBufferBytes = BUF_NUM * m_notifySize;
@@ -75,14 +75,20 @@ bool DxAudioPlayer::Open(int nChannel, int nSamples)
 
 void DxAudioPlayer::PushPCM(uint8_t* pBuf, uint32_t uSize)
 {
+	PCM_BUF pcm = { 0 };
 
+	pcm.buf = new uint8_t[uSize]();
+	pcm.size = uSize;
+	memcpy(pcm.buf, pBuf, uSize);
+
+	m_pcmQueue.Push(pcm);
 }
 
 void DxAudioPlayer::OnPlayProc()
 {
 	LPVOID pvAudioPtr1, pvAudioPtr2;
 	DWORD dwAudioBytes1, dwAudioBytes2;
-
+	DWORD dwOffset = 0;
 	while (m_bRun)
 	{
 		DWORD dwRet = WaitForMultipleObjects(BUF_NUM, m_hNotifyEvts, FALSE, INFINITE);
@@ -90,7 +96,28 @@ void DxAudioPlayer::OnPlayProc()
 		if (FAILED(m_pSecondBuff->Lock(0, m_notifySize, &pvAudioPtr1, &dwAudioBytes1, &pvAudioPtr2, &dwAudioBytes2, DSBLOCK_FROMWRITECURSOR)))
 			continue;
 
+		while (true)
+		{
+			if (dwOffset < m_notifySize)
+			{
+				PCM_BUF pcmbuf;
+				if (m_pcmQueue.Pop(pcmbuf))
+				{
+					memcpy(m_bytesNotifyPtr + dwOffset, pcmbuf.buf, pcmbuf.size);
+					delete[] pcmbuf.buf;
 
+					dwOffset += pcmbuf.size;
+				}
+			}
+			else
+			{
+				memcpy(pvAudioPtr1, m_bytesNotifyPtr, dwAudioBytes1);
+				memcpy(pvAudioPtr2, m_bytesNotifyPtr+ dwAudioBytes1, dwAudioBytes2);
+				dwOffset -= m_notifySize;
+				memcpy(m_bytesNotifyPtr, m_bytesNotifyPtr + m_notifySize, dwOffset);
+				break;
+			}
+		}
 
 		m_pSecondBuff->Unlock(pvAudioPtr1, dwAudioBytes1, pvAudioPtr2, dwAudioBytes2);
 	}
