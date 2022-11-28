@@ -30,6 +30,7 @@ public:
 
 	BOOL Reset();
 
+	WAVEFORMATEX* WaveFormat() { return m_pwfx; }
 private:
 	bool ReadMMIO();
 	bool WriteMMIO(WAVEFORMATEX* pwfx);

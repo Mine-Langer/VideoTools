@@ -168,7 +168,7 @@ void CVideoDecoder::Stop()
 
 bool CVideoDecoder::SendPacket(AVPacket* pkt)
 {
-	/*if (pkt == nullptr)
+	if (pkt == nullptr)
 		m_srcVPktQueue.MaxSizePush(pkt, &m_bRun);
 	else 
 	{
@@ -176,7 +176,7 @@ bool CVideoDecoder::SendPacket(AVPacket* pkt)
 		if (!tpkt)
 			return false;
 		m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
-	}*/
+	}
 	
 	return true;
 }

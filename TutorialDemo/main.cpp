@@ -3,7 +3,7 @@
 
 #include "demos.h"
 #include "DemuxAudio.h"
-
+#include "DSound3D.h"
 
 int main(int argc, char* argv[])
 {
@@ -59,6 +59,10 @@ int main(int argc, char* argv[])
 
     //CM3u8Test m;
     //m.OpenUrl("https://mnkwxsheem9.haifengsports.club/20221018/rt0EzjWF/index.m3u8");
+
+    DSound3D ds3d;
+    TCHAR szFile[] = _T("D:/CloudMusic/The_Titan.wav");
+    ds3d.Open(szFile);
 
     system("pause");
     return 0;

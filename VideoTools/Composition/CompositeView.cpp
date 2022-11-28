@@ -105,7 +105,7 @@ void CompositeView::OnActAudio()
 
 void CompositeView::OnBtnPlay()
 {
-	if (!m_player.Open("F:/MyDocuments/OneDrive/video/QQÊÓÆµ¸ãÇ®.mp4"))
+	if (!m_player.Open("D:/documents/OneDrive/video/QQÊÓÆµ¸ãÇ®.mp4"))
 		return;
 	int width = ui->playView->width();
 	int height = ui->playView->height();

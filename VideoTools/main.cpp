@@ -4,7 +4,7 @@
 #include <QTextCodec>
 
 //https://mnkwxsheem9.haifengsports.club/20221018/rt0EzjWF/index.m3u8
-//#undef main
+#undef main
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);

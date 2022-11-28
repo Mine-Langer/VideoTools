@@ -26,6 +26,7 @@ extern "C"
 #include "libavutil/fifo.h"
 #include "libswscale/swscale.h"
 #include "libswresample/swresample.h"
+#include "libsdl/SDL.h"
 }
 
 #pragma comment (lib, "avcodec.lib")
@@ -35,6 +36,7 @@ extern "C"
 #pragma comment (lib, "avutil.lib")
 #pragma comment (lib, "swresample.lib")
 #pragma comment (lib, "swscale.lib")
+#pragma comment (lib, "SDL2.lib")
 
 #include "SafeQueue.h"
 
