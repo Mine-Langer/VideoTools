@@ -32,6 +32,14 @@ bool CPlayer::Open(const char* szInput)
 		m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
 		m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
 		m_dxAudio.Open(ch_layout.nb_channels, sample_rate);
+
+		m_audioSpec.freq = sample_rate;
+		m_audioSpec.channels = ch_layout.nb_channels;
+		m_audioSpec.samples = 1024;
+		m_audioSpec.format = AUDIO_S16SYS;
+		m_audioSpec.silence = 0;
+		m_audioSpec.userdata = this;
+		m_audioSpec.callback = OnAudioCallback;
 	}
 
 	return true;
@@ -44,17 +52,12 @@ void CPlayer::SetView(HWND hWnd, int w, int h)
 
 	m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
 
-	m_audioSpec.format = AUDIO_S16SYS;
-	m_audioSpec.silence = 0;
-	m_audioSpec.userdata = this;
-	m_audioSpec.callback = OnAudioCallback;
-
 	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
 	{
 		printf("SDL_OpenAudio failed.\n");
 		return;
 	}
-	SDL_PauseAudio(1);
+	SDL_PauseAudio(0);
 	// m_pTexture = SDL_CreateTexture();
 }
 
@@ -104,6 +107,9 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 	AVFrame* pFrame = nullptr;
 	if (pThis->m_audioFrameQueue.Pop(pFrame))
 	{
+		if (!pFrame)
+			return;
+
 		int wlen = len < pFrame->nb_samples ? len : pFrame->nb_samples;
 		SDL_memset(stream, 0, wlen);
 		SDL_MixAudio(stream, pFrame->data[0], wlen, SDL_MIX_MAXVOLUME);
