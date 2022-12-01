@@ -52,6 +52,13 @@ void CPlayer::SetView(HWND hWnd, int w, int h)
 
 	m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
 
+	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, w, h);
+
+	m_rect.x = 0;
+	m_rect.y = 0;
+	m_rect.w = w;
+	m_rect.h = h;
+
 	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
 	{
 		printf("SDL_OpenAudio failed.\n");
@@ -68,7 +75,6 @@ void CPlayer::Start()
 	m_audioDecoder.Start(this);
 
 	m_bRun = true;
-	//m_tPlay = std::thread(&CPlayer::OnPlayProc, this);
 	m_tRender = std::thread(&CPlayer::OnRenderProc, this);
 }
 
@@ -91,9 +97,16 @@ void CPlayer::OnRenderProc()
 		m_videoFrameQueue.Pop(pFrame);
 		if (pFrame)
 		{
-			m_dxVideo.Render(pFrame->data[0], pFrame->data[1], pFrame->data[2]);
+			SDL_UpdateYUVTexture(m_pTexture, nullptr, pFrame->data[0], pFrame->linesize[0],
+				pFrame->data[1], pFrame->linesize[1], pFrame->data[2], pFrame->linesize[2]);
+			SDL_RenderClear(m_pRender);
+			SDL_RenderCopy(m_pRender, m_pTexture, nullptr, &m_rect);
+			//m_dxVideo.Render(pFrame->data[0], pFrame->data[1], pFrame->data[2]);
 			printf("video frame:[Y:%d, U:%d, V:%d]\n", pFrame->linesize[0], pFrame->linesize[1], pFrame->linesize[2]);
+			
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 
+			SDL_RenderPresent(m_pRender);
 			av_frame_free(&pFrame);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(40));
@@ -110,7 +123,7 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 		if (!pFrame)
 			return;
 
-		int wlen = len < pFrame->nb_samples ? len : pFrame->nb_samples;
+		int wlen = len < pFrame->linesize[0] ? len : pFrame->linesize[0];
 		SDL_memset(stream, 0, wlen);
 		SDL_MixAudio(stream, pFrame->data[0], wlen, SDL_MIX_MAXVOLUME);
 
