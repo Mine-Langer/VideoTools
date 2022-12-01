@@ -27,6 +27,7 @@ private:
 
 	static void	OnAudioCallback(void* userdata, Uint8* stream, int len);
 
+
 private:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 

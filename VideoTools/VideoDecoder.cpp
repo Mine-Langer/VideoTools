@@ -205,7 +205,7 @@ void CVideoDecoder::Release()
 	}
 }
 
-bool CVideoDecoder::SetSwsConfig(int width, int height, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
+bool CVideoDecoder::SetSwsConfig(SDL_Rect* rect, int width, int height, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
 {
 	float ratio = m_srcWidth * 1.0 / (m_srcHeight * 1.0);
 
@@ -216,10 +216,21 @@ bool CVideoDecoder::SetSwsConfig(int width, int height, enum AVPixelFormat pix_f
 	if (m_swsHeight > height)
 		m_swsWidth = height * ratio;
 
+//	m_swsWidth = width;
+//	m_swsHeight = height;
+
 	m_pSwsCtx = sws_getContext(m_srcWidth, m_srcHeight, m_srcFormat,
 		m_swsWidth, m_swsHeight, m_swsFormat, SWS_BICUBIC, nullptr, nullptr, nullptr);
 	if (!m_pSwsCtx)
 		return false;
+	
+	if (rect)
+	{
+		rect->x = (width - m_swsWidth) / 2;
+		rect->y = (height - m_swsHeight) / 2;
+		rect->w = m_swsWidth;
+		rect->h = m_swsHeight;
+	}
 
 	return true;
 }

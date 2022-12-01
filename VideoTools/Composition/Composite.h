@@ -59,7 +59,7 @@ private:
 	//SDL_Window* m_window = nullptr;
 	//SDL_Texture* m_texture = nullptr;
 	//SDL_Renderer* m_render = nullptr;
-	//SDL_Rect m_rect;
+	SDL_Rect m_rect;
 
 	int m_videoWidth = 0;
 	int m_videoHeight = 0;

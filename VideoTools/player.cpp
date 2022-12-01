@@ -47,17 +47,13 @@ bool CPlayer::Open(const char* szInput)
 
 void CPlayer::SetView(HWND hWnd, int w, int h)
 {
-	m_videoDecoder.SetSwsConfig(w, h);
+	m_videoDecoder.SetSwsConfig(&m_rect, w, h);
+
 	m_pWindow = SDL_CreateWindowFrom(hWnd);
 
 	m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
 
-	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, w, h);
-
-	m_rect.x = 0;
-	m_rect.y = 0;
-	m_rect.w = w;
-	m_rect.h = h;
+	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
 
 	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
 	{
@@ -65,8 +61,8 @@ void CPlayer::SetView(HWND hWnd, int w, int h)
 		return;
 	}
 	SDL_PauseAudio(0);
-	// m_pTexture = SDL_CreateTexture();
 }
+
 
 void CPlayer::Start()
 {
@@ -94,7 +90,11 @@ void CPlayer::OnRenderProc()
 	AVFrame* pFrame = nullptr;
 	while (m_bRun)
 	{
-		m_videoFrameQueue.Pop(pFrame);
+		if (!m_videoFrameQueue.Pop(pFrame)) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+			continue;
+		}
+
 		if (pFrame)
 		{
 			SDL_UpdateYUVTexture(m_pTexture, nullptr, pFrame->data[0], pFrame->linesize[0],
@@ -102,14 +102,15 @@ void CPlayer::OnRenderProc()
 			SDL_RenderClear(m_pRender);
 			SDL_RenderCopy(m_pRender, m_pTexture, nullptr, &m_rect);
 			//m_dxVideo.Render(pFrame->data[0], pFrame->data[1], pFrame->data[2]);
-			printf("video frame:[Y:%d, U:%d, V:%d]\n", pFrame->linesize[0], pFrame->linesize[1], pFrame->linesize[2]);
-			
+			//printf("video frame:[Y:%d, U:%d, V:%d]\n", pFrame->linesize[0], pFrame->linesize[1], pFrame->linesize[2]);
+
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 
 			SDL_RenderPresent(m_pRender);
 			av_frame_free(&pFrame);
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(40));
+		else
+			m_bRun = false;
 	}
 }
 

@@ -27,9 +27,9 @@ bool Composite::OpenImage(const char* szFile)
 		return false;
 
 	if (m_type == E_Play)
-		m_videoDecoder.SetSwsConfig(m_videoWidth, m_videoHeight);
+		m_videoDecoder.SetSwsConfig(&m_rect, m_videoWidth, m_videoHeight);
 	else if (m_type == E_Save)
-		m_videoDecoder.SetSwsConfig();
+		m_videoDecoder.SetSwsConfig(&m_rect);
 	m_videoDecoder.Start(this);
 
 	return true;
