@@ -47,8 +47,8 @@ extern "C"
 #include <queue>
 #include <tchar.h>
 
-#ifdef _DEBUG
 #include <windows.h>
+#ifdef _DEBUG
 #define HL_PRINT(...) { char szText[1024]={0}; sprintf_s(szText, 1024, __VA_ARGS__); OutputDebugStringA(szText); }
 #else
 #define HL_PRINT(...) 
