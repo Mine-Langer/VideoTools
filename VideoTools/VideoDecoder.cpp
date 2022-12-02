@@ -62,7 +62,7 @@ bool CVideoDecoder::Open(CDemultiplexer* pDemux)
 		return false;
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
-	m_timebase = av_q2d(m_pCodecCtx->time_base);
+	m_timebase = av_q2d(pStream->time_base);
 
 	m_srcWidth = m_pCodecCtx->width / 2 * 2;
 	m_srcHeight = m_pCodecCtx->height / 2 * 2;
@@ -217,9 +217,6 @@ bool CVideoDecoder::SetSwsConfig(SDL_Rect* rect, int width, int height, enum AVP
 	if (m_swsHeight > height)
 		m_swsWidth = height * ratio;
 
-//	m_swsWidth = width;
-//	m_swsHeight = height;
-
 	m_pSwsCtx = sws_getContext(m_srcWidth, m_srcHeight, m_srcFormat,
 		m_swsWidth, m_swsHeight, m_swsFormat, SWS_BICUBIC, nullptr, nullptr, nullptr);
 	if (!m_pSwsCtx)
@@ -243,7 +240,7 @@ void CVideoDecoder::GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelF
 	srcFormat = m_pCodecCtx->pix_fmt;
 }
 
-int64_t CVideoDecoder::Timebase()
+double CVideoDecoder::Timebase()
 {
 	return m_timebase; 
 }
@@ -261,6 +258,9 @@ AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)
 	}
 
 	int h = sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, m_srcHeight, swsFrame->data, swsFrame->linesize);
+
+	swsFrame->pts = frame->pts;
+	swsFrame->best_effort_timestamp = frame->pts;
 
 	return swsFrame;
 }

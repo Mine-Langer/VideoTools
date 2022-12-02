@@ -38,6 +38,7 @@ bool CFilterVideo::Init(AVCodecContext* pCodecCtx, AVStream* pStream)
 	}
 	av_free(bufSinkParam);
 
+
 	outputs->name = av_strdup("in");
 	outputs->filter_ctx = m_bufferSrcCtx;
 	outputs->pad_idx = 0;
@@ -53,6 +54,8 @@ bool CFilterVideo::Init(AVCodecContext* pCodecCtx, AVStream* pStream)
 
 	if (0 > avfilter_graph_config(m_filterGraph, nullptr))
 		return false;
+
+	char* temp = avfilter_graph_dump(m_filterGraph, nullptr);
 
 	return true;
 }

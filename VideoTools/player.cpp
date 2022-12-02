@@ -79,9 +79,27 @@ void CPlayer::Stop()
 
 }
 
+void CPlayer::Pause()
+{
+}
+
 void CPlayer::Release()
 {
+	SDL_PauseAudio(1);
+	if (m_pWindow) {
+		SDL_DestroyWindow(m_pWindow);
+		m_pWindow = nullptr;
+	}
 
+	if (m_pRender) {
+		SDL_DestroyRenderer(m_pRender);
+		m_pRender = nullptr;
+	}
+
+	if (m_pTexture) {
+		SDL_DestroyTexture(m_pTexture);
+		m_pTexture = nullptr;
+	}
 }
 
 
@@ -102,13 +120,13 @@ void CPlayer::OnRenderProc()
 				pFrame->data[1], pFrame->linesize[1], pFrame->data[2], pFrame->linesize[2]);
 			SDL_RenderClear(m_pRender);
 			SDL_RenderCopy(m_pRender, m_pTexture, nullptr, &m_rect);
-			//m_dxVideo.Render(pFrame->data[0], pFrame->data[1], pFrame->data[2]);
-			//printf("video frame:[Y:%d, U:%d, V:%d]\n", pFrame->linesize[0], pFrame->linesize[1], pFrame->linesize[2]);
 
-			int64_t _pts = pFrame->pts * m_videoDecoder.Timebase();
+			double _pts = pFrame->best_effort_timestamp * m_videoDecoder.Timebase();
 			delay = m_avSync.CalcDelay(_pts);
 			if (delay > 0)	
 				std::this_thread::sleep_for(std::chrono::microseconds(delay));
+
+			//printf("video pts:%lld, timebase:%f, time:%f \n", pFrame->best_effort_timestamp, m_videoDecoder.Timebase(), _pts);
 
 			SDL_RenderPresent(m_pRender);
 			av_frame_free(&pFrame);
@@ -135,7 +153,7 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 		SDL_MixAudio(stream, pFrame->data[0], wlen, SDL_MIX_MAXVOLUME);
 		double rpts = pFrame->best_effort_timestamp * pThis->m_audioDecoder.Timebase();
 		pThis->m_avSync.SetAudioClock(rpts);
-		//printf("	[AudioFrame] pts:%lld, dts:%f \r\n", pFrame->pts, pFrame->pts * pThis->m_audioDecoder.timebase());
+		printf("audio pts:%lld, timebase:%f time:%f \r\n", pFrame->best_effort_timestamp, pThis->m_audioDecoder.Timebase(), rpts);
 		av_frame_free(&pFrame);
 	}
 	else

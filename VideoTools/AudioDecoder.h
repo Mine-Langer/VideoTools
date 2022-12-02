@@ -26,7 +26,7 @@ public:
 	bool SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
 	
 	AVChannelLayout GetChannelLayout();
-	int64_t Timebase();
+	double Timebase();
 
 	// зЊТы
 	AVFrame* ConvertFrame(AVFrame* frame);
@@ -42,7 +42,7 @@ private:
 	SwrContext* m_pSwrCtx = nullptr;
 	IDecoderEvent* m_pEvent = nullptr;
 
-	int64_t m_timebase = 0;
+	double m_timebase = 0.0;
 	int64_t m_channelLayout = 0;
 	AVSampleFormat m_sampleFormat = AV_SAMPLE_FMT_NONE;
 	int m_sampleRate = 0;

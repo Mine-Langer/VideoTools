@@ -37,7 +37,7 @@ public:
 	void GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat);
 
 	AVFrame* ConvertFrame(AVFrame* frame);
-	int64_t Timebase();
+	double Timebase();
 
 protected:
 	void OnDecodeFunction();
@@ -54,7 +54,7 @@ private:
 	enum AVState m_state = NotStarted;
 	std::thread m_thread;
 
-	int64_t m_timebase = 0;
+	double m_timebase = 0.0;
 	int m_swsWidth = 0, m_srcWidth = 0;
 	int m_swsHeight = 0, m_srcHeight = 0;
 	enum AVPixelFormat m_swsFormat = AV_PIX_FMT_NONE, m_srcFormat = AV_PIX_FMT_NONE;

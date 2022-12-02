@@ -188,7 +188,7 @@ AVChannelLayout CAudioDecoder::GetChannelLayout()
 	return m_pCodecCtx->ch_layout;
 }
 
-int64_t CAudioDecoder::Timebase()
+double CAudioDecoder::Timebase()
 {
 	return m_timebase;  
 }
@@ -255,6 +255,8 @@ AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 		av_frame_free(&dstFrame);
 		return nullptr;
 	}
+	dstFrame->pts = frame->pts;
+	dstFrame->best_effort_timestamp = frame->best_effort_timestamp;
 
 	return dstFrame;
 }

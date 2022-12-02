@@ -3,7 +3,6 @@
 #include "AudioDecoder.h"
 #include "VideoDecoder.h"
 #include "DxAudioPlayer.h"
-#include "DxVideoRender.h"
 #include "avSync.h"
 
 class CPlayer :public IDemuxEvent, public IDecoderEvent
@@ -19,6 +18,8 @@ public:
 	void Start();
 
 	void Stop();
+
+	void Pause();
 
 	void Release();
 
@@ -41,7 +42,6 @@ private:
 	CAudioDecoder	m_audioDecoder;
 	CVideoDecoder	m_videoDecoder;
 	DxAudioPlayer	m_dxAudio;
-	DxVideoRender	m_dxVideo;
 
 	SDL_Window*		m_pWindow = nullptr;
 	SDL_Renderer*	m_pRender = nullptr;

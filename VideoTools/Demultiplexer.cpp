@@ -118,10 +118,9 @@ void CDemultiplexer::OnDemuxFunction()
 				idxArr[m_videoIndex]++;
 				m_pEvent->DemuxPacket(pkt, AVMEDIA_TYPE_VIDEO);
 			}
-			printf("pkt idx[%d][%d] pkt times:%.2f  duration:%.2f\n", pkt->stream_index, idxArr[pkt->stream_index],
-				av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base)*pkt->pts,
-				av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base) * pkt->duration
-				);
+			//printf("pkt idx[%d][%d] pkt times:%.2f  duration:%.2f\n", pkt->stream_index, idxArr[pkt->stream_index],
+			//	av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base)*pkt->pts,
+			//	av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base) * pkt->duration);
 		}
 	}
 	av_packet_free(&pkt);
