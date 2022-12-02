@@ -61,6 +61,7 @@ bool CAudioDecoder::Open(CDemultiplexer* pDemux)
 		return false;
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
+	m_timebase = av_q2d(m_pCodecCtx->time_base);
 
 	return true;
 }
@@ -185,6 +186,11 @@ bool CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat
 AVChannelLayout CAudioDecoder::GetChannelLayout()
 {
 	return m_pCodecCtx->ch_layout;
+}
+
+int64_t CAudioDecoder::Timebase()
+{
+	return m_timebase;  
 }
 
 void CAudioDecoder::OnDecodeFunction()

@@ -134,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioEncoder.h" />
+    <ClInclude Include="avSync.h" />
     <ClInclude Include="capture\captureScreen.h" />
     <QtMoc Include="Conversion\qvideoconversion.h" />
     <QtMoc Include="Conversion\qvideoinfo.h" />

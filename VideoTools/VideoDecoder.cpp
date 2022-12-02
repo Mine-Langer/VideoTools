@@ -62,6 +62,7 @@ bool CVideoDecoder::Open(CDemultiplexer* pDemux)
 		return false;
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
+	m_timebase = av_q2d(m_pCodecCtx->time_base);
 
 	m_srcWidth = m_pCodecCtx->width / 2 * 2;
 	m_srcHeight = m_pCodecCtx->height / 2 * 2;
@@ -240,6 +241,11 @@ void CVideoDecoder::GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelF
 	srcWidth = m_pCodecCtx->width;
 	srcHeight = m_pCodecCtx->height;
 	srcFormat = m_pCodecCtx->pix_fmt;
+}
+
+int64_t CVideoDecoder::Timebase()
+{
+	return m_timebase; 
 }
 
 AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)

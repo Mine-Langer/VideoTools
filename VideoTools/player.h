@@ -4,6 +4,7 @@
 #include "VideoDecoder.h"
 #include "DxAudioPlayer.h"
 #include "DxVideoRender.h"
+#include "avSync.h"
 
 class CPlayer :public IDemuxEvent, public IDecoderEvent
 {
@@ -47,6 +48,7 @@ private:
 	SDL_Texture*	m_pTexture = nullptr;
 	SDL_Rect		m_rect;
 	SDL_AudioSpec	m_audioSpec;
+	AVSync			m_avSync;
 
 	SafeQueue<AVFrame*> m_audioFrameQueue;
 	SafeQueue<AVFrame*> m_videoFrameQueue;
