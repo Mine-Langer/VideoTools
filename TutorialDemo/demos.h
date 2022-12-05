@@ -1,6 +1,6 @@
 #pragma once
 #include "Common.h"
-#include "PcmPlay.h"
+
 #define _CRT_SECURE_NO_WARNINGS 1 
 
 struct buffer_data
@@ -142,7 +142,6 @@ private:
 	bool InitFilterGraph();
 
 private:
-	AVMD5* _md5 = nullptr;
 	AVFilterGraph* _graph = nullptr;
 	AVFilterContext* _src_ctx = nullptr;
 	AVFilterContext* _sink_ctx = nullptr;

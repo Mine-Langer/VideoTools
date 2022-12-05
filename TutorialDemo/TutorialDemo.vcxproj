@@ -21,9 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{c47a91dc-1183-463a-91ee-34b2cef14df4}</ProjectGuid>
+    <ProjectGuid>{087b7a9e-59a4-427e-a548-c54578d1e466}</ProjectGuid>
     <RootNamespace>TutorialDemo</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -104,13 +104,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\library\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>Default</LanguageStandard>
+      <AdditionalIncludeDirectories>../library/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\library\lib\win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../library/lib/win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -121,7 +120,6 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,23 +130,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="demos.cpp" />
-    <ClCompile Include="DemuxAudio.cpp" />
-    <ClCompile Include="DSound3D.cpp" />
-    <ClCompile Include="DxRender.cpp" />
-    <ClCompile Include="FilterAudio.cpp" />
+    <ClCompile Include="drawText.cpp" />
+    <ClCompile Include="FilterVideo.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="FilteringAudio.cpp" />
-    <ClCompile Include="PcmPlay.cpp" />
-    <ClCompile Include="WaveFile.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Common.h" />
+    <ClInclude Include="common.h" />
     <ClInclude Include="demos.h" />
-    <ClInclude Include="DemuxAudio.h" />
-    <ClInclude Include="DSound3D.h" />
-    <ClInclude Include="DxRender.h" />
-    <ClInclude Include="PcmPlay.h" />
-    <ClInclude Include="WaveFile.h" />
+    <ClInclude Include="drawText.h" />
+    <ClInclude Include="FilterVideo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

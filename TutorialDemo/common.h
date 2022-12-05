@@ -1,7 +1,7 @@
 #pragma once
 #pragma execution_character_set("utf-8")
 
-extern "C" 
+extern "C"
 {
 #include "libavformat/avformat.h"
 #include "libavformat/avio.h"
@@ -39,29 +39,10 @@ extern "C"
 #pragma comment (lib, "swscale.lib")
 #pragma comment (lib, "SDL2.lib")
 
-#include "SafeQueue.h"
-
+#include <windows.h>
 #include <thread>
 #include <iostream>
 #include <string>
 #include <mutex>
 #include <queue>
 #include <tchar.h>
-
-#include <windows.h>
-#ifdef _DEBUG
-#define HL_PRINT(...) { char szText[1024]={0}; sprintf_s(szText, 1024, __VA_ARGS__); OutputDebugStringA(szText); }
-#else
-#define HL_PRINT(...) 
-#endif
-
-#define AVSYNC_DYNAMIC_COEFFICIENT 0.0160119  // 动态帧率算法的系数 解方程 (1+x)^6 = 1.1 即
-												// 在相差时间(ffmepg时间) 为 6位数的时候，控制
-												// 帧率的延时会在标准延时下增加或减少相差时间的
-												// (1.1-1)倍
-
-#define AVSYNC_DYNAMIC_THRESHOLD 0.003        // 音视频同步动态帧率进行干预的二者当前时间差的阈值
-
-
-
-

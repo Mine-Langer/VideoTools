@@ -61,6 +61,7 @@ bool CAudioDecoder::Open(CDemultiplexer* pDemux)
 		return false;
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
+	m_timebase = av_q2d(m_pCodecCtx->time_base);
 
 	return true;
 }
@@ -187,6 +188,11 @@ AVChannelLayout CAudioDecoder::GetChannelLayout()
 	return m_pCodecCtx->ch_layout;
 }
 
+double CAudioDecoder::Timebase()
+{
+	return m_timebase;  
+}
+
 void CAudioDecoder::OnDecodeFunction()
 {
 	int error = 0;
@@ -249,6 +255,8 @@ AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 		av_frame_free(&dstFrame);
 		return nullptr;
 	}
+	dstFrame->pts = frame->pts;
+	dstFrame->best_effort_timestamp = frame->best_effort_timestamp;
 
 	return dstFrame;
 }

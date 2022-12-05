@@ -51,7 +51,7 @@ void ExtractMvs::Run()
 	_frame = av_frame_alloc();
 	AVPacket pkt;
 		 
-	cout << "framenum, source, blockw, blockh, srcx, srcy, dstx, dsty, flags" << endl;
+	std::cout << "framenum, source, blockw, blockh, srcx, srcy, dstx, dsty, flags" << std::endl;
 	
 	while (true)
 	{
@@ -72,7 +72,7 @@ bool ExtractMvs::DecodePacket(AVPacket* pkt)
 	if (0 > ret)
 		return false;
 
-	while (ret >= 0)
+	/*while (ret >= 0)
 	{
 		ret = avcodec_receive_frame(_video_codec_ctx, _frame);
 		if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
@@ -101,7 +101,7 @@ bool ExtractMvs::DecodePacket(AVPacket* pkt)
 			}
 			av_frame_unref(_frame);
 		}
-	}
+	}*/
 
 	return true;
 }

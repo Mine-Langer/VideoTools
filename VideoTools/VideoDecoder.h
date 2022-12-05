@@ -35,8 +35,10 @@ public:
 
 	bool SetSwsConfig(SDL_Rect* rect = nullptr, int width = -1, int height = -1, enum AVPixelFormat pix_fmt = AV_PIX_FMT_NONE);
 	void GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat);
+	void GetSrcRational(AVRational& sampleRatio, AVRational& timebase);
 
 	AVFrame* ConvertFrame(AVFrame* frame);
+	double Timebase();
 
 protected:
 	void OnDecodeFunction();
@@ -53,6 +55,7 @@ private:
 	enum AVState m_state = NotStarted;
 	std::thread m_thread;
 
+	double m_timebase = 0.0;
 	int m_swsWidth = 0, m_srcWidth = 0;
 	int m_swsHeight = 0, m_srcHeight = 0;
 	enum AVPixelFormat m_swsFormat = AV_PIX_FMT_NONE, m_srcFormat = AV_PIX_FMT_NONE;

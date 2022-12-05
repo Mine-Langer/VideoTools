@@ -21,7 +21,11 @@ bool CPlayer::Open(const char* szInput)
 		int width = 0; 
 		int height = 0; 
 		AVPixelFormat pix_fmt;
+		AVRational sampleRatio, timebase;
 		m_videoDecoder.GetSrcParameter(width, height, pix_fmt);
+		m_videoDecoder.GetSrcRational(sampleRatio, timebase);
+		m_filter.SetFilter("drawtext=fontsize=60:fontfile=lazy.ttf:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow");
+		m_filter.Init(width, height, pix_fmt, sampleRatio, timebase);
 	}
 
 	if (m_audioDecoder.Open(&m_demux))
@@ -79,14 +83,33 @@ void CPlayer::Stop()
 
 }
 
+void CPlayer::Pause()
+{
+}
+
 void CPlayer::Release()
 {
+	SDL_PauseAudio(1);
+	if (m_pWindow) {
+		SDL_DestroyWindow(m_pWindow);
+		m_pWindow = nullptr;
+	}
 
+	if (m_pRender) {
+		SDL_DestroyRenderer(m_pRender);
+		m_pRender = nullptr;
+	}
+
+	if (m_pTexture) {
+		SDL_DestroyTexture(m_pTexture);
+		m_pTexture = nullptr;
+	}
 }
 
 
 void CPlayer::OnRenderProc()
 {
+	int64_t delay = 0;
 	AVFrame* pFrame = nullptr;
 	while (m_bRun)
 	{
@@ -101,13 +124,18 @@ void CPlayer::OnRenderProc()
 				pFrame->data[1], pFrame->linesize[1], pFrame->data[2], pFrame->linesize[2]);
 			SDL_RenderClear(m_pRender);
 			SDL_RenderCopy(m_pRender, m_pTexture, nullptr, &m_rect);
-			//m_dxVideo.Render(pFrame->data[0], pFrame->data[1], pFrame->data[2]);
-			//printf("video frame:[Y:%d, U:%d, V:%d]\n", pFrame->linesize[0], pFrame->linesize[1], pFrame->linesize[2]);
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+			double _pts = pFrame->best_effort_timestamp * m_videoDecoder.Timebase();
+			delay = m_avSync.CalcDelay(_pts);
+			if (delay > 0)	
+				std::this_thread::sleep_for(std::chrono::microseconds(delay));
+
+			//printf("video pts:%lld, timebase:%f, time:%f \n", pFrame->best_effort_timestamp, m_videoDecoder.Timebase(), _pts);
 
 			SDL_RenderPresent(m_pRender);
 			av_frame_free(&pFrame);
+			
+			m_avSync.SetVideoShowTime();
 		}
 		else
 			m_bRun = false;
@@ -127,8 +155,9 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 		int wlen = len < pFrame->linesize[0] ? len : pFrame->linesize[0];
 		SDL_memset(stream, 0, wlen);
 		SDL_MixAudio(stream, pFrame->data[0], wlen, SDL_MIX_MAXVOLUME);
-
-		//printf("	[AudioFrame] pts:%lld, dts:%f \r\n", pFrame->pts, pFrame->pts * pThis->m_audioDecoder.timebase());
+		double rpts = pFrame->best_effort_timestamp * pThis->m_audioDecoder.Timebase();
+		pThis->m_avSync.SetAudioClock(rpts);
+		printf("audio pts:%lld, timebase:%f time:%f \r\n", pFrame->best_effort_timestamp, pThis->m_audioDecoder.Timebase(), rpts);
 		av_frame_free(&pFrame);
 	}
 	else
@@ -152,7 +181,9 @@ bool CPlayer::DemuxPacket(AVPacket* pkt, int type)
 
 bool CPlayer::VideoEvent(AVFrame* frame)
 {
-	m_videoFrameQueue.MaxSizePush(frame, &m_bRun);
+	AVFrame* filterFrame = m_filter.Convert(frame);
+	m_videoFrameQueue.MaxSizePush(filterFrame, &m_bRun);
+	av_frame_free(&frame);
 
 	return true;
 }

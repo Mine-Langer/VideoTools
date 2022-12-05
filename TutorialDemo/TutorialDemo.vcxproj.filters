@@ -18,51 +18,27 @@
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="drawText.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterVideo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="demos.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FilterAudio.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FilteringAudio.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="PcmPlay.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DemuxAudio.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DxRender.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DSound3D.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="WaveFile.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Common.h">
+    <ClInclude Include="common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="drawText.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterVideo.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="demos.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="PcmPlay.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DemuxAudio.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DxRender.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DSound3D.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="WaveFile.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,7 @@ public:
 	CFilterVideo();
 	~CFilterVideo();
 
-	bool Init(AVCodecContext* pCodecCtx, AVStream* pStream);
+	bool Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRational sampleRatio, AVRational timebase);
 
 	void SetFilter(const char* szFilter);
 
@@ -21,3 +21,22 @@ private:
 	std::string m_szFilter;
 };
 
+class CDrawText
+{
+public:
+	CDrawText();
+	~CDrawText();
+
+	bool StartDrawText(const char* pFileA, const char* pFileOut, int x, int y, int iFontSize, std::string strText);
+
+	bool WaitFinish();
+
+private:
+	bool OpenFile(const char* pFile);
+
+	bool OpenOutput(const char pFileOut);
+
+	bool InitFilter(const char* filter_desc);
+
+
+};

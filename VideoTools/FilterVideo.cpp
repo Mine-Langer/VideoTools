@@ -10,33 +10,39 @@ CFilterVideo::~CFilterVideo()
 
 }
 
-bool CFilterVideo::Init(AVCodecContext* pCodecCtx, AVStream* pStream)
+bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRational sampleRatio, AVRational timebase)
 {
 	char szArgs[512] = { 0 };
 	const AVFilter* buffersrc = avfilter_get_by_name("buffer");
 	const AVFilter* buffersink = avfilter_get_by_name("buffersink");
+	const AVFilter* filterDrawText = avfilter_get_by_name("drawtext");
+
 	AVFilterInOut* outputs = avfilter_inout_alloc();
 	AVFilterInOut* inputs = avfilter_inout_alloc();
-	AVRational timebase = pStream->time_base;
+
 	AVPixelFormat pix_fmts[] = { AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE };
 
 	sprintf_s(szArgs, sizeof(szArgs), "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-		pCodecCtx->width/2*2, pCodecCtx->height/2*2, pCodecCtx->pix_fmt, timebase.num, timebase.den,
-		pCodecCtx->sample_aspect_ratio.num, pCodecCtx->sample_aspect_ratio.den);
+		nWidth/2*2, nHeight/2*2, pix_fmt, 1, 10, 0, 1);
 
 	m_filterGraph = avfilter_graph_alloc();
 	if (0 > avfilter_graph_create_filter(&m_bufferSrcCtx, buffersrc, "in", szArgs, nullptr, m_filterGraph))
 		return false;
 
-	AVBufferSinkParams* bufSinkParam = av_buffersink_params_alloc();
-	bufSinkParam->pixel_fmts = pix_fmts;
-
-	if (0 > avfilter_graph_create_filter(&m_bufferSinkCtx, buffersink, "out", nullptr, bufSinkParam, m_filterGraph))
-	{
-		av_free(bufSinkParam);
+	AVFilterContext* drawTextFilterCtx = nullptr;
+	if (0 > avfilter_graph_create_filter(&drawTextFilterCtx, filterDrawText, "drawtext", m_szFilter.c_str(), nullptr, m_filterGraph))
 		return false;
-	}
-	av_free(bufSinkParam);
+
+	if (0 > avfilter_graph_create_filter(&m_bufferSinkCtx, buffersink, "out", nullptr, nullptr, m_filterGraph))
+		return false;
+	
+	av_opt_set_bin(m_bufferSinkCtx, "pix_fmts", (uint8_t*)&pix_fmt, sizeof(pix_fmt), AV_OPT_SEARCH_CHILDREN);
+
+	if (0 > avfilter_link(m_bufferSrcCtx, 0, drawTextFilterCtx, 0))
+		return false;
+
+	if (0 > avfilter_link(drawTextFilterCtx, 0, m_bufferSrcCtx, 0))
+		return false;
 
 	outputs->name = av_strdup("in");
 	outputs->filter_ctx = m_bufferSrcCtx;
@@ -53,6 +59,8 @@ bool CFilterVideo::Init(AVCodecContext* pCodecCtx, AVStream* pStream)
 
 	if (0 > avfilter_graph_config(m_filterGraph, nullptr))
 		return false;
+
+	char* temp = avfilter_graph_dump(m_filterGraph, nullptr);
 
 	return true;
 }
