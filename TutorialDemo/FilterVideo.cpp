@@ -16,6 +16,10 @@ bool FilterVideo::Run(const char* szInput, const char* szOutput, int x, int y, i
     if (!OpenOutput(szOutput))
         return false;
 
+    if (!OpenFilter(""))
+        return false;
+
+    OnDemux();
 
     return true;
 }
@@ -87,9 +91,76 @@ bool FilterVideo::OpenOutput(const char* szOutput)
 
 bool FilterVideo::OpenFilter(const char* szFilterDesc)
 {
+    char szArgs[512] = { 0 };
     const AVFilter* filterSrc = avfilter_get_by_name("buffer");
     const AVFilter* filterSink = avfilter_get_by_name("buffersink");
     const AVFilter* filterText = avfilter_get_by_name("drawtext");
 
-    return false;
+    //AVFilterInOut* filterOutput = avfilter_inout_alloc();
+    //AVFilterInOut* filterInput = avfilter_inout_alloc();
+
+    m_pFilterGraph = avfilter_graph_alloc();
+    
+    AVRational tb = m_codec_ctx_out->time_base;
+    AVRational ts = m_codec_ctx_out->sample_aspect_ratio;
+    sprintf_s(szArgs, 512, "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d", 
+        m_codec_ctx_out->width, m_codec_ctx_out->height, m_codec_ctx_out->pix_fmt, tb.num, tb.den, ts.num, ts.den);
+
+    if (0 > avfilter_graph_create_filter(&m_pFilterCtxSrc, filterSrc, "in", szArgs, nullptr, m_pFilterGraph))
+        return false;
+
+    if (0 > avfilter_graph_create_filter(&m_pFilterCtxText, filterText, "drawtext", szFilterDesc, nullptr, m_pFilterGraph))
+        return false;
+
+    if (0 > avfilter_graph_create_filter(&m_pFilterCtxSink, filterSink, "out", nullptr, nullptr, m_pFilterGraph))
+        return false;
+
+    av_opt_set_bin(m_pFilterCtxSink, "pix_fmts", (uint8_t*)&m_codec_ctx_out->pix_fmt, sizeof(m_codec_ctx_out->pix_fmt), AV_OPT_SEARCH_CHILDREN);
+
+    if (0 > avfilter_link(m_pFilterCtxSrc, 0, m_pFilterCtxText, 0))
+        return false;
+
+    if (0 > avfilter_link(m_pFilterCtxText, 0, m_pFilterCtxSink, 0))
+        return false;
+
+    if (avfilter_graph_config(m_pFilterGraph, nullptr))
+        return false;
+
+    char* szDump = avfilter_graph_dump(m_pFilterGraph, nullptr);
+
+    return true;
+}
+
+void FilterVideo::OnDemux()
+{
+    AVPacket pkt;
+    AVFrame* srcFrame = av_frame_alloc();
+    AVFrame* filterFrame = av_frame_alloc();
+    AVPacket* dstPacket = av_packet_alloc();
+
+    while (true)
+    {
+        if (0 > av_read_frame(m_fmt_ctx_in, &pkt))
+            break;
+
+        if (pkt.stream_index != m_videoIndex)
+            continue;
+
+        if (0 > avcodec_send_packet(m_codec_ctx_in, &pkt))
+            continue;
+
+        if (0 > avcodec_receive_frame(m_codec_ctx_in, srcFrame))
+            continue;
+
+        av_buffersrc_add_frame(m_pFilterCtxSrc, srcFrame);
+
+        av_buffersink_get_frame(m_pFilterCtxSink, filterFrame);
+
+
+        if (0 > avcodec_send_frame(m_codec_ctx_out, filterFrame))
+            continue;
+
+        if (0 > avcodec_receive_packet(m_codec_ctx_out, dstPacket))
+            continue;
+    }
 }
