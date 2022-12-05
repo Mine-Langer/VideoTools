@@ -240,6 +240,12 @@ void CVideoDecoder::GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelF
 	srcFormat = m_pCodecCtx->pix_fmt;
 }
 
+void CVideoDecoder::GetSrcRational(AVRational& sampleRatio, AVRational& timebase)
+{
+	sampleRatio = m_pCodecCtx->sample_aspect_ratio;
+	timebase = m_pCodecCtx->time_base;
+}
+
 double CVideoDecoder::Timebase()
 {
 	return m_timebase; 

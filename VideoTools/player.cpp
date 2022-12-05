@@ -21,7 +21,11 @@ bool CPlayer::Open(const char* szInput)
 		int width = 0; 
 		int height = 0; 
 		AVPixelFormat pix_fmt;
+		AVRational sampleRatio, timebase;
 		m_videoDecoder.GetSrcParameter(width, height, pix_fmt);
+		m_videoDecoder.GetSrcRational(sampleRatio, timebase);
+		m_filter.SetFilter("drawtext=fontsize=60:fontfile=lazy.ttf:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow");
+		m_filter.Init(width, height, pix_fmt, sampleRatio, timebase);
 	}
 
 	if (m_audioDecoder.Open(&m_demux))
@@ -177,7 +181,9 @@ bool CPlayer::DemuxPacket(AVPacket* pkt, int type)
 
 bool CPlayer::VideoEvent(AVFrame* frame)
 {
-	m_videoFrameQueue.MaxSizePush(frame, &m_bRun);
+	AVFrame* filterFrame = m_filter.Convert(frame);
+	m_videoFrameQueue.MaxSizePush(filterFrame, &m_bRun);
+	av_frame_free(&frame);
 
 	return true;
 }
