@@ -15,7 +15,7 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	char szArgs[512] = { 0 };
 	const AVFilter* buffersrc = avfilter_get_by_name("buffer");
 	const AVFilter* buffersink = avfilter_get_by_name("buffersink");
-	const AVFilter* filterDrawText = avfilter_get_by_name("drawtext");
+	//const AVFilter* filterDrawText = avfilter_get_by_name("drawtext");
 
 	AVFilterInOut* outputs = avfilter_inout_alloc();
 	AVFilterInOut* inputs = avfilter_inout_alloc();
@@ -29,20 +29,20 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	if (0 > avfilter_graph_create_filter(&m_bufferSrcCtx, buffersrc, "in", szArgs, nullptr, m_filterGraph))
 		return false;
 
-	AVFilterContext* drawTextFilterCtx = nullptr;
-	if (0 > avfilter_graph_create_filter(&drawTextFilterCtx, filterDrawText, "drawtext", m_szFilter.c_str(), nullptr, m_filterGraph))
-		return false;
+	//AVFilterContext* drawTextFilterCtx = nullptr;
+	//if (0 > avfilter_graph_create_filter(&drawTextFilterCtx, filterDrawText, "drawtext", m_szFilter.c_str(), nullptr, m_filterGraph))
+	//	return false;
 
 	if (0 > avfilter_graph_create_filter(&m_bufferSinkCtx, buffersink, "out", nullptr, nullptr, m_filterGraph))
 		return false;
 	
-	av_opt_set_bin(m_bufferSinkCtx, "pix_fmts", (uint8_t*)&pix_fmt, sizeof(pix_fmt), AV_OPT_SEARCH_CHILDREN);
+	av_opt_set_int_list(m_bufferSinkCtx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
 
-	if (0 > avfilter_link(m_bufferSrcCtx, 0, drawTextFilterCtx, 0))
-		return false;
-
-	if (0 > avfilter_link(drawTextFilterCtx, 0, m_bufferSrcCtx, 0))
-		return false;
+	//if (0 > avfilter_link(m_bufferSrcCtx, 0, drawTextFilterCtx, 0))
+	//	return false;
+	//
+	//if (0 > avfilter_link(drawTextFilterCtx, 0, m_bufferSrcCtx, 0))
+	//	return false;
 
 	outputs->name = av_strdup("in");
 	outputs->filter_ctx = m_bufferSrcCtx;
@@ -60,6 +60,9 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	if (0 > avfilter_graph_config(m_filterGraph, nullptr))
 		return false;
 
+	avfilter_inout_free(&inputs);
+	avfilter_inout_free(&outputs);
+
 	char* temp = avfilter_graph_dump(m_filterGraph, nullptr);
 
 	return true;
@@ -73,7 +76,7 @@ void CFilterVideo::SetFilter(const char* szFilter)
 AVFrame* CFilterVideo::Convert(AVFrame* srcFrame)
 {
 	AVFrame* dstFrame = av_frame_alloc();
-	if (0 > av_buffersrc_add_frame(m_bufferSrcCtx, srcFrame))
+	if (0 > av_buffersrc_add_frame_flags(m_bufferSrcCtx, srcFrame, AV_BUFFERSRC_FLAG_KEEP_REF))
 	{
 		av_frame_free(&dstFrame);
 		return nullptr;

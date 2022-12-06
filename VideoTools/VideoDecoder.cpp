@@ -61,6 +61,7 @@ bool CVideoDecoder::Open(CDemultiplexer* pDemux)
 	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
+	m_pCodecCtx->time_base = pStream->time_base;
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
 	m_timebase = av_q2d(pStream->time_base);
 

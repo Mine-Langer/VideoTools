@@ -24,7 +24,7 @@ bool CPlayer::Open(const char* szInput)
 		AVRational sampleRatio, timebase;
 		m_videoDecoder.GetSrcParameter(width, height, pix_fmt);
 		m_videoDecoder.GetSrcRational(sampleRatio, timebase);
-		m_filter.SetFilter("drawtext=fontsize=60:fontfile=lazy.ttf:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow");
+		m_filter.SetFilter("scale=78:24,transpose=cclock"); // "drawtext=fontsize=60:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow"
 		m_filter.Init(width, height, pix_fmt, sampleRatio, timebase);
 	}
 
