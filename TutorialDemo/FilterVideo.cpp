@@ -15,8 +15,13 @@ bool FilterVideo::Run(const char* szInput, const char* szOutput, int x, int y, i
 
     if (!OpenOutput(szOutput))
         return false;
+    av_dump_format(m_fmt_ctx_out, 0, szOutput, 1);
+        
 
-    if (!OpenFilter(""))
+    char szFilterDesc[512] = { 0 };
+    _snprintf_s(szFilterDesc, sizeof(szFilterDesc),
+        "fontcolor=blue:fontsize=%d:text=\'%s\':x=%d:y=%d", size, szText, x, y);
+    if (!OpenFilter(szFilterDesc))
         return false;
 
     OnDemux();
@@ -64,7 +69,7 @@ bool FilterVideo::OpenOutput(const char* szOutput)
     m_codec_ctx_out->codec_id = AV_CODEC_ID_H264;
     m_codec_ctx_out->width = m_codec_ctx_in->width;
     m_codec_ctx_out->height = m_codec_ctx_in->height;
-    m_codec_ctx_out->pix_fmt = m_codec_ctx_in->pix_fmt;
+    m_codec_ctx_out->pix_fmt = pCodec->pix_fmts[0];
     m_codec_ctx_out->bit_rate = 4000000;
     m_codec_ctx_out->time_base = { 1, 25 };
     m_codec_ctx_out->gop_size = 12;
@@ -76,7 +81,7 @@ bool FilterVideo::OpenOutput(const char* szOutput)
     if (out_fmt->flags & AVFMT_GLOBALHEADER)
         m_codec_ctx_out->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    AVStream* pStream = avformat_new_stream(m_fmt_ctx_out, pCodec);
+    AVStream* pStream = avformat_new_stream(m_fmt_ctx_out, nullptr);
     pStream->time_base = m_codec_ctx_out->time_base;
     pStream->id = m_fmt_ctx_out->nb_streams - 1;
 
@@ -96,8 +101,8 @@ bool FilterVideo::OpenFilter(const char* szFilterDesc)
     const AVFilter* filterSink = avfilter_get_by_name("buffersink");
     const AVFilter* filterText = avfilter_get_by_name("drawtext");
 
-    //AVFilterInOut* filterOutput = avfilter_inout_alloc();
-    //AVFilterInOut* filterInput = avfilter_inout_alloc();
+    AVFilterInOut* filterOutput = avfilter_inout_alloc();
+    AVFilterInOut* filterInput = avfilter_inout_alloc();
 
     m_pFilterGraph = avfilter_graph_alloc();
     
@@ -123,6 +128,20 @@ bool FilterVideo::OpenFilter(const char* szFilterDesc)
     if (0 > avfilter_link(m_pFilterCtxText, 0, m_pFilterCtxSink, 0))
         return false;
 
+    /* Endpoints for the filter graph. */
+    filterOutput->name = av_strdup("in");
+    filterOutput->filter_ctx = m_pFilterCtxSrc;
+    filterOutput->pad_idx = 0;
+    filterOutput->next = NULL;
+
+    filterInput->name = av_strdup("out");
+    filterInput->filter_ctx = m_pFilterCtxSink;
+    filterInput->pad_idx = 0;
+    filterInput->next = NULL;
+
+    if ((avfilter_graph_parse_ptr(m_pFilterGraph, szFilterDesc, &filterInput, &filterOutput, NULL)) < 0)
+        return false;
+
     if (avfilter_graph_config(m_pFilterGraph, nullptr))
         return false;
 
@@ -138,6 +157,8 @@ void FilterVideo::OnDemux()
     AVFrame* filterFrame = av_frame_alloc();
     AVPacket* dstPacket = av_packet_alloc();
 
+    avformat_write_header(m_fmt_ctx_out, nullptr);
+
     while (true)
     {
         if (0 > av_read_frame(m_fmt_ctx_in, &pkt))
@@ -151,16 +172,31 @@ void FilterVideo::OnDemux()
 
         if (0 > avcodec_receive_frame(m_codec_ctx_in, srcFrame))
             continue;
+        
+        srcFrame->pts = srcFrame->best_effort_timestamp;
 
-        av_buffersrc_add_frame(m_pFilterCtxSrc, srcFrame);
+        int ret = av_buffersrc_add_frame_flags(m_pFilterCtxSrc, srcFrame, AV_BUFFERSRC_FLAG_KEEP_REF);
 
-        av_buffersink_get_frame(m_pFilterCtxSink, filterFrame);
+        while (1)
+        {
+            ret = av_buffersink_get_frame(m_pFilterCtxSink, filterFrame);
+            if (ret < 0)
+                break;
 
+            filterFrame->pts = srcFrame->pts;
+            if (0 > avcodec_send_frame(m_codec_ctx_out, filterFrame))
+                continue;
 
-        if (0 > avcodec_send_frame(m_codec_ctx_out, filterFrame))
-            continue;
+            if (0 > avcodec_receive_packet(m_codec_ctx_out, dstPacket))
+                continue;
 
-        if (0 > avcodec_receive_packet(m_codec_ctx_out, dstPacket))
-            continue;
+            ret = av_interleaved_write_frame(m_fmt_ctx_out, dstPacket);
+            av_frame_unref(filterFrame); 
+            av_packet_unref(dstPacket);
+            av_frame_unref(srcFrame);
+        }
     }
+
+    av_write_trailer(m_fmt_ctx_out);
+    avio_closep(&m_fmt_ctx_out->pb);
 }

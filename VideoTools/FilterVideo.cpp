@@ -23,7 +23,7 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	AVPixelFormat pix_fmts[] = { AV_PIX_FMT_YUV420P, AV_PIX_FMT_NONE };
 
 	sprintf_s(szArgs, sizeof(szArgs), "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d",
-		nWidth/2*2, nHeight/2*2, pix_fmt, 1, 10, 0, 1);
+		nWidth/2*2, nHeight/2*2, pix_fmt, timebase.num, timebase.den, sampleRatio.num, sampleRatio.den);
 
 	m_filterGraph = avfilter_graph_alloc();
 	if (0 > avfilter_graph_create_filter(&m_bufferSrcCtx, buffersrc, "in", szArgs, nullptr, m_filterGraph))
