@@ -117,6 +117,10 @@ void CAudioDecoder::Stop()
 		m_thread.join();
 }
 
+void CAudioDecoder::Clear()
+{
+}
+
 bool CAudioDecoder::SendPacket(AVPacket* pkt)
 {
 	if (pkt == nullptr)

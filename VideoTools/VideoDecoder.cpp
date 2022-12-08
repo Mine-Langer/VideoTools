@@ -183,6 +183,10 @@ bool CVideoDecoder::SendPacket(AVPacket* pkt)
 	return true;
 }
 
+void CVideoDecoder::Clear()
+{
+}
+
 void CVideoDecoder::Release()
 {
 	if (m_pCodecCtx)

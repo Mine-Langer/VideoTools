@@ -20,6 +20,8 @@ public:
 
 	void Stop();
 
+	void Clear();
+
 	bool SendPacket(AVPacket* pkt);
 
 	void GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);

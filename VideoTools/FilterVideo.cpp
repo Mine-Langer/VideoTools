@@ -15,7 +15,7 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	char szArgs[512] = { 0 };
 	const AVFilter* buffersrc = avfilter_get_by_name("buffer");
 	const AVFilter* buffersink = avfilter_get_by_name("buffersink");
-	//const AVFilter* filterDrawText = avfilter_get_by_name("drawtext");
+	const AVFilter* filterDrawText = avfilter_get_by_name("drawtext");
 
 	AVFilterInOut* outputs = avfilter_inout_alloc();
 	AVFilterInOut* inputs = avfilter_inout_alloc();
@@ -29,21 +29,22 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	if (0 > avfilter_graph_create_filter(&m_bufferSrcCtx, buffersrc, "in", szArgs, nullptr, m_filterGraph))
 		return false;
 
-	//AVFilterContext* drawTextFilterCtx = nullptr;
-	//if (0 > avfilter_graph_create_filter(&drawTextFilterCtx, filterDrawText, "drawtext", m_szFilter.c_str(), nullptr, m_filterGraph))
-	//	return false;
-
+#if 0
+	AVFilterContext* drawTextFilterCtx = nullptr;
+	if (0 > avfilter_graph_create_filter(&drawTextFilterCtx, filterDrawText, "drawtext", m_szFilter.c_str(), nullptr, m_filterGraph))
+		return false;
+#endif
 	if (0 > avfilter_graph_create_filter(&m_bufferSinkCtx, buffersink, "out", nullptr, nullptr, m_filterGraph))
 		return false;
 	
 	av_opt_set_int_list(m_bufferSinkCtx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
-
-	//if (0 > avfilter_link(m_bufferSrcCtx, 0, drawTextFilterCtx, 0))
-	//	return false;
-	//
-	//if (0 > avfilter_link(drawTextFilterCtx, 0, m_bufferSrcCtx, 0))
-	//	return false;
-
+#if 0
+	if (0 > avfilter_link(m_bufferSrcCtx, 0, drawTextFilterCtx, 0))
+		return false;
+	
+	if (0 > avfilter_link(drawTextFilterCtx, 0, m_bufferSrcCtx, 0))
+		return false;
+#endif
 	outputs->name = av_strdup("in");
 	outputs->filter_ctx = m_bufferSrcCtx;
 	outputs->pad_idx = 0;
