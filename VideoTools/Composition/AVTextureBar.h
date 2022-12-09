@@ -1,10 +1,18 @@
 #pragma once
+#pragma execution_character_set("utf-8")
 
 #include <QWidget>
 #include <QList>
 #include <QPair>
 
-#pragma execution_character_set("utf-8")
+struct ItemElem
+{
+	QString	filename;
+	QPixmap pixmap;
+	int		type;
+	QRectF	imgRect;
+	int		length;
+};
 
 class AVTextureBar : public QWidget
 {
@@ -40,6 +48,6 @@ private:
 	int m_duration = 0;
 	int m_type = 0; // ¿‡–Õ 0:ÕºœÒ  1:“Ù∆µ
 	int m_nSel = -1;
-	QList<QPair<int,QString>> m_varList;
+	QList<ItemElem> m_varList;
 
 };

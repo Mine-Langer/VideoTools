@@ -22,6 +22,8 @@ public:
 
 	void Pause();
 
+	void Seek(uint64_t pts_time);
+
 	void Release();
 
 private:

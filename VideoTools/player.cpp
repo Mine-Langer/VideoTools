@@ -28,9 +28,9 @@ bool CPlayer::Open(const char* szInput)
 		strFontFile = "D:\\github.com\\VideoTools\\bin\\x64\\hanyiwenboguliw.ttf";
 		char szFilterDesc[512] = { 0 };
 		_snprintf_s(szFilterDesc, sizeof(szFilterDesc),
-			"fontcolor=blue:fontsize=36:fontfile=\'%s\':text=\'·´Çå¸´Ã÷\':x=100:y=50", strFontFile.c_str());
+			"drawtext=fontfile=\'%s\':fontcolor=blue:fontsize=36:text=\'libing044@gmail  --Langer\':x=100:y=50", strFontFile.c_str());
 
-		m_filter.SetFilter("movie=logo.png[wm];[in][wm]overlay=5:5[out]"); // "movie=logo.png[wm];[in][wm]overlay=5:5[out]" "drawtext=fontsize=60:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow"
+		m_filter.SetFilter(szFilterDesc); // "movie=logo.png[wm];[in][wm]overlay=5:5[out]" "drawtext=fontsize=60:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow"
 		m_filter.Init(width, height, pix_fmt, sampleRatio, timebase);
 	}
 
@@ -95,6 +95,11 @@ void CPlayer::Pause()
 	SDL_PauseAudio(!m_pause);
 }
 
+void CPlayer::Seek(uint64_t pts_time)
+{
+	m_demux.SetPosition(pts_time);
+}
+
 void CPlayer::Release()
 {
 	SDL_PauseAudio(1);
@@ -121,7 +126,7 @@ void CPlayer::OnRenderProc()
 	AVFrame* pFrame = nullptr;
 	while (m_bRun)
 	{
-		if (!m_pause && !m_videoFrameQueue.Pop(pFrame)) {
+		if (!m_videoFrameQueue.Pop(pFrame)) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 			continue;
 		}
@@ -196,8 +201,20 @@ bool CPlayer::DemuxPacket(AVPacket* pkt, int type)
 
 void CPlayer::CleanPacket()
 {
+	AVFrame* frame = nullptr;
 	m_audioDecoder.Clear();
 	m_videoDecoder.Clear();
+	while (!m_videoFrameQueue.Empty())
+	{
+		if (m_videoFrameQueue.Pop(frame))
+			av_frame_free(&frame);
+	}
+
+	while (!m_audioFrameQueue.Empty())
+	{
+		if (m_audioFrameQueue.Pop(frame))
+			av_frame_free(&frame);
+	}
 }
 
 bool CPlayer::VideoEvent(AVFrame* frame)

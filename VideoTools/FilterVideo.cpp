@@ -34,10 +34,13 @@ bool CFilterVideo::Init(int nWidth, int nHeight, AVPixelFormat pix_fmt, AVRation
 	if (0 > avfilter_graph_create_filter(&drawTextFilterCtx, filterDrawText, "drawtext", m_szFilter.c_str(), nullptr, m_filterGraph))
 		return false;
 #endif
-	if (0 > avfilter_graph_create_filter(&m_bufferSinkCtx, buffersink, "out", nullptr, nullptr, m_filterGraph))
+	AVBufferSinkParams* buffSinkParams = av_buffersink_params_alloc();
+	buffSinkParams->pixel_fmts = pix_fmts;
+	if (0 > avfilter_graph_create_filter(&m_bufferSinkCtx, buffersink, "out", nullptr, buffSinkParams, m_filterGraph))
 		return false;
-	
-	av_opt_set_int_list(m_bufferSinkCtx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
+	av_free(buffSinkParams);
+
+	//av_opt_set_int_list(m_bufferSinkCtx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
 #if 0
 	if (0 > avfilter_link(m_bufferSrcCtx, 0, drawTextFilterCtx, 0))
 		return false;

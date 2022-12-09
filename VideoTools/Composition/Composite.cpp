@@ -2,8 +2,7 @@
 
 Composite::Composite()
 {
-	//SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER);
-	//SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+
 }
 
 Composite::~Composite()
@@ -26,11 +25,11 @@ bool Composite::OpenImage(const char* szFile)
 	if (!m_videoDecoder.Open(szFile))
 		return false;
 
-	if (m_type == E_Play)
-		m_videoDecoder.SetSwsConfig(&m_rect, m_videoWidth, m_videoHeight);
-	else if (m_type == E_Save)
-		m_videoDecoder.SetSwsConfig(&m_rect);
-	m_videoDecoder.Start(this);
+	//if (m_type == E_Play)
+	//	m_videoDecoder.SetSwsConfig(&m_rect, m_videoWidth, m_videoHeight);
+	//else if (m_type == E_Save)
+	//	m_videoDecoder.SetSwsConfig(&m_rect);
+	//m_videoDecoder.Start(this);
 
 	return true;
 }

@@ -24,8 +24,9 @@ void AVTextureBar::AddTexture(QString szFile)
 	{
 		tSecPoint = 0;
 	}
+	ItemElem elem;
 
-	m_varList.append(qMakePair(tSecPoint, szFile));
+	m_varList.append(elem);
 }
 
 void AVTextureBar::UpdatePostion()
@@ -103,6 +104,7 @@ void AVTextureBar::paintEvent(QPaintEvent* event)
 		if (posX < 0)
 			posX = 0;
 		painter.setPen(Qt::green);
+		painter.drawPixmap()
 		painter.drawLine(posX, 0, posX, height());
 	}
 }

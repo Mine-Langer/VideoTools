@@ -119,6 +119,13 @@ void CAudioDecoder::Stop()
 
 void CAudioDecoder::Clear()
 {
+	while (!m_srcAPktQueue.Empty())
+	{
+		AVPacket* pkt = nullptr;
+		m_srcAPktQueue.Pop(pkt);
+		if (pkt)
+			av_packet_free(&pkt);
+	}
 }
 
 bool CAudioDecoder::SendPacket(AVPacket* pkt)
@@ -152,13 +159,7 @@ void CAudioDecoder::Release()
 		m_pSwrCtx = nullptr;
 	}
 
-	while (!m_srcAPktQueue.Empty())
-	{
-		AVPacket* pkt = nullptr;
-		m_srcAPktQueue.Pop(pkt);
-		if (pkt)
-			av_packet_free(&pkt);
-	}
+	Clear();
 }
 
 void CAudioDecoder::GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt)

@@ -3,6 +3,7 @@
 #include "../VideoEncoder.h"
 #include "../AudioEncoder.h"
 #include "../FilterVideo.h"
+#include "../player.h"
 
 #define E_Play 0x1
 #define E_Save 0x2
@@ -54,12 +55,7 @@ private:
 	AVFormatContext* m_pOutFormatCtx = nullptr;
 	CFilterVideo m_filter;
 
-	// ²¥·Å
-	//SDL_AudioSpec m_audioSpec;
-	//SDL_Window* m_window = nullptr;
-	//SDL_Texture* m_texture = nullptr;
-	//SDL_Renderer* m_render = nullptr;
-	SDL_Rect m_rect;
+	CPlayer	m_player;
 
 	int m_videoWidth = 0;
 	int m_videoHeight = 0;
