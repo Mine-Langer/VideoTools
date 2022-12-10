@@ -29,16 +29,12 @@ int CDrawText::StartDrawText(const char* pFileA, const char* pFileOut, int x, in
 
 		char szFilterDesc[512] = { 0 };
 
-		//std::string strFontFile;
-		//strFontFile = "E\:\\learn\\ffmpeg\\ffmpeg_x264_freetype_static\\bin\\zihun152hao-jijiachaojihei.ttf";
-
-		//_snprintf(szFilterDesc, sizeof(szFilterDesc),
-		//	"fontcolor=blue:fontsize=%d:fontfile=\'%s\':text=\'%s\':x=%d:y=%d",
-		//	iFontSize, strFontFile.c_str(), strText.c_str(), x, y);
+		std::string strFontFile;
+		strFontFile = "D:\\github.com\\VideoTools\\bin\\x64\\hanyiwenboguliw.ttf";
 
 		_snprintf_s(szFilterDesc, sizeof(szFilterDesc),
-			"fontcolor=blue:fontsize=%d:text=\'%s\':x=%d:y=%d",
-			iFontSize, strText.c_str(), x, y);
+			"fontcolor=blue:fontsize=%d:fontfile=\'%s\':text=\'%s\':x=%d:y=%d",
+			iFontSize, strFontFile.c_str(), strText.c_str(), x, y);
 
 		InitFilter(szFilterDesc);
 

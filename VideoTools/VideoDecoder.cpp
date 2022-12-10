@@ -179,8 +179,20 @@ bool CVideoDecoder::SendPacket(AVPacket* pkt)
 			return false;
 		m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
 	}
-	
+	printf("SendPacket() recv pkt size:%d\n", m_srcVPktQueue.Size());
+
 	return true;
+}
+
+void CVideoDecoder::Clear()
+{
+	while (!m_srcVPktQueue.Empty())
+	{
+		AVPacket* pkt = nullptr;
+		m_srcVPktQueue.Pop(pkt);
+		if (pkt)
+			av_packet_free(&pkt);
+	}
 }
 
 void CVideoDecoder::Release()
@@ -198,13 +210,7 @@ void CVideoDecoder::Release()
 		m_pSwsCtx = nullptr;
 	}
 
-	while (!m_srcVPktQueue.Empty())
-	{
-		AVPacket* pkt = nullptr;
-		m_srcVPktQueue.Pop(pkt);
-		if (pkt)
-			av_packet_free(&pkt);
-	}
+	Clear();
 }
 
 bool CVideoDecoder::SetSwsConfig(SDL_Rect* rect, int width, int height, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
@@ -284,6 +290,7 @@ void CVideoDecoder::OnDecodeFunction()
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		else
 		{
+			printf("OnDecodeFunction() recv pkt size:%d\n", m_srcVPktQueue.Size());
 			if (!m_srcVPktQueue.Pop(packet))
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			else

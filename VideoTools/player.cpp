@@ -24,7 +24,13 @@ bool CPlayer::Open(const char* szInput)
 		AVRational sampleRatio, timebase;
 		m_videoDecoder.GetSrcParameter(width, height, pix_fmt);
 		m_videoDecoder.GetSrcRational(sampleRatio, timebase);
-		m_filter.SetFilter("scale=78:24,transpose=cclock"); // "drawtext=fontsize=60:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow"
+		std::string strFontFile;
+		strFontFile = "D:\\github.com\\VideoTools\\bin\\x64\\hanyiwenboguliw.ttf";
+		char szFilterDesc[512] = { 0 };
+		_snprintf_s(szFilterDesc, sizeof(szFilterDesc),
+			"drawtext=fontfile=\'%s\':fontcolor=blue:fontsize=36:text=\'libing044@gmail  --Langer\':x=100:y=50", strFontFile.c_str());
+
+		m_filter.SetFilter(szFilterDesc); // "movie=logo.png[wm];[in][wm]overlay=5:5[out]" "drawtext=fontsize=60:text='%{localtime\:%Y\-%m\-%d %H-%M-%S}':fontcolor=green:box=1:boxcolor=yellow"
 		m_filter.Init(width, height, pix_fmt, sampleRatio, timebase);
 	}
 
@@ -85,6 +91,13 @@ void CPlayer::Stop()
 
 void CPlayer::Pause()
 {
+	m_pause = !m_pause;
+	SDL_PauseAudio(!m_pause);
+}
+
+void CPlayer::Seek(uint64_t pts_time)
+{
+	m_demux.SetPosition(pts_time);
 }
 
 void CPlayer::Release()
@@ -133,8 +146,10 @@ void CPlayer::OnRenderProc()
 			//printf("video pts:%lld, timebase:%f, time:%f \n", pFrame->best_effort_timestamp, m_videoDecoder.Timebase(), _pts);
 
 			SDL_RenderPresent(m_pRender);
-			av_frame_free(&pFrame);
 			
+			if (!m_pause)
+				av_frame_free(&pFrame);			
+
 			m_avSync.SetVideoShowTime();
 		}
 		else
@@ -145,6 +160,11 @@ void CPlayer::OnRenderProc()
 void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 {
 	CPlayer* pThis = (CPlayer*)userdata;
+
+	if (pThis->m_pause) {
+		SDL_memset(stream, 0, len);
+		return;
+	}
 
 	AVFrame* pFrame = nullptr;
 	if (pThis->m_audioFrameQueue.Pop(pFrame))
@@ -177,6 +197,24 @@ bool CPlayer::DemuxPacket(AVPacket* pkt, int type)
 		m_audioDecoder.SendPacket(pkt);
 	}
 	return true;
+}
+
+void CPlayer::CleanPacket()
+{
+	AVFrame* frame = nullptr;
+	m_audioDecoder.Clear();
+	m_videoDecoder.Clear();
+	while (!m_videoFrameQueue.Empty())
+	{
+		if (m_videoFrameQueue.Pop(frame))
+			av_frame_free(&frame);
+	}
+
+	while (!m_audioFrameQueue.Empty())
+	{
+		if (m_audioFrameQueue.Pop(frame))
+			av_frame_free(&frame);
+	}
 }
 
 bool CPlayer::VideoEvent(AVFrame* frame)

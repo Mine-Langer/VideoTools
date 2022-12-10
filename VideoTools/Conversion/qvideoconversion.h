@@ -18,6 +18,7 @@ public:
 private:
 	
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
+	virtual void CleanPacket() override;
 
 	virtual bool VideoEvent(AVFrame* frame) override;
 

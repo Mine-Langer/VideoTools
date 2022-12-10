@@ -79,6 +79,12 @@ void CDemultiplexer::Release()
 	}
 }
 
+void CDemultiplexer::SetPosition(int64_t dwTime)
+{
+	m_target_pts = dwTime;
+	m_seek = true;
+}
+
 int CDemultiplexer::AudioStreamIndex()
 {
 	return m_audioIndex;
@@ -100,6 +106,12 @@ void CDemultiplexer::OnDemuxFunction()
 	AVPacket* pkt = av_packet_alloc();
 	while (m_bRun)
 	{
+		if (m_seek)
+		{
+			avformat_seek_file(m_pFormatCtx, -1, INT64_MIN, m_target_pts, INT64_MAX, 0);
+			m_pEvent->CleanPacket();
+			m_seek = false;
+		}
 		if (0 > av_read_frame(m_pFormatCtx, pkt))
 		{
 			m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);

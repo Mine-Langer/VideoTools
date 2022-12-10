@@ -22,6 +22,8 @@ public:
 
 	void Pause();
 
+	void Seek(uint64_t pts_time);
+
 	void Release();
 
 private:
@@ -33,6 +35,8 @@ private:
 
 private:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
+
+	virtual void CleanPacket() override;
 
 	virtual bool VideoEvent(AVFrame* frame) override;
 
@@ -56,6 +60,7 @@ private:
 	SafeQueue<AVFrame*> m_videoFrameQueue;
 
 	bool m_bRun = false;
+	bool m_pause = false;
 
 	std::thread m_tPlay;
 	std::thread m_tRender;

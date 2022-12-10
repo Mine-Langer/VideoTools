@@ -7,14 +7,15 @@
 #undef main
 int main()
 {
+	CDrawText drawtext;
 	const char* pFileIn = "D:/documents/OneDrive/video/QQ视频搞钱.mp4";
 
 	const char* pFileOut = "haoge.mp4";
 
 	const char* strText = ("牛逼哄哄");
 
-	FilterVideo fv;
-	fv.Run(pFileIn, pFileOut, 80, 60, 100, strText);
+	drawtext.StartDrawText(pFileIn, pFileOut, 100,100,48,strText);
+	drawtext.WaitFinish();
 
     return 0;
 }

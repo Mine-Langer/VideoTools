@@ -5,6 +5,8 @@ class IDemuxEvent
 {
 public:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) = 0;
+
+	virtual void CleanPacket() = 0;
 };
 
 class CDemultiplexer
@@ -26,6 +28,8 @@ public:
 
 	void Release();
 
+	void SetPosition(int64_t dwTime);
+
 	int AudioStreamIndex();
 
 	int VideoStreamIndex();
@@ -44,6 +48,8 @@ private:
 	bool m_bRun = false;
 	std::thread m_thread;
 
+	bool m_seek = false;
+	int64_t m_target_pts = 0;
 	IDemuxEvent* m_pEvent = nullptr;
 };
 
