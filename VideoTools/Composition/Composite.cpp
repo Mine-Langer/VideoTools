@@ -12,12 +12,14 @@ Composite::~Composite()
 
 void Composite::AddAudio(const char* szFile)
 {
-	strcpy_s(m_szAudioFile, sizeof(m_szAudioFile), szFile);
+	//GetAudioImage(szFile);
+
+	//strcpy_s(m_szAudioFile, sizeof(m_szAudioFile), szFile);
 }
 
 void Composite::AddImage(const char* szFile)
 {
-	strcpy_s(m_szVideoFile, sizeof(m_szVideoFile), szFile);
+	//strcpy_s(m_szVideoFile, sizeof(m_szVideoFile), szFile);
 }
 
 bool Composite::OpenImage(const char* szFile)
@@ -75,7 +77,7 @@ void Composite::Close()
 	m_videoDecoder.Stop();
 }
 
-void Composite::Play()
+void Composite::Play(std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vecMusic)
 {
 	//m_type = E_Play;
 	//if (m_state == NotStarted)
@@ -105,6 +107,20 @@ void Composite::Play()
 	//	SDL_PauseAudio(0);
 	//	m_state = Started;
 	//}
+	for (int i = 0; i < vecMusic.size(); i++)
+	{
+		std::string strFile = vecMusic[i].filename.toStdString();
+		m_demuxMusic.Open(strFile.c_str());
+		
+		m_audioDecoder.Open(&m_demuxMusic);
+
+		m_demuxMusic.Start(this);
+
+		m_audioDecoder.Start(this);
+
+		m_player.Start();
+	}
+
 }
 
 bool Composite::InitWnd(void* pWnd, int width, int height)
@@ -183,6 +199,54 @@ bool Composite::SaveFile(const char* szOutput, int type)
 	return true;
 }
 
+// 调试用  获取音频的图像数据
+bool Composite::GetAudioImage(const char* filename)
+{
+	AVFormatContext* fmt_ctx = nullptr;
+	AVCodecContext* codec_ctx = nullptr;
+	if (0 != avformat_open_input(&fmt_ctx, filename, nullptr, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(fmt_ctx, nullptr))
+		return false;
+
+	int img_idx = av_find_best_stream(fmt_ctx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+	if (img_idx < 0)
+		return false;
+
+	codec_ctx = avcodec_alloc_context3(nullptr);
+	if (0 > avcodec_parameters_to_context(codec_ctx, fmt_ctx->streams[img_idx]->codecpar))
+		return false;
+
+	const AVCodec* pCodec = avcodec_find_decoder(codec_ctx->codec_id);
+	if (!pCodec)
+		return false;
+
+	if (0 > avcodec_open2(codec_ctx, pCodec, nullptr))
+		return false;
+
+	int ret = 0;
+	AVPacket packet;
+	AVFrame frame;
+	while (true)
+	{
+		ret = av_read_frame(fmt_ctx, &packet);
+		if (ret < 0)
+			break;
+		if (packet.stream_index == img_idx)
+		{
+			avcodec_send_packet(codec_ctx, &packet);
+
+			avcodec_receive_frame(codec_ctx, &frame);
+
+
+		}
+		av_packet_unref(&packet);
+	}
+
+	return true;
+}
+
 bool Composite::VideoEvent(AVFrame* frame)
 {
 	AVFrame* vdata = av_frame_clone(frame);
@@ -199,6 +263,24 @@ bool Composite::AudioEvent(AVFrame* frame)
 }
 
 
+
+bool Composite::DemuxPacket(AVPacket* pkt, int type)
+{
+	if (type == AVMEDIA_TYPE_VIDEO)
+	{
+		m_videoDecoder.SendPacket(pkt);
+	}
+	else if (type == AVMEDIA_TYPE_AUDIO)
+	{
+		m_audioDecoder.SendPacket(pkt);
+	}
+	return true;
+}
+
+void Composite::CleanPacket()
+{
+
+}
 
 void Composite::OnPlayFunction()
 {

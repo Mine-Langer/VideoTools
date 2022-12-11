@@ -12,9 +12,13 @@ CompositeView::CompositeView(QWidget *parent)
 	m_imageMenu = new QMenu(ui->imageCtrlWidget);
 	m_audioMenu = new QMenu(ui->audioCtrlWidget);
 	QAction* actImage = new QAction(tr("²åÈëÍ¼Ïñ"), m_imageMenu);
+	QAction* actImageDel = new QAction(tr("É¾³ýÍ¼Ïñ"), m_imageMenu);
 	QAction* actAudio = new QAction(tr("²åÈëÒôÆµ"), m_audioMenu);
+	QAction* actAudioDel = new QAction(tr("É¾³ýÒôÆµ"), m_imageMenu);
 	m_imageMenu->addAction(actImage);
 	m_audioMenu->addAction(actAudio);
+	m_imageMenu->setStyleSheet("{ color: white }");
+	m_audioMenu->setStyleSheet("{ color: white }");
 
 	// Ä¬ÈÏÊ±³¤3·ÖÖÓ
 	const int defaultSecond = 180;
@@ -24,6 +28,8 @@ CompositeView::CompositeView(QWidget *parent)
 
 	connect(actImage, SIGNAL(triggered()), this, SLOT(OnActImage()));
 	connect(actAudio, SIGNAL(triggered()), this, SLOT(OnActAudio()));
+	connect(actImageDel, SIGNAL(triggered()), this, SLOT(OnActImageDel()));
+	connect(actAudioDel, SIGNAL(triggered()), this, SLOT(OnActAudioDel()));
 	connect(ui->imageCtrlWidget, &AVTextureBar::customContextMenuRequested, this, &CompositeView::OnImageWidgetContextMenuRequested);
 	connect(ui->audioCtrlWidget, &AVTextureBar::customContextMenuRequested, this, &CompositeView::OnAudioWidgetContextMenuRequested);
 	connect(ui->btnPlay, &QPushButton::clicked, this, &CompositeView::OnBtnPlay);
@@ -65,8 +71,8 @@ void CompositeView::OnActImage()
 	if (filename.isEmpty())
 		return;
 
-	QByteArray arrFile = filename.toLocal8Bit();
-	const char* szName = arrFile.data();
+	//QByteArray arrFile = filename.toLocal8Bit();
+	//const char* szName = arrFile.data();
 
 // 	QPixmap pixmap(filename);
 // 	float ratio = (pixmap.height() * 1.00f) / (ui->imageCtrlWidget->height() * 1.00f);
@@ -74,9 +80,9 @@ void CompositeView::OnActImage()
 // 	ui->thumbnail_widget->setFixedSize(calcWidth, ui->imageCtrlWidget->height());
 // 	ui->thumbnail_widget->setStyleSheet(QString(tr("border-image:url(%1);background-size:contain")).arg(filename));
 
-	m_composite.AddImage(szName);
-	m_comType |= 0x1;
-	ui->imageCtrlWidget->AddTexture(filename);
+	//m_composite.AddImage(szName);
+	//m_comType |= 0x1;
+	ui->imageCtrlWidget->AddTexture(filename, 1);
 }
 
 void CompositeView::OnActAudio()
@@ -85,11 +91,12 @@ void CompositeView::OnActAudio()
 	if (filename.isEmpty())
 		return;
 
-	QByteArray arrFile = filename.toLocal8Bit();
-	const char* szName = arrFile.data();
+	//QByteArray arrFile = filename.toLocal8Bit();
+	//const char* szName = arrFile.data();
 
-	m_composite.AddAudio(szName);
-	m_comType |= 0x2;
+	//m_composite.AddAudio(szName);
+	//m_comType |= 0x2;
+	ui->audioCtrlWidget->AddTexture(filename, 2);
 	/*strcpy_s(m_szAudio, FILENAME_MAX, szName);
 
 	if (m_player.OpenAudio(szName))
@@ -101,6 +108,16 @@ void CompositeView::OnActAudio()
 		ui->label_end_time->setText(QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
 		ui->play_progress_slider->setRange(0, duration);
 	}*/
+}
+
+void CompositeView::OnActImageDel()
+{
+
+}
+
+void CompositeView::OnActAudioDel()
+{
+
 }
 
 void CompositeView::OnBtnPlay()
@@ -116,7 +133,10 @@ void CompositeView::OnBtnPlay()
 
 	m_player.Start();
 #else
-	 m_composite.Play();
+	std::vector<ItemElem> vecAudio = ui->audioCtrlWidget->GetItemList();
+	std::vector<ItemElem> vecImage = ui->imageCtrlWidget->GetItemList();
+
+	 m_composite.Play(vecImage, vecAudio);
 #endif
 }
 

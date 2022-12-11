@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/HLCapture">
         <file>res/frame.png</file>
+        <file>res/music.png</file>
     </qresource>
 </RCC>

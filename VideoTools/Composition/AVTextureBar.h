@@ -24,12 +24,11 @@ public:
 
 	void SetTimeLength(int duration);
 	
-	// 设置显示类型
-	void SetType(int nType);
-
-	void AddTexture(QString szFile);
+	void AddTexture(QString szFile, int type);
 
 	void UpdatePostion();
+
+	std::vector<ItemElem>& GetItemList();
 
 protected:
 	void mousePressEvent(QMouseEvent* event) override;
@@ -40,14 +39,17 @@ protected:
 	void leaveEvent(QEvent* event) override;
 
 private:
+	void UpdateLoction();
+
+private:
 	bool m_bDraw = false;
-	bool m_bMoved = false;
+	bool m_bMoved = false, m_bHover = false;
 	QString m_szTime;
 	QPoint m_timePos; // 绘制时间坐标
 	QPoint m_selectedPos, m_tempPos;
 	int m_duration = 0;
 	int m_type = 0; // 类型 0:图像  1:音频
 	int m_nSel = -1;
-	QList<ItemElem> m_varList;
+	std::vector<ItemElem> m_varList;
 
 };

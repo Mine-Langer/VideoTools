@@ -3,8 +3,7 @@
 #include <QWidget>
 #include <QMenu>
 #include "Composite.h"
-
-//test
+#include "AVTextureBar.h"
 #include "../player.h"
 
 #pragma execution_character_set("utf-8")
@@ -28,6 +27,8 @@ private slots:
 	void OnAudioWidgetContextMenuRequested(const QPoint& pos);
 	void OnActImage();
 	void OnActAudio();
+	void OnActImageDel();
+	void OnActAudioDel();
 	void OnBtnPlay();
 	void OnBtnExport();
 	void timeDurationChanged(const QTime& time);
@@ -41,4 +42,7 @@ private:
 	Composite m_composite;
 	CPlayer		m_player;
 	int m_comType = 0;
+
+	QList<ItemElem> m_itemImageList;
+	QList<ItemElem> m_itemMusicList;
 };
