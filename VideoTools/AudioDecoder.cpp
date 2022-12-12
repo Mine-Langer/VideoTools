@@ -169,22 +169,22 @@ void CAudioDecoder::GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout
 	sample_fmt = m_pCodecCtx->sample_fmt;
 }
 
-bool CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
+int CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
 {
 	m_sampleFormat = sample_fmt;
 	m_sampleRate = sample_rate;
 
 	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &ch_layout, m_sampleFormat, m_sampleRate,
 		&m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr))
-		return false;
+		return 0;
 
 	if (0 > swr_init(m_pSwrCtx))
-		return false;
+		return 0;
 
 	m_nbSamples = av_rescale_rnd(swr_get_delay(m_pSwrCtx, m_pCodecCtx->sample_rate) + m_pCodecCtx->frame_size,
 		m_sampleRate, m_pCodecCtx->sample_rate, AV_ROUND_INF);
 
-	return true;
+	return m_nbSamples;
 }
 
 

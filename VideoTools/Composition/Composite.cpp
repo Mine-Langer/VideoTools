@@ -10,36 +10,28 @@ Composite::~Composite()
 
 }
 
-void Composite::AddAudio(const char* szFile)
+
+bool Composite::OpenImage(std::vector<ItemElem>& vecImage)
 {
-	//GetAudioImage(szFile);
-
-	//strcpy_s(m_szAudioFile, sizeof(m_szAudioFile), szFile);
-}
-
-void Composite::AddImage(const char* szFile)
-{
-	//strcpy_s(m_szVideoFile, sizeof(m_szVideoFile), szFile);
-}
-
-bool Composite::OpenImage(const char* szFile)
-{
-	if (!m_videoDecoder.Open(szFile))
-		return false;
-
-	//if (m_type == E_Play)
-	//	m_videoDecoder.SetSwsConfig(&m_rect, m_videoWidth, m_videoHeight);
-	//else if (m_type == E_Save)
-	//	m_videoDecoder.SetSwsConfig(&m_rect);
-	//m_videoDecoder.Start(this);
+	for (int i = 0; i < vecImage.size(); i++)
+	{
+		std::string szFilename = vecImage[i].filename.toStdString();
+		CImageFrame img_frame;
+		if (img_frame.Open(szFilename.c_str()))
+			m_videoQueue.Push(img_frame.ImageFrame());
+	}
 
 	return true;
 }
 
-bool Composite::OpenAudio(const char* szFile)
+bool Composite::OpenAudio(std::vector<ItemElem>& vecAudio)
 {
-	if (!m_audioDecoder.Open(szFile))
-		return false;
+	for (int i = 0; i < vecAudio.size(); i++)
+	{
+		std::string szFilename = vecAudio[i].filename.toStdString();
+	}
+	//if (!m_audioDecoder.Open(szFile))
+	//	return false;
 
 	int sample_rate = -1;
 	AVChannelLayout ch_layout = { };
@@ -47,15 +39,6 @@ bool Composite::OpenAudio(const char* szFile)
 	m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
 	m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
 	m_audioDecoder.Start(this);
-
-	// 播放参数
-	//m_audioSpec.freq = sample_rate;
-	//m_audioSpec.format = AUDIO_S16SYS;
-	//m_audioSpec.channels = av_get_channel_layout_nb_channels(ch_layout);
-	//m_audioSpec.silence = 0;
-	//m_audioSpec.samples = nb_sample;
-	//m_audioSpec.userdata = this;
-	//m_audioSpec.callback = OnSDLAudioFunction;
 
 	return true;
 }
@@ -107,74 +90,83 @@ void Composite::Play(std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vec
 	//	SDL_PauseAudio(0);
 	//	m_state = Started;
 	//}
+
+	m_nType = 1; // 播放
+
+	m_player.SetView(m_hWndView, m_videoWidth, m_videoHeight);
+	SDL_Rect rect;
+	for (int i = 0; i < vecImage.size(); i++)
+	{
+		std::string strFile = vecMusic[i].filename.toStdString();
+		m_demuxImage.Open(strFile.c_str());
+		if (m_videoDecoder.Open(&m_demuxImage))
+		{
+			m_videoDecoder.SetSwsConfig(&rect, m_videoWidth, m_videoHeight);
+
+			m_demuxImage.Start(this);
+
+			m_videoDecoder.Start(this);
+		}
+	}
+
 	for (int i = 0; i < vecMusic.size(); i++)
 	{
 		std::string strFile = vecMusic[i].filename.toStdString();
 		m_demuxMusic.Open(strFile.c_str());
 		
-		m_audioDecoder.Open(&m_demuxMusic);
+		if (m_audioDecoder.Open(&m_demuxMusic))
+		{
+			int sample_rate;
+			AVChannelLayout ch_layout;
+			AVSampleFormat sample_fmt;
+			m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
+
+			int nbSamples = m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
+
+			m_player.SetAudioSpec(sample_rate, ch_layout, nbSamples);
+		}
 
 		m_demuxMusic.Start(this);
 
 		m_audioDecoder.Start(this);
-
-		m_player.Start();
+		
+		m_player.PlayAudio();
 	}
 
 }
 
-bool Composite::InitWnd(void* pWnd, int width, int height)
+bool Composite::InitWnd(HWND pWnd, int width, int height)
 {
-	//m_window = SDL_CreateWindowFrom(pWnd);
-	//if (!m_window)
-	//	return false;
-	//
-	//m_render = SDL_CreateRenderer(m_window, -1, 0);
-	//if (!m_render)
-	//	return false;
-	//
-	//m_texture = SDL_CreateTexture(m_render, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, width, height);
-	//if (!m_texture)
-	//	return false;
-	//
-	//m_videoWidth = width;
-	//m_videoHeight = height;
-	//m_rect.x = m_rect.y = 0;
-	//m_rect.w = m_videoWidth;
-	//m_rect.h = m_videoHeight;
+	m_hWndView = pWnd;
+	m_videoWidth = width;
+	m_videoHeight = height;
 
 	return true;
 }
 
-bool Composite::SaveFile(const char* szOutput, int type)
+bool Composite::SaveFile(const char* szOutput, std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vecMusic)
 {
-	m_type = E_Save;
+	//if (!OpenAudio(m_szAudioFile))
+	//	return false;
 
-	if (!OpenAudio(m_szAudioFile))
-		return false;
-
-	if (!OpenImage(m_szVideoFile))
+	if (!OpenImage(vecImage))
 		return false;
 
 	if (0 > avformat_alloc_output_context2(&m_pOutFormatCtx, nullptr, nullptr, szOutput))
 		return false;
 
-	int srcWidth, srcHeight;
-	AVPixelFormat srcFormat;
-	m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
-
-	m_bitRate = 400000;
+	m_bitRate = 4000000;
 	m_frameRate = 25;
-	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE && ((type & 0x1) == 0x1))
-		if (!m_videoEncoder.Init(m_pOutFormatCtx, m_pOutFormatCtx->oformat->video_codec, srcWidth, srcHeight))
+	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE)
+		if (!m_videoEncoder.Init(m_pOutFormatCtx, AV_CODEC_ID_H264, m_outputWidth, m_outputHeight))
 			return false;
 	
-	int sample_rate;
+	int sample_rate = 44100;
 	AVChannelLayout ch_layout;
-	enum AVSampleFormat sample_fmt;
-	m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
+	av_channel_layout_default(&ch_layout, 2);
+	AVSampleFormat sample_fmt = AV_SAMPLE_FMT_S16;
 
-	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE && ((type & 0x2) == 0x2))
+	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE)
 	{
 		if (!m_audioEncoder.InitAudio(m_pOutFormatCtx, m_pOutFormatCtx->oformat->audio_codec, ch_layout, sample_fmt, sample_rate))
 			return false;
@@ -258,11 +250,14 @@ bool Composite::VideoEvent(AVFrame* frame)
 bool Composite::AudioEvent(AVFrame* frame)
 {
 	bool bRun = (m_state != Stopped);
-	m_audioQueue.MaxSizePush(frame, &bRun);
+	
+	if (m_nType == 1)
+		m_player.SendAudioFrane(frame);
+	else
+		m_audioQueue.MaxSizePush(frame, &bRun);
+
 	return true;
 }
-
-
 
 bool Composite::DemuxPacket(AVPacket* pkt, int type)
 {
@@ -343,4 +338,75 @@ void Composite::OnSaveFunction()
 		}
 	}
 	av_write_trailer(m_pOutFormatCtx);
+}
+
+
+
+/*****************************************************************************************
+******************************************************************************************/
+CImageFrame::~CImageFrame()
+{
+	Release();
+}
+
+bool CImageFrame::Open(const char* szfile)
+{
+	if (0 != avformat_open_input(&m_pFormatCtx, szfile, nullptr, nullptr))
+		return false;
+	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
+		return false;
+	int img_idx = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+	if (0 > img_idx)
+		return false;
+	m_pCodecCtx = avcodec_alloc_context3(nullptr);
+	if (0 > avcodec_parameters_to_context(m_pCodecCtx, m_pFormatCtx->streams[img_idx]->codecpar))
+		return false;
+	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
+	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
+		return false;
+	
+	AVPacket pkt;
+	while (true)
+	{
+		if (0 > av_read_frame(m_pFormatCtx, &pkt))
+			break;
+		if (pkt.stream_index == img_idx)
+		{
+			if (0 > avcodec_send_packet(m_pCodecCtx, &pkt))
+				continue;
+
+			m_pFrameData = av_frame_alloc();
+			if (0 > avcodec_receive_frame(m_pCodecCtx, m_pFrameData)) {
+				av_frame_free(&m_pFrameData);
+				m_pFrameData = nullptr;
+				continue;
+			}
+			break;
+		}
+	}
+
+	if (!m_pFrameData)
+		return false;
+
+	return true;
+}
+
+AVFrame* CImageFrame::ImageFrame()
+{
+	return m_pFrameData;
+}
+
+void CImageFrame::Release()
+{
+	if (m_pFormatCtx) {
+		avformat_close_input(&m_pFormatCtx);
+		avformat_free_context(m_pFormatCtx);
+		m_pFormatCtx = nullptr;
+	}
+
+	if (m_pCodecCtx) {
+		avcodec_close(m_pCodecCtx);
+		avcodec_free_context(&m_pCodecCtx);
+		m_pCodecCtx = nullptr;
+	}
 }

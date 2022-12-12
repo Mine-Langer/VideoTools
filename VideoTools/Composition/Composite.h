@@ -15,9 +15,6 @@ public:
 	Composite();
 	~Composite();
 
-	void AddAudio(const char* szFile);
-	void AddImage(const char* szFile);
-
 	void Start();
 
 	void Close();
@@ -25,10 +22,10 @@ public:
 	void Play(std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vecMusic); // 播放
 
 	// 设置播放时的显示参数
-	bool InitWnd(void* pWnd, int width, int height);
+	bool InitWnd(HWND pWnd, int width, int height);
 
 	// 保存文件
-	bool SaveFile(const char* szOutput, int type);
+	bool SaveFile(const char* szOutput, std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vecMusic);
 
 private:
 
@@ -38,8 +35,8 @@ private:
 	virtual void CleanPacket()override;
 
 private:
-	bool OpenAudio(const char* szFile);
-	bool OpenImage(const char* szFile);
+	bool OpenAudio(std::vector<ItemElem>& vecAudio);
+	bool OpenImage(std::vector<ItemElem>& vecImage);
 
 	bool GetAudioImage(const char* filename);
 
@@ -64,9 +61,15 @@ private:
 	AVFormatContext* m_pOutFormatCtx = nullptr;
 	CFilterVideo m_filter;
 
+	int m_nType = 0;
 
+	HWND m_hWndView;
 	int m_videoWidth = 0;
 	int m_videoHeight = 0;
+
+	// 480p=720×480  720p=1280×720 1080p=1920×1080 4k=2160p=3840×2160
+	int m_outputWidth = 1280;
+	int m_outputHeight = 720;
 
 	int m_bitRate = 0;
 	int m_frameRate = 0;
@@ -76,7 +79,31 @@ private:
 	std::thread m_saveThread;
 	AVState m_state = NotStarted;
 	int m_type = 0; // 0: 预览播放  1：保存文件
-	char m_szAudioFile[128] = { 0 };
-	char m_szVideoFile[128] = { 0 };
+	//char m_szAudioFile[128] = { 0 };
+	//char m_szVideoFile[128] = { 0 };
 };
 
+class CImageFrame
+{
+public:
+	~CImageFrame();
+
+	bool Open(const char* szfile);
+
+	AVFrame* ImageFrame();
+
+private:
+	void Release();
+
+private:
+	AVFormatContext* m_pFormatCtx = nullptr;
+	AVCodecContext* m_pCodecCtx = nullptr;
+	AVFrame* m_pFrameData = nullptr;
+};
+
+
+class CAudioFrame
+{
+public:
+	~CAudioFrame();
+};

@@ -50,7 +50,8 @@ void CompositeView::showEvent(QShowEvent* event)
 	if (bShow)
 	{
 		bShow = false;
-		m_composite.InitWnd((void*)ui->playView->winId(), ui->playView->width(), ui->playView->height());
+		HWND hWnd = (HWND)ui->playView->winId();
+		m_composite.InitWnd(hWnd, ui->playView->width(), ui->playView->height());
 	}
 }
 
@@ -71,17 +72,6 @@ void CompositeView::OnActImage()
 	if (filename.isEmpty())
 		return;
 
-	//QByteArray arrFile = filename.toLocal8Bit();
-	//const char* szName = arrFile.data();
-
-// 	QPixmap pixmap(filename);
-// 	float ratio = (pixmap.height() * 1.00f) / (ui->imageCtrlWidget->height() * 1.00f);
-// 	int calcWidth = (pixmap.width() * 1.00f) / ratio;
-// 	ui->thumbnail_widget->setFixedSize(calcWidth, ui->imageCtrlWidget->height());
-// 	ui->thumbnail_widget->setStyleSheet(QString(tr("border-image:url(%1);background-size:contain")).arg(filename));
-
-	//m_composite.AddImage(szName);
-	//m_comType |= 0x1;
 	ui->imageCtrlWidget->AddTexture(filename, 1);
 }
 
@@ -91,23 +81,7 @@ void CompositeView::OnActAudio()
 	if (filename.isEmpty())
 		return;
 
-	//QByteArray arrFile = filename.toLocal8Bit();
-	//const char* szName = arrFile.data();
-
-	//m_composite.AddAudio(szName);
-	//m_comType |= 0x2;
 	ui->audioCtrlWidget->AddTexture(filename, 2);
-	/*strcpy_s(m_szAudio, FILENAME_MAX, szName);
-
-	if (m_player.OpenAudio(szName))
-	{
-		int duration = m_player.GetAudioDuration();
-		int h = duration / 3600;
-		int m = (duration - (3600 * h)) / 60;
-		int s = (duration - (3600 * h)) % 60;
-		ui->label_end_time->setText(QString("%1:%2:%3").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
-		ui->play_progress_slider->setRange(0, duration);
-	}*/
 }
 
 void CompositeView::OnActImageDel()
@@ -122,12 +96,13 @@ void CompositeView::OnActAudioDel()
 
 void CompositeView::OnBtnPlay()
 {
-#ifdef TEST
-	if (!m_player.Open("D:/documents/OneDrive/video/QQ ”∆µ∏„«Æ.mp4")) //F:/MyDocuments/OneDrive/video D:/documents/OneDrive/video
-		return;
 	int width = ui->playView->width();
 	int height = ui->playView->height();
 	HWND hWnd = (HWND)ui->playView->winId();
+#ifdef TEST
+	if (!m_player.Open("D:/documents/OneDrive/video/QQ ”∆µ∏„«Æ.mp4")) //F:/MyDocuments/OneDrive/video D:/documents/OneDrive/video
+		return;
+	
 
 	m_player.SetView(hWnd, width, height);
 
@@ -136,13 +111,17 @@ void CompositeView::OnBtnPlay()
 	std::vector<ItemElem> vecAudio = ui->audioCtrlWidget->GetItemList();
 	std::vector<ItemElem> vecImage = ui->imageCtrlWidget->GetItemList();
 
-	 m_composite.Play(vecImage, vecAudio);
+	m_composite.InitWnd(hWnd, width, height);
+
+	m_composite.Play(vecImage, vecAudio);
 #endif
 }
 
 void CompositeView::OnBtnExport()
 {
-	m_composite.SaveFile("output.mp4", m_comType);
+	std::vector<ItemElem> vecAudio = ui->audioCtrlWidget->GetItemList();
+	std::vector<ItemElem> vecImage = ui->imageCtrlWidget->GetItemList();
+	m_composite.SaveFile("output.mp4", vecImage, vecAudio);
 	m_comType = 0;
 }
 

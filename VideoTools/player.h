@@ -16,6 +16,8 @@ public:
 
 	void SetView(HWND hWnd, int w, int h);
 
+	void SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int samples);
+
 	void Start();
 
 	void Stop();
@@ -25,6 +27,13 @@ public:
 	void Seek(uint64_t pts_time);
 
 	void Release();
+
+/// <summary>
+/// composite function
+/// </summary>
+	void SendAudioFrane(AVFrame* frame);
+
+	void PlayAudio();
 
 private:
 	void OnPlayProc();

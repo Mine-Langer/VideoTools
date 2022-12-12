@@ -40,16 +40,11 @@ bool CPlayer::Open(const char* szInput)
 		AVChannelLayout ch_layout; 
 		AVSampleFormat sample_fmt;
 		m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
-		m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
+		int samples = m_audioDecoder.SetSwrContext(ch_layout, AV_SAMPLE_FMT_S16, sample_rate);
 		m_dxAudio.Open(ch_layout.nb_channels, sample_rate);
 
-		m_audioSpec.freq = sample_rate;
-		m_audioSpec.channels = ch_layout.nb_channels;
-		m_audioSpec.samples = 1024;
-		m_audioSpec.format = AUDIO_S16SYS;
-		m_audioSpec.silence = 0;
-		m_audioSpec.userdata = this;
-		m_audioSpec.callback = OnAudioCallback;
+		// ÉèÖÃSDL_AudioSpecÊôÐÔ
+		SetAudioSpec(sample_rate, ch_layout, samples);
 	}
 
 	return true;
@@ -65,12 +60,18 @@ void CPlayer::SetView(HWND hWnd, int w, int h)
 
 	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
 
-	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
-	{
-		printf("SDL_OpenAudio failed.\n");
-		return;
-	}
-	SDL_PauseAudio(0);
+	//PlayAudio();
+}
+
+void CPlayer::SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int samples)
+{
+	m_audioSpec.freq = sample_rate;
+	m_audioSpec.channels = ch_layout.nb_channels;
+	m_audioSpec.samples = samples;
+	m_audioSpec.format = AUDIO_S16SYS;
+	m_audioSpec.silence = 0;
+	m_audioSpec.userdata = this;
+	m_audioSpec.callback = OnAudioCallback;
 }
 
 
@@ -119,6 +120,21 @@ void CPlayer::Release()
 	}
 }
 
+
+void CPlayer::SendAudioFrane(AVFrame* frame)
+{
+	m_audioFrameQueue.MaxSizePush(frame, &m_bRun);
+}
+
+void CPlayer::PlayAudio()
+{
+	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
+	{
+		printf("SDL_OpenAudio failed.\n");
+		return;
+	}
+	SDL_PauseAudio(0);
+}
 
 void CPlayer::OnRenderProc()
 {
