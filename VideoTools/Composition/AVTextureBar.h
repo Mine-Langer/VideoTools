@@ -12,8 +12,8 @@ struct ItemElem
 	int		type;
 	QRectF	imgRect;
 	int		length;
-	int		start;	// 音频开始点
-	int		end;	// 音频结束点
+	int		start = 0;	// 音频开始点
+	int		end = 0;	// 音频结束点
 };
 
 class AVTextureBar : public QWidget

@@ -129,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConvertDemo.cpp" />
     <ClCompile Include="demos.cpp" />
     <ClCompile Include="drawText.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
@@ -136,9 +137,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
+    <ClInclude Include="ConvertDemo.h" />
     <ClInclude Include="demos.h" />
     <ClInclude Include="drawText.h" />
     <ClInclude Include="FilterVideo.h" />
+    <ClInclude Include="SafeQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

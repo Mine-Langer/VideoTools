@@ -46,6 +46,7 @@ private:
 	//static void OnSDLAudioFunction(void* userdata, Uint8* stream, int len);
 	void OnPlayFunction(); // 
 	void OnSaveFunction(); // 保存文件
+	void OnDemuxFunction();
 
 private:
 	CPlayer	m_player;
@@ -77,8 +78,11 @@ private:
 
 	std::thread m_playThread;
 	std::thread m_saveThread;
+	std::thread m_demuxThread;
 	AVState m_state = NotStarted;
 	int m_type = 0; // 0: 预览播放  1：保存文件
+	std::vector<ItemElem> m_vecImage;
+	std::vector<ItemElem> m_vecMusic;
 	//char m_szAudioFile[128] = { 0 };
 	//char m_szVideoFile[128] = { 0 };
 };
@@ -106,4 +110,33 @@ class CAudioFrame
 {
 public:
 	~CAudioFrame();
+
+	void SetRange(int begin, int end);
+
+	bool Open(const char* szfile, int begin = 0, int end = 0);
+
+	AVFrame* AudioFrame(bool& bstatus);
+
+private:
+	void Release();
+
+	void OnRun();
+
+private:
+	AVFormatContext* m_pFormatCtx = nullptr;
+	AVCodecContext* m_pCodecCtx = nullptr;
+	SwrContext* m_swr_ctx = nullptr;
+
+	int64_t m_begin_pts = 0, m_end_pts = 0;
+	int m_audio_idx = -1;
+
+	int m_swr_sample_rate = 0;
+	AVChannelLayout m_swr_ch_layout;
+	AVSampleFormat m_swr_sample_fmt;
+
+	SafeQueue<AVFrame*> m_frameQueueData;
+	std::thread m_tRead;
+	bool m_bRun = false;
+
+	double m_timebase = 0.0;
 };

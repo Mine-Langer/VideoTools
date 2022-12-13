@@ -240,14 +240,13 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 
 	output_codec_ctx = avcodec_alloc_context3(pCodec);
 	av_channel_layout_default(&output_codec_ctx->ch_layout, 2);
-	//output_codec_ctx->ch_layout = input_codec_ctx->ch_layout;
 	output_codec_ctx->sample_fmt = pCodec->sample_fmts[0];
 	output_codec_ctx->sample_rate = input_codec_ctx->sample_rate;
-	//output_codec_ctx->bit_rate = input_codec_ctx->bit_rate;
 	output_codec_ctx->bit_rate = 96000;
 
 	// 创建输出码流的AVStream
 	AVStream* pStream = avformat_new_stream(output_fmt_ctx, pCodec);
+	pStream->index = output_fmt_ctx->nb_streams - 1;
 	pStream->time_base.den = input_codec_ctx->sample_rate;
 	pStream->time_base.num = 1;
 

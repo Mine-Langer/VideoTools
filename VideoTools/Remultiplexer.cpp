@@ -17,7 +17,7 @@ bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight, AV
 
     if (pOutFmt->audio_codec) {
 
-        m_audioEncoder.InitAudio(m_pFormatCtx, pOutFmt->audio_codec, chLayout, sampleFmt, sampleRate);
+        m_audioEncoder.InitAudio(m_pFormatCtx, pOutFmt->audio_codec);
     }
 
     if (pOutFmt->video_codec) {
@@ -44,7 +44,7 @@ void CRemultiplexer::SendFrame(AVFrame* frame, int nType)
     else if (nType == AVMEDIA_TYPE_AUDIO)
     {
         if (frame)
-            m_audioEncoder.PushFrameToFifo((const uint8_t**)frame->data, frame->nb_samples);
+            m_audioEncoder.PushFrameToFifo(frame, frame->nb_samples);
     }
 }
 

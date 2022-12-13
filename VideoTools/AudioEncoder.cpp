@@ -10,7 +10,7 @@ CAudioEncoder::~CAudioEncoder()
 
 }
 
-bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVChannelLayout srcChLayout, enum AVSampleFormat srcSampleFmt, int srcSampleRate)
+bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
 {
 	const AVCodec* pCodec = avcodec_find_encoder(codecId);
 	if (pCodec == nullptr)
@@ -23,13 +23,14 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVC
 	m_pCodecCtx->codec_id = codecId;
 	av_channel_layout_default(&m_pCodecCtx->ch_layout, 2);
 	m_pCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-	m_pCodecCtx->sample_rate = srcSampleRate;
+	m_pCodecCtx->sample_rate = 44100;
 	m_pCodecCtx->bit_rate = 96000;
 	m_pCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 	m_pCodecCtx->time_base = { 1, m_pCodecCtx->sample_rate };
 	
 	m_pStream = avformat_new_stream(formatCtx, nullptr);
 	m_pStream->time_base = m_pCodecCtx->time_base;
+	m_pStream->index = formatCtx->nb_streams - 1;
 
 	if (formatCtx->oformat->flags & AVFMT_GLOBALHEADER)
 		m_pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -38,13 +39,6 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, AVC
 		return false;
 
 	if (0 > avcodec_parameters_from_context(m_pStream->codecpar, m_pCodecCtx))
-		return false;
-
-	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate,
-		&srcChLayout, srcSampleFmt, srcSampleRate, 0, nullptr))
-		return false;
-
-	if (0 > swr_init(m_pSwrCtx))
 		return false;
 
 	m_pAudioFifo = av_audio_fifo_alloc(m_pCodecCtx->sample_fmt, m_pCodecCtx->ch_layout.nb_channels, 1);
@@ -73,11 +67,6 @@ void CAudioEncoder::Release()
 		m_pCodecCtx = nullptr;
 	}
 
-	if (m_pSwrCtx) {
-		swr_free(&m_pSwrCtx);
-		m_pSwrCtx = nullptr;
-	}
-
 	if (m_pAudioFifo) {
 		av_audio_fifo_free(m_pAudioFifo);
 		m_pAudioFifo = nullptr;
@@ -101,22 +90,15 @@ AVRational CAudioEncoder::GetTimeBase()
 	return m_pCodecCtx->time_base;
 }
 
-bool CAudioEncoder::PushFrameToFifo(const uint8_t** frameData, int framesize)
+bool CAudioEncoder::PushFrameToFifo(AVFrame* frameData, int framesize)
 {
-	AVFrame* pFrame = AllocOutputFrame(framesize);
-	if (!pFrame)
-		return false;
-	
-	if (0 > swr_convert(m_pSwrCtx, pFrame->data, framesize, frameData, framesize))
-		return false;
-
 	int fifoSize = av_audio_fifo_size(m_pAudioFifo);
 
 	int err = av_audio_fifo_realloc(m_pAudioFifo, fifoSize + framesize);
 
-	int wsize = av_audio_fifo_write(m_pAudioFifo, (void**)pFrame->data, framesize);
+	int wsize = av_audio_fifo_write(m_pAudioFifo, (void**)frameData->data, framesize);
 	
-	av_frame_free(&pFrame);
+	av_frame_free(&frameData);
 
 	return true;
 }
@@ -170,38 +152,12 @@ bool CAudioEncoder::PushAudioToFifo()
 		if (frame == nullptr)
 			return false;
 
-		if (!ReadFrame2Fifo(frame))
-			continue;
+		PushFrameToFifo(frame, frame->nb_samples);
+		av_frame_free(&frame);
 	}
 	return true;
 }
 
-bool CAudioEncoder::ReadFrame2Fifo(AVFrame* frame)
-{
-	bool bRet = false;
-	if (!m_convertBuffer)
-		m_convertBuffer = new uint8_t* [m_pCodecCtx->channels];
-	if (0 > av_samples_alloc(m_convertBuffer, nullptr, m_pCodecCtx->channels, frame->nb_samples, m_pCodecCtx->sample_fmt, 0))
-		goto ends;
-
-	if (0 > swr_convert(m_pSwrCtx, m_convertBuffer, frame->nb_samples, (const uint8_t**)frame->extended_data, frame->nb_samples))
-		goto ends;
-
-	if (0 > av_audio_fifo_realloc(m_pAudioFifo, av_audio_fifo_size(m_pAudioFifo) + frame->nb_samples))
-		goto ends;
-
-	if (0 > av_audio_fifo_write(m_pAudioFifo, (void**)m_convertBuffer, frame->nb_samples))
-		goto ends;
-
-	bRet = true;
-
-ends:
-	if (m_convertBuffer) {
-		av_freep(&m_convertBuffer[0]);
-	}
-	av_frame_free(&frame);
-	return bRet;
-}
 
 AVFrame* CAudioEncoder::AllocOutputFrame(int nbSize)
 {
@@ -250,6 +206,9 @@ bool CAudioEncoder::ReadPacketFromFifo(AVPacket* pkt)
 
 		av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
 		pkt->stream_index = m_pStream->index;
+
+		int realtime = pkt->pts * av_q2d(m_pCodecCtx->time_base);
+		printf("pts:%lld  realtime:%d  framesize:%d\r\n", pkt->pts, realtime, frameSize);
 
 		av_frame_free(&outputFrame);
 		return true;
