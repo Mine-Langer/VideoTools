@@ -2,43 +2,68 @@
 #include "common.h"
 #include "SafeQueue.h"
 
-class CAudioFrame
+
+class Decoder
 {
 public:
-	~CAudioFrame();
+	bool Init(AVFormatContext* fmt_ctx, int idx);
 
-	bool Open(const char* szfile, int begin = 0, int end = 0);
-
-	AVFrame* AudioFrame(bool& bstatus);
+	AVFrame* PushPkt(AVPacket* pkt);
 
 private:
-	void Release();
+	AVCodecContext* input_codec_ctx = nullptr;
+	AVFrame* src_frame = nullptr;
+	SwrContext* swr_ctx = nullptr;
 
-	void OnRun();
-
-private:
-	AVFormatContext* m_pFormatCtx = nullptr;
-	AVCodecContext* m_pCodecCtx = nullptr;
-
-	int64_t m_begin_pts = 0, m_end_pts = 0;
-	int m_audio_idx = -1;
-
-	SafeQueue<AVFrame*> m_frameQueueData;
-	std::thread m_tRead;
-	bool m_bRun = false;
-
-	double m_timebase = 0.0;
+	AVChannelLayout out_ch_layout;
+	AVSampleFormat out_sample_fmt = AV_SAMPLE_FMT_FLTP;
+	int out_sample_rate = 44100;
 };
 
-class AEncode
+
+class Encoder
 {
 public:
-	bool Open(AVFormatContext* fmt_ctx, AVCodecID codec_id, int src_samples, AVChannelLayout src_ch_layout, AVSampleFormat src_fmt);
+	bool Init();
+
+	void writeHeader();
+
+	void writeTail();
+
+	void writeFrame(bool bFinished);
+
+	void PushFrame(AVFrame* frame);
+
+private:
+	AVFormatContext* output_fmt_ctx = nullptr;
+	AVCodecContext* output_codec_ctx = nullptr;
+	AVAudioFifo* fifo = nullptr;
+
+	AVPacket* dst_pkt = nullptr;
+
+	int64_t _pts = 0;
+};
+
+
+class CDemux
+{
+public:
+	bool Open(const char* szinput);
+
+private:
+	void OnDemux();
+
+private:
+	AVFormatContext* input_fmt_ctx = nullptr;
 	
-private:
+	Decoder decoder;
 
+	Encoder encoder;
 
+	int video_index = -1;
+	int audio_index = -1;
 };
+
 
 class ConvertDemo
 {
@@ -46,19 +71,32 @@ public:
 	bool Save(const char* szOut, const char* szInput);
 
 private:
-	void OpenOutput(const char* szOut);
+	bool OpenInput(const char* szInput);
+
+	bool OpenOutput(const char* szOutput);
 
 	void Release();
 
-	void OnThreadFunc();
+	bool InitConfig();
+
+	void dowork();
+
+	void PushFrameToFifo(AVFrame* frame);
+	void PopFrameToEncodeAndWrite(bool bFinished = false);
+
 
 private:
-	CAudioFrame audioFrame;
-	AEncode		audioEncode;
+	AVFormatContext* input_fmt_ctx = nullptr;
+	AVFormatContext* output_fmt_ctx = nullptr;
+	AVCodecContext* input_codec_ctx = nullptr;
+	AVCodecContext* output_codec_ctx = nullptr;
+	SwrContext* swr_ctx = nullptr;
+	AVAudioFifo* fifo = nullptr;
+	AVPacket* input_packet = nullptr;
+	AVFrame* input_frame = nullptr;
+	AVPacket* output_packet = nullptr;
 
-	AVFormatContext* m_pFormatCtx = nullptr;
-
-
-	std::thread m_thread;
+	int audio_index = -1;
+	int64_t _pts = 0;
 };
 

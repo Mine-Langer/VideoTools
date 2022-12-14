@@ -228,10 +228,6 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 	if (0 > avformat_alloc_output_context2(&output_fmt_ctx, nullptr, nullptr, szOutput))
 		return false;
 
-	// 打开输出文件
-	if (0 > avio_open(&output_fmt_ctx->pb, szOutput, AVIO_FLAG_WRITE))
-		return false;
-
 	// 查找编码器
 	const AVOutputFormat* out_fmt = output_fmt_ctx->oformat;
 	const AVCodec* pCodec = avcodec_find_encoder(out_fmt->audio_codec);
@@ -258,6 +254,10 @@ bool CTransAAC::OpenOutput(const char* szOutput)
 		return false;
 
 	if (0 > avcodec_parameters_from_context(pStream->codecpar, output_codec_ctx))
+		return false;
+
+	// 打开输出文件
+	if (0 > avio_open(&output_fmt_ctx->pb, szOutput, AVIO_FLAG_WRITE))
 		return false;
 
 	return true;
