@@ -35,6 +35,9 @@ public:
 
 	void Clear();
 
+	// 等待解码完成
+	bool WaitFinished();
+
 	bool SetSwsConfig(SDL_Rect* rect = nullptr, int width = -1, int height = -1, enum AVPixelFormat pix_fmt = AV_PIX_FMT_NONE);
 	void GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat);
 	void GetSrcRational(AVRational& sampleRatio, AVRational& timebase);

@@ -23,7 +23,7 @@ int main()
 	//t.Run("D:/CloudMusic/Brotherhood.mp3", "output.aac");
 
 	ConvertDemo cd;
-	cd.Save("output.mp4", "D:/CloudMusic/Brotherhood.mp3");
+	cd.Save("output.mp4", "G:/CloudMusic/The Titan.mp3"); // G:\CloudMusic\The Titan.mp3  D:/CloudMusic/Brotherhood.mp3
 
 	system("pause");
     return 0;

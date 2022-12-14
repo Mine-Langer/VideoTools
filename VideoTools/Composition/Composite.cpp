@@ -131,9 +131,10 @@ bool Composite::SaveFile(const char* szOutput, std::vector<ItemElem>& vecImage, 
 	if (0 > avformat_alloc_output_context2(&m_pOutFormatCtx, nullptr, nullptr, szOutput))
 		return false;
 
-	m_bitRate = 4000000;
-	m_frameRate = 25;
-	if (m_pOutFormatCtx->oformat->video_codec != AV_CODEC_ID_NONE)
+	//m_bitRate = 4000000;
+	//m_frameRate = 25;
+	const AVOutputFormat* out_fmt = m_pOutFormatCtx->oformat;
+	if (out_fmt->video_codec != AV_CODEC_ID_NONE)
 		if (!m_videoEncoder.Init(m_pOutFormatCtx, AV_CODEC_ID_H264, m_outputWidth, m_outputHeight))
 			return false;
 	
@@ -142,24 +143,19 @@ bool Composite::SaveFile(const char* szOutput, std::vector<ItemElem>& vecImage, 
 	av_channel_layout_default(&ch_layout, 2);
 	AVSampleFormat sample_fmt = AV_SAMPLE_FMT_S16;
 
-	if (m_pOutFormatCtx->oformat->audio_codec != AV_CODEC_ID_NONE)
+	if (out_fmt->audio_codec != AV_CODEC_ID_NONE)
 	{
 		if (!m_audioEncoder.InitAudio(m_pOutFormatCtx, m_pOutFormatCtx->oformat->audio_codec))
 			return false;
-
-		m_audioEncoder.BindAudioData(&m_audioQueue);
+		//m_audioEncoder.BindAudioData(&m_audioQueue);
 	}
 
 	av_dump_format(m_pOutFormatCtx, 0, szOutput, 1);
 
 	// 打开输出文件
-	if (!(m_pOutFormatCtx->oformat->flags & AVFMT_NOFILE))
+	if (!(out_fmt->flags & AVFMT_NOFILE))
 		if (0 > avio_open(&m_pOutFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
 			return false;
-
-	// 写文件流头
-	if (0 > avformat_write_header(m_pOutFormatCtx, nullptr))
-		return false;
 
 	// 开始写文件线程
 	m_saveThread = std::thread(&Composite::OnSaveFunction, this);
@@ -271,6 +267,13 @@ void Composite::OnSaveFunction()
 	int ret = 0;
 	bool bRun = true;
 
+	// 写文件流头
+	if (0 > avformat_write_header(m_pOutFormatCtx, nullptr))
+	{
+		printf("avformat_write_header failed.\n");
+		return;
+	}
+
 	while (bRun)
 	{
 		if (m_videoQueue.Empty() ||  m_audioQueue.Empty())
@@ -284,12 +287,9 @@ void Composite::OnSaveFunction()
 			if (0 >= av_compare_ts(videoIndex, m_videoEncoder.GetTimeBase(), audioIndex, m_audioEncoder.GetTimeBase()))
 			{
 				// 写视频帧
-				AVFrame* swsVideoFrame = videoFrame; // m_videoDecoder.ConvertFrame(videoFrame);
-				if (!swsVideoFrame)
-					continue;
-				swsVideoFrame->pts = videoIndex++;
-
-				vPacket = m_videoEncoder.Encode(swsVideoFrame);
+				// 先编码
+				videoFrame->pts = videoIndex++;
+				vPacket = m_videoEncoder.Encode(videoFrame);
 				if (vPacket)
 				{
 					av_interleaved_write_frame(m_pOutFormatCtx, vPacket);
@@ -317,6 +317,7 @@ void Composite::OnSaveFunction()
 	}
 	av_write_trailer(m_pOutFormatCtx);
 	avio_closep(&m_pOutFormatCtx->pb);
+	printf("转换完成!\n");
 }
 
 void Composite::OnDemuxFunction()
@@ -428,7 +429,7 @@ bool CAudioFrame::Open(const char* szfile, int begin, int end)
 
 	m_swr_sample_rate = 44100;
 	av_channel_layout_default(&m_swr_ch_layout, 2);
-	m_swr_sample_fmt = AV_SAMPLE_FMT_S16;
+	m_swr_sample_fmt = pCodec->sample_fmts[0];
 	if (0 > swr_alloc_set_opts2(&m_swr_ctx, &m_swr_ch_layout, m_swr_sample_fmt, m_swr_sample_rate,
 		&m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr))
 		return false;
@@ -500,11 +501,20 @@ void CAudioFrame::OnRun()
 
 		AVFrame* cvtFrame = av_frame_alloc();
 		cvtFrame->sample_rate = m_swr_sample_rate;
+		cvtFrame->ch_layout = m_swr_ch_layout;
 		cvtFrame->format = m_swr_sample_fmt;
 		cvtFrame->nb_samples = frame->nb_samples;
-		av_frame_get_buffer(cvtFrame, 0);
+		if (0 > av_frame_get_buffer(cvtFrame, 0))
+		{
+			printf("av_frame_get_buffer audio failed.\n");
+			continue;
+		}
 
-		swr_convert(m_swr_ctx, cvtFrame->data, cvtFrame->nb_samples, (const uint8_t**)frame->extended_data, frame->nb_samples);
+		if (0 > swr_convert(m_swr_ctx, cvtFrame->data, cvtFrame->nb_samples, (const uint8_t**)frame->extended_data, frame->nb_samples))
+		{
+			printf("swr_convert audio failed.\n");
+			continue;
+		}
 
 		m_frameQueueData.MaxSizePush(cvtFrame, &m_bRun);
 		av_frame_unref(frame);

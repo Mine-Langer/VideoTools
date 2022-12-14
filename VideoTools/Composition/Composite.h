@@ -43,14 +43,14 @@ private:
 	bool InitAudioEnc(enum AVCodecID codec_id);
 
 private:
-	//static void OnSDLAudioFunction(void* userdata, Uint8* stream, int len);
 	void OnPlayFunction(); // 
 	void OnSaveFunction(); // 保存文件
-	void OnDemuxFunction();
+	void OnDemuxFunction();// 解码线程
 
 private:
 	CPlayer	m_player;
-	CDemultiplexer m_demuxImage, m_demuxMusic;
+	CDemultiplexer m_demuxImage;
+	CDemultiplexer m_demuxMusic;
 	CVideoDecoder m_videoDecoder;
 	CAudioDecoder m_audioDecoder;
 	CVideoEncoder m_videoEncoder;
@@ -58,6 +58,9 @@ private:
 
 	SafeQueue<AVFrame*> m_videoQueue;
 	SafeQueue<AVFrame*> m_audioQueue;
+
+	SafeQueue<AVPacket*> m_videoPktQueue;
+	SafeQueue<AVPacket*> m_audioPktQueue;
 
 	AVFormatContext* m_pOutFormatCtx = nullptr;
 	CFilterVideo m_filter;
@@ -72,8 +75,8 @@ private:
 	int m_outputWidth = 1280;
 	int m_outputHeight = 720;
 
-	int m_bitRate = 0;
-	int m_frameRate = 0;
+	int m_bitRate = 4000000;
+	int m_frameRate = 25;
 	int m_audioFrameSize = 0;
 
 	std::thread m_playThread;
@@ -83,8 +86,6 @@ private:
 	int m_type = 0; // 0: 预览播放  1：保存文件
 	std::vector<ItemElem> m_vecImage;
 	std::vector<ItemElem> m_vecMusic;
-	//char m_szAudioFile[128] = { 0 };
-	//char m_szVideoFile[128] = { 0 };
 };
 
 class CImageFrame

@@ -128,6 +128,11 @@ void CAudioDecoder::Clear()
 	}
 }
 
+bool CAudioDecoder::WaitFinished()
+{
+	return true;
+}
+
 bool CAudioDecoder::SendPacket(AVPacket* pkt)
 {
 	if (pkt == nullptr)
@@ -169,22 +174,20 @@ void CAudioDecoder::GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout
 	sample_fmt = m_pCodecCtx->sample_fmt;
 }
 
-int CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
+bool CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
 {
-	m_sampleFormat = sample_fmt;
-	m_sampleRate = sample_rate;
+	m_swr_ch_layout = ch_layout;
+	m_swr_sample_rate = sample_rate;
+	m_swr_sample_fmt = sample_fmt;
 
-	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &ch_layout, m_sampleFormat, m_sampleRate,
+	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &ch_layout, m_swr_sample_fmt, m_swr_sample_rate,
 		&m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr))
-		return 0;
+		return false;
 
 	if (0 > swr_init(m_pSwrCtx))
-		return 0;
+		return false;
 
-	m_nbSamples = av_rescale_rnd(swr_get_delay(m_pSwrCtx, m_pCodecCtx->sample_rate) + m_pCodecCtx->frame_size,
-		m_sampleRate, m_pCodecCtx->sample_rate, AV_ROUND_INF);
-
-	return m_nbSamples;
+	return true;
 }
 
 
@@ -248,14 +251,17 @@ void CAudioDecoder::OnDecodeFunction()
 AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 {
 	AVFrame* dstFrame = av_frame_alloc();
-	if (0 > av_samples_alloc(dstFrame->data, dstFrame->linesize,
-		m_pCodecCtx->ch_layout.nb_channels, m_nbSamples, m_sampleFormat, 1))
+	dstFrame->nb_samples = frame->nb_samples;
+	dstFrame->format = m_swr_sample_fmt;
+	dstFrame->sample_rate = m_swr_sample_rate;
+	dstFrame->ch_layout = m_swr_ch_layout;
+	if (0 > av_frame_get_buffer(dstFrame, 0))
 	{
 		av_frame_free(&dstFrame);
 		return nullptr;
 	}
 
-	if (0 > swr_convert(m_pSwrCtx, dstFrame->data, m_nbSamples, (const uint8_t**)frame->data, frame->nb_samples))
+	if (0 > swr_convert(m_pSwrCtx, dstFrame->data, dstFrame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples))
 	{
 		av_frame_free(&dstFrame);
 		return nullptr;
@@ -265,22 +271,3 @@ AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
 
 	return dstFrame;
 }
-
-/*bool CAudioDecoder::DemuxPacket(AVPacket* pkt, int type)
-{
-	if (type == AVMEDIA_TYPE_AUDIO)
-	{
-		bool bRun = (m_state != Stopped);
-		if (pkt)
-		{
-			AVPacket* packet = av_packet_clone(pkt);
-			m_srcAPktQueue.MaxSizePush(packet, &bRun);
-		}
-		else
-		{
-			m_srcAPktQueue.MaxSizePush(nullptr, &bRun);
-		}
-	}
-	return true;
-}*/
-

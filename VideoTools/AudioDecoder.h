@@ -2,7 +2,7 @@
 #include "Demultiplexer.h"
 #include "VideoDecoder.h"
 
-class CAudioDecoder //:public IDemuxEvent
+class CAudioDecoder 
 {
 public:
 	CAudioDecoder();
@@ -22,10 +22,13 @@ public:
 
 	void Clear();
 
+	// 等待解码完成
+	bool WaitFinished();
+
 	bool SendPacket(AVPacket* pkt);
 
 	void GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
-	int SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
+	bool SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
 	
 	AVChannelLayout GetChannelLayout();
 	double Timebase();
@@ -45,10 +48,10 @@ private:
 	IDecoderEvent* m_pEvent = nullptr;
 
 	double m_timebase = 0.0;
-	int64_t m_channelLayout = 0;
-	AVSampleFormat m_sampleFormat = AV_SAMPLE_FMT_NONE;
-	int m_sampleRate = 0;
-	int m_nbSamples = 0;
+
+	AVChannelLayout m_swr_ch_layout;
+	AVSampleFormat m_swr_sample_fmt = AV_SAMPLE_FMT_NONE;
+	int m_swr_sample_rate = 0;
 
 	bool m_bRun = false;
 	enum AVState m_state = NotStarted;

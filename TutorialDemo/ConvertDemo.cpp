@@ -9,8 +9,6 @@ bool ConvertDemo::Save(const char* szOut, const char* szInput)
 
 	return true;
 
-
-
 	if (!OpenInput(szInput))
 		return false;
 

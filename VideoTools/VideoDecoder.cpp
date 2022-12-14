@@ -330,6 +330,11 @@ void CVideoDecoder::OnDecodeFunction()
 	Release();
 }
 
+bool CVideoDecoder::WaitFinished()
+{
+	return true;
+}
+
 /*bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
 {
 	if (type == AVMEDIA_TYPE_VIDEO)

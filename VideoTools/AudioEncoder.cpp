@@ -30,7 +30,6 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
 	
 	m_pStream = avformat_new_stream(formatCtx, nullptr);
 	m_pStream->time_base = m_pCodecCtx->time_base;
-	m_pStream->index = formatCtx->nb_streams - 1;
 
 	if (formatCtx->oformat->flags & AVFMT_GLOBALHEADER)
 		m_pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -153,7 +152,6 @@ bool CAudioEncoder::PushAudioToFifo()
 			return false;
 
 		PushFrameToFifo(frame, frame->nb_samples);
-		av_frame_free(&frame);
 	}
 	return true;
 }

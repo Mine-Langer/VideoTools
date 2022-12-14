@@ -44,7 +44,6 @@ bool CVideoEncoder::Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, in
 		return false;
 
 	m_pStream->time_base = m_pCodecCtx->time_base;
-	m_pStream->id = outFmtCtx->nb_streams - 1;
 
 	if (0 > avcodec_parameters_from_context(m_pStream->codecpar, m_pCodecCtx))
 		return false;
