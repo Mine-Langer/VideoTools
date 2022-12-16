@@ -1,5 +1,6 @@
 #pragma once
 #include "Common.h"
+#include "VideoEncoder.h"
 
 class CAudioEncoder
 {
@@ -9,26 +10,27 @@ public:
 
 	bool InitAudio(AVFormatContext* formatCtx, AVCodecID codecId);
 
-	void BindAudioData(SafeQueue<AVFrame*> *audioQueue);
+	void Start(IEncoderEvent* pEvt);
 
 	void Release();
 
-	bool GetEncodePacket(AVPacket* pkt, int& aIndex);
-
 	AVRational GetTimeBase();
 
-	bool PushFrameToFifo(AVFrame* frameData, int framesize);
+	bool PushFrame(AVFrame* frame);
 
 	AVPacket* GetPacketFromFifo(int* aIdx);
 
 private:
-	bool PushAudioToFifo();
+	void OnWork();
 
-	bool ReadPacketFromFifo(AVPacket* pkt);
+	bool PushFrameToFifo(AVFrame* frame);
+
+	bool ReadPacketFromFifo();
 
 	AVFrame* AllocOutputFrame(int nbSize);
 
 private:
+	IEncoderEvent* m_pEvent = nullptr;
 	AVCodecContext* m_pCodecCtx = nullptr;
 	AVStream* m_pStream = nullptr;
 
@@ -37,8 +39,11 @@ private:
 
 	int m_nbSamples = 0;
 
-	SafeQueue<AVFrame*>* m_pAudioQueue = nullptr;
+	SafeQueue<AVFrame*> m_pAudioQueue;
 	bool m_bFinished = false;
 	int m_frameIndex = 0;
+
+	bool m_bRun = false;
+	std::thread m_thread;
 };
 

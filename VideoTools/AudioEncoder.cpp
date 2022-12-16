@@ -51,9 +51,12 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
 	return true;
 }
 
-void CAudioEncoder::BindAudioData(SafeQueue<AVFrame*>* audioQueue)
+void CAudioEncoder::Start(IEncoderEvent* pEvt)
 {
-	m_pAudioQueue = audioQueue;
+	m_pEvent = pEvt;
+
+	m_bRun = true;
+	m_thread = std::thread(&CAudioEncoder::OnWork, this);
 }
 
 
@@ -72,25 +75,22 @@ void CAudioEncoder::Release()
 	}
 }
 
-bool CAudioEncoder::GetEncodePacket(AVPacket* pkt, int& aIndex)
-{
-	if (!PushAudioToFifo())
-		m_bFinished = true;
-
-	while (!ReadPacketFromFifo(pkt))
-		continue;
-	aIndex = m_frameIndex;
-
-	return !m_bFinished;
-}
 
 AVRational CAudioEncoder::GetTimeBase()
 {
 	return m_pCodecCtx->time_base;
 }
 
-bool CAudioEncoder::PushFrameToFifo(AVFrame* frameData, int framesize)
+bool CAudioEncoder::PushFrame(AVFrame* frame)
 {
+	m_pAudioQueue.MaxSizePush(frame, &m_bRun);
+
+	return false;
+}
+
+bool CAudioEncoder::PushFrameToFifo(AVFrame* frameData)
+{
+	int framesize = frameData->nb_samples;
 	int fifoSize = av_audio_fifo_size(m_pAudioFifo);
 
 	int err = av_audio_fifo_realloc(m_pAudioFifo, fifoSize + framesize);
@@ -137,23 +137,26 @@ AVPacket* CAudioEncoder::GetPacketFromFifo(int* aIdx)
 	return nullptr;
 }
 
-bool CAudioEncoder::PushAudioToFifo()
+void CAudioEncoder::OnWork()
 {
 	AVFrame* frame = nullptr;
-	while (av_audio_fifo_size(m_pAudioFifo) < m_nbSamples)
+	while (m_bRun)
 	{
-		if (!m_pAudioQueue->Pop(frame))
-		{
+		if (!m_pAudioQueue.Pop(frame))
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			continue;
+		else
+		{
+			if (frame == nullptr) {
+
+			}
+			else
+			{
+				PushFrameToFifo(frame);
+
+				ReadPacketFromFifo();
+			}
 		}
-
-		if (frame == nullptr)
-			return false;
-
-		PushFrameToFifo(frame, frame->nb_samples);
 	}
-	return true;
 }
 
 
@@ -174,10 +177,11 @@ AVFrame* CAudioEncoder::AllocOutputFrame(int nbSize)
 
 	return outputFrame;
 }
-bool CAudioEncoder::ReadPacketFromFifo(AVPacket* pkt)
+bool CAudioEncoder::ReadPacketFromFifo()
 {
+	int fifo_size = 0;
 	int error = 0;
-	if (av_audio_fifo_size(m_pAudioFifo) >= m_nbSamples || (m_bFinished && av_audio_fifo_size(m_pAudioFifo) > 0))
+	while ((fifo_size = av_audio_fifo_size(m_pAudioFifo) >= m_nbSamples) || (m_bFinished && fifo_size > 0))
 	{
 		const int frameSize = FFMIN(av_audio_fifo_size(m_pAudioFifo), m_nbSamples);
 		AVFrame* outputFrame = AllocOutputFrame(frameSize);
@@ -192,6 +196,7 @@ bool CAudioEncoder::ReadPacketFromFifo(AVPacket* pkt)
 			return false;
 		}
 
+		AVPacket* pkt = av_packet_alloc();
 		error = avcodec_receive_packet(m_pCodecCtx, pkt);
 		if (error < 0)
 		{
@@ -204,6 +209,8 @@ bool CAudioEncoder::ReadPacketFromFifo(AVPacket* pkt)
 
 		av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
 		pkt->stream_index = m_pStream->index;
+
+		m_pEvent->AudioEvent(pkt);
 
 		int realtime = pkt->pts * av_q2d(m_pCodecCtx->time_base);
 		printf("pts:%lld  realtime:%d  framesize:%d\r\n", pkt->pts, realtime, frameSize);

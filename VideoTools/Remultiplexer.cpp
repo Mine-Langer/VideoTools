@@ -15,18 +15,20 @@ bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight, AV
 
     const AVOutputFormat* pOutFmt = m_pFormatCtx->oformat;
 
-    if (pOutFmt->audio_codec) {
-
+    if (pOutFmt->audio_codec) 
+    {
         m_audioEncoder.InitAudio(m_pFormatCtx, pOutFmt->audio_codec);
     }
 
-    if (pOutFmt->video_codec) {
-
+    if (pOutFmt->video_codec) 
+    {
         m_videoEncoder.Init(m_pFormatCtx, pOutFmt->video_codec, vWidth, vHeight);
     }
 
     if (0 > avio_open(&m_pFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
         return false;
+
+    av_dump_format(m_pFormatCtx, 0, szOutput, 1);
 
     return true;
 }
@@ -39,12 +41,12 @@ void CRemultiplexer::SendFrame(AVFrame* frame, int nType)
         AVFrame* tframe = nullptr;
         if (frame)
             tframe = av_frame_clone(frame);
-        m_videoFrameQueue.MaxSizePush(tframe, &m_bRun);
+        m_videoEncoder.PushFrame(tframe);
     }
     else if (nType == AVMEDIA_TYPE_AUDIO)
     {
         if (frame)
-            m_audioEncoder.PushFrameToFifo(frame, frame->nb_samples);
+            m_audioEncoder.PushFrame(frame);
     }
 }
 
@@ -66,10 +68,26 @@ bool CRemultiplexer::Start(IRemuxEvent* pEvt)
 
     m_pEvent = pEvt;
 
+    m_audioEncoder.Start(this);
+    m_videoEncoder.Start(this);
+
     m_bRun = true;
     m_thread = std::thread(&CRemultiplexer::OnWork, this);
 
     return false;
+}
+
+bool CRemultiplexer::VideoEvent(AVPacket* pkt)
+{
+    m_videoPktQueue.MaxSizePush(pkt, &m_bRun);
+    return true;
+}
+
+bool CRemultiplexer::AudioEvent(AVPacket* pkt)
+{
+    m_audioPktQueue.MaxSizePush(pkt, &m_bRun);
+
+    return true;
 }
 
 void CRemultiplexer::OnWork()
@@ -81,25 +99,21 @@ void CRemultiplexer::OnWork()
     bool endV = false, endA = false;
     while (m_bRun)
     {
-        if (m_videoFrameQueue.Empty()){
+        if (m_videoPktQueue.Empty()){
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
         }
         // ÅÐ¶ÏÒôÊÓÆµÖ¡Ê±Ðò
         if (0 > av_compare_ts(videoIdx, m_videoEncoder.GetTimeBase(), audioIdx, m_audioEncoder.GetTimeBase()))
         {
-            AVFrame* videoFrame = nullptr;
-            m_videoFrameQueue.Pop(videoFrame);
+            AVPacket* v_pkt = nullptr;
+            m_videoPktQueue.Pop(v_pkt);
 
-            if (videoFrame) {
-                videoFrame->pts = videoIdx++;
-
-                AVPacket* pkt_v = m_videoEncoder.Encode(videoFrame);
-                if (!pkt_v) continue;
-
-                av_interleaved_write_frame(m_pFormatCtx, pkt_v);
-                av_packet_free(&pkt_v);
-                av_frame_free(&videoFrame);
+            if (v_pkt) 
+            {
+                videoIdx++;
+                av_interleaved_write_frame(m_pFormatCtx, v_pkt);
+                av_packet_free(&v_pkt);
             }
             else
                 endV = true;

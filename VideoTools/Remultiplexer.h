@@ -12,7 +12,7 @@ public:
 /*
 * ÖØ·â×°¸´ÓÃÆ÷
 */
-class CRemultiplexer
+class CRemultiplexer: public IEncoderEvent
 {
 public:
 	CRemultiplexer();
@@ -25,6 +25,11 @@ public:
 	void Release();
 
 	bool Start(IRemuxEvent* pEvt);
+
+private:
+	virtual bool VideoEvent(AVPacket* pkt) override;
+
+	virtual bool AudioEvent(AVPacket* pkt) override;
 
 private:
 	void OnWork();
@@ -41,5 +46,8 @@ private:
 
 	SafeQueue<AVFrame*> m_audioFrameQueue;
 	SafeQueue<AVFrame*> m_videoFrameQueue;
+
+	SafeQueue<AVPacket*> m_audioPktQueue;
+	SafeQueue<AVPacket*> m_videoPktQueue;
 };
 

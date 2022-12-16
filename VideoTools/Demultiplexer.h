@@ -28,6 +28,8 @@ public:
 
 	void Release();
 
+	void WaitFinished();
+
 	void SetPosition(int64_t dwTime);
 
 	int AudioStreamIndex();

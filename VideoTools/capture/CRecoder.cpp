@@ -405,16 +405,13 @@ void CRecoder::CaptureThread()
 		else
 		{
 			{
-// 				if (pvFrame == nullptr)
-// 					break;
-				// AVFrame* swsFrame = m_videoDecoder.ConvertFrame(pvFrame);
 				m_captureScreen.CaptureImage();
 				{
 					m_swsFrame->pkt_dts = m_swsFrame->pts = videoIndex++;
 					//m_swsFrame->pkt_duration = 90000 / 25 / 100;
 					//m_swsFrame->pkt_pos = -1;
 
-					AVPacket* pkt = m_videoEncoder.Encode(m_swsFrame);
+					/*AVPacket* pkt = m_videoEncoder.Encode(m_swsFrame);
 					if (pkt)
 					{
 						pkt->duration = 1024;
@@ -427,7 +424,7 @@ void CRecoder::CaptureThread()
 						av_write_frame(m_pFormatCtx, pkt);
 						//av_interleaved_write_frame(m_pFormatCtx, pkt);
 						av_packet_free(&pkt);
-					}
+					}*/
 				}
 
 				av_frame_free(&pvFrame);

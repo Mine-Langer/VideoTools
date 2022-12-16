@@ -79,6 +79,14 @@ void CDemultiplexer::Release()
 	}
 }
 
+void CDemultiplexer::WaitFinished()
+{
+	if (m_thread.joinable())
+		m_thread.join();
+
+	Release();
+}
+
 void CDemultiplexer::SetPosition(int64_t dwTime)
 {
 	m_target_pts = dwTime;

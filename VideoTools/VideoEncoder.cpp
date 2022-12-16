@@ -51,26 +51,17 @@ bool CVideoEncoder::Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, in
 	return true;
 }
 
-AVPacket* CVideoEncoder::Encode(AVFrame* srcFrame)
+void CVideoEncoder::Start(IEncoderEvent* pEvt)
 {
-	int error = 0;
+	m_pEvent = pEvt;
 
-	error = avcodec_send_frame(m_pCodecCtx, srcFrame);
-	if (error < 0)
-		return nullptr;
+	m_bRun = true;
+	m_thread = std::thread(&CVideoEncoder::OnWork, this);
+}
 
-	AVPacket* packet = av_packet_alloc();
-	error = avcodec_receive_packet(m_pCodecCtx, packet);
-	if (error < 0)
-	{
-		av_packet_free(&packet);
-		return nullptr;
-	}
-
-	av_packet_rescale_ts(packet, m_pCodecCtx->time_base, m_pStream->time_base);
-	packet->stream_index = m_pStream->index;
-
-	return packet;
+void CVideoEncoder::PushFrame(AVFrame* srcFrame)
+{
+	m_videoDataQueue.MaxSizePush(srcFrame, &m_bRun);
 }
 
 
@@ -86,4 +77,35 @@ void CVideoEncoder::Release()
 AVRational CVideoEncoder::GetTimeBase()
 {
 	return m_pCodecCtx->time_base;
+}
+
+void CVideoEncoder::OnWork()
+{
+	AVFrame* pFrame = nullptr;
+	while (m_bRun)
+	{
+		if (!m_videoDataQueue.Pop(pFrame))
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		else
+		{
+			if (!pFrame)
+				break;
+
+			pFrame->pts = m_pts++;
+			if (0 == avcodec_send_frame(m_pCodecCtx, pFrame))
+			{
+				AVPacket* pkt = av_packet_alloc();
+				if (0 == avcodec_receive_packet(m_pCodecCtx, pkt))
+				{
+					av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
+					pkt->stream_index = m_pStream->index;
+					m_pEvent->VideoEvent(pkt);
+				}
+				else
+				{
+					av_packet_free(&pkt);
+				}
+			}
+		}
+	}
 }

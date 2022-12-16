@@ -213,10 +213,12 @@ void CVideoDecoder::Release()
 	Clear();
 }
 
-bool CVideoDecoder::SetSwsConfig(SDL_Rect* rect, int width, int height, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
+bool CVideoDecoder::SetSwsConfig(SDL_Rect* rect, int w, int h, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
 {
 	float ratio = m_srcWidth * 1.0 / (m_srcHeight * 1.0);
 
+	int width = (w == -1 ? m_srcWidth : w);
+	int height = (h == -1 ? m_srcHeight : h);
 	m_swsFormat = (pix_fmt == AV_PIX_FMT_NONE ? AV_PIX_FMT_YUV420P : pix_fmt);
 
 	m_swsWidth = width / 2 * 2;
@@ -332,20 +334,12 @@ void CVideoDecoder::OnDecodeFunction()
 
 bool CVideoDecoder::WaitFinished()
 {
+	if (m_thread.joinable())
+		m_thread.join();
+
+	Release();
+
 	return true;
 }
 
-/*bool CVideoDecoder::DemuxPacket(AVPacket* pkt, int type)
-{
-	if (type == AVMEDIA_TYPE_VIDEO)
-	{
-		if (pkt != nullptr)
-		{
-			bool bRun = (m_state != Stopped);
-			AVPacket* srcVPkt = av_packet_clone(pkt);
-			m_srcVPktQueue.MaxSizePush(srcVPkt, &bRun);
-		}
-	}
-	return true;
-}*/
 
