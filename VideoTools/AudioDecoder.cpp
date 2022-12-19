@@ -219,6 +219,7 @@ void CAudioDecoder::OnDecodeFunction()
 			{
 				if (pkt == nullptr) {
 					// ½áÊø±êÖ¾
+					printf(" audio decode overed.\n");
 					m_pEvent->AudioEvent(nullptr);
 					break;
 				}
@@ -226,7 +227,11 @@ void CAudioDecoder::OnDecodeFunction()
 				{
 					error = avcodec_send_packet(m_pCodecCtx, pkt);
 					if (error < 0)
+					{
+						av_packet_free(&pkt);
 						continue;
+					}
+					av_packet_free(&pkt);
 
 					error = avcodec_receive_frame(m_pCodecCtx, srcFrame);
 					if (error < 0)
@@ -236,6 +241,7 @@ void CAudioDecoder::OnDecodeFunction()
 
 					AVFrame* cvtFrame = ConvertFrame(srcFrame);
 
+					//printf(" audio decode a frame: pts(%lld)\n", cvtFrame->pts);
 					m_pEvent->AudioEvent(cvtFrame);
 
 					av_frame_unref(srcFrame);

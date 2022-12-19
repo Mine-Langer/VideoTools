@@ -107,21 +107,25 @@ void CRemultiplexer::OnWork()
         if (0 > av_compare_ts(videoIdx, m_videoEncoder.GetTimeBase(), audioIdx, m_audioEncoder.GetTimeBase()))
         {
             AVPacket* v_pkt = nullptr;
-            m_videoPktQueue.Pop(v_pkt);
+            //m_videoPktQueue.Pop(v_pkt);
+            v_pkt = m_videoPktQueue.Front();
 
             if (v_pkt) 
             {
                 videoIdx++;
                 av_interleaved_write_frame(m_pFormatCtx, v_pkt);
-                av_packet_free(&v_pkt);
+            //    av_packet_free(&v_pkt);
             }
             else
                 endV = true;
         }
         else
         {
-            AVPacket* pkt_a = m_audioEncoder.GetPacketFromFifo(&audioIdx);
-            if (pkt_a) {
+            AVPacket* pkt_a = nullptr; // m_audioEncoder.GetPacketFromFifo(&audioIdx);
+            if (m_audioPktQueue.Pop(pkt_a)) {
+                if (pkt_a == nullptr)
+                    break;
+
                 av_interleaved_write_frame(m_pFormatCtx, pkt_a);
                 av_packet_free(&pkt_a);
             }
@@ -132,7 +136,7 @@ void CRemultiplexer::OnWork()
             break;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-
+    printf("save file overd.\n");
     av_write_trailer(m_pFormatCtx);
 
     Release();

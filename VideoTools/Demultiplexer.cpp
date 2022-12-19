@@ -93,6 +93,12 @@ void CDemultiplexer::SetPosition(int64_t dwTime)
 	m_seek = true;
 }
 
+void CDemultiplexer::SetUniqueStream(bool bUnique, int uniqueStream)
+{
+	m_bUniqueStream = bUnique;
+	m_uniqueIndex = uniqueStream;
+}
+
 int CDemultiplexer::AudioStreamIndex()
 {
 	return m_audioIndex;
@@ -110,8 +116,8 @@ AVFormatContext* CDemultiplexer::FormatContext()
 
 void CDemultiplexer::OnDemuxFunction()
 {
-	int idxArr[2] = { 0 };
 	AVPacket* pkt = av_packet_alloc();
+	int aidx = 0, vidx = 0;
 	while (m_bRun)
 	{
 		if (m_seek)
@@ -122,20 +128,27 @@ void CDemultiplexer::OnDemuxFunction()
 		}
 		if (0 > av_read_frame(m_pFormatCtx, pkt))
 		{
-			m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);
-			m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_VIDEO);
+			if (m_audioIndex >= 0)
+				m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);
+			if (m_videoIndex >= 0)
+				m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_VIDEO);
 			m_bRun = false;
+			printf("input file demux over. \n");
 		}
 		else
 		{
 			if (pkt->stream_index == m_audioIndex)
 			{
-				idxArr[m_audioIndex]++;
+				if (m_bUniqueStream && m_uniqueIndex == AVMEDIA_TYPE_AUDIO)
+					continue;
+				//printf("	demux a audio packet. %d\n", aidx++);
 				m_pEvent->DemuxPacket(pkt, AVMEDIA_TYPE_AUDIO);
 			}
 			else if (pkt->stream_index == m_videoIndex)
 			{
-				idxArr[m_videoIndex]++;
+				if (m_bUniqueStream && m_uniqueIndex == AVMEDIA_TYPE_VIDEO)
+					continue;
+				//printf("	demux a video packet. %d\n", vidx++);
 				m_pEvent->DemuxPacket(pkt, AVMEDIA_TYPE_VIDEO);
 			}
 			//printf("pkt idx[%d][%d] pkt times:%.2f  duration:%.2f\n", pkt->stream_index, idxArr[pkt->stream_index],

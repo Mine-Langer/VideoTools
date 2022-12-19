@@ -179,7 +179,6 @@ bool CVideoDecoder::SendPacket(AVPacket* pkt)
 			return false;
 		m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
 	}
-	printf("SendPacket() recv pkt size:%d\n", m_srcVPktQueue.Size());
 
 	return true;
 }
@@ -292,12 +291,12 @@ void CVideoDecoder::OnDecodeFunction()
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		else
 		{
-			printf("OnDecodeFunction() recv pkt size:%d\n", m_srcVPktQueue.Size());
 			if (!m_srcVPktQueue.Pop(packet))
 				std::this_thread::sleep_for(std::chrono::milliseconds(20));
 			else
 			{
 				if (packet == nullptr) { // ½áÊø±êÖ¾	
+					printf("video decoder overed.\n");
 					m_pEvent->VideoEvent(nullptr);
 					break;
 				}
@@ -319,6 +318,7 @@ void CVideoDecoder::OnDecodeFunction()
 
 					AVFrame* cvtFrame = ConvertFrame(srcFrame);
 
+					//printf("video decoder a frame: pts(%lld)\n", cvtFrame->pts);
 					m_pEvent->VideoEvent(cvtFrame);
 					
 					av_frame_unref(srcFrame);

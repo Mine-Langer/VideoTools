@@ -17,7 +17,7 @@ private:
 
 
 private:
-	CDemultiplexer*	_demux = nullptr;
+	CDemultiplexer	_demux;
 	//CAudioDecoder	_audioDecoder;
 };
 

@@ -147,7 +147,7 @@ void CAudioEncoder::OnWork()
 		else
 		{
 			if (frame == nullptr) {
-
+				break;
 			}
 			else
 			{

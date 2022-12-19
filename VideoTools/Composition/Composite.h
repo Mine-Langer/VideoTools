@@ -10,7 +10,7 @@
 
 #define E_Play 0x1
 #define E_Save 0x2
-class Composite :public IDecoderEvent, public IDemuxEvent, public IRemuxEvent
+class Composite :public IDemuxEvent, public IDecoderEvent, public IRemuxEvent
 {
 public:
 	Composite();
@@ -35,10 +35,8 @@ private:
 	virtual void RemuxEvent(int nType) override;
 
 private:
-	void OpenAudio(std::vector<ItemElem>& vecAudio);
-	void OpenImage(std::vector<ItemElem>& vecImage);
-
-	bool GetAudioImage(const char* filename);
+	void OpenAudio(std::vector<ItemElem> vecAudio);
+	void OpenImage(std::vector<ItemElem> vecImage);
 
 	bool InitAudioEnc(enum AVCodecID codec_id);
 
@@ -96,59 +94,3 @@ private:
 	int m_type = 0; // 0: 预览播放  1：保存文件
 
 };
-
-#if 0
-class CImageFrame
-{
-public:
-	~CImageFrame();
-
-	bool Open(const char* szfile);
-
-	AVFrame* ImageFrame();
-
-private:
-	void Release();
-
-private:
-	AVFormatContext* m_pFormatCtx = nullptr;
-	AVCodecContext* m_pCodecCtx = nullptr;
-	AVFrame* m_pFrameData = nullptr;
-};
-
-
-class CAudioFrame
-{
-public:
-	~CAudioFrame();
-
-	void SetRange(int begin, int end);
-
-	bool Open(const char* szfile, int begin = 0, int end = 0);
-
-	AVFrame* AudioFrame(bool& bstatus);
-
-private:
-	void Release();
-
-	void OnRun();
-
-private:
-	AVFormatContext* m_pFormatCtx = nullptr;
-	AVCodecContext* m_pCodecCtx = nullptr;
-	SwrContext* m_swr_ctx = nullptr;
-
-	int64_t m_begin_pts = 0, m_end_pts = 0;
-	int m_audio_idx = -1;
-
-	int m_swr_sample_rate = 0;
-	AVChannelLayout m_swr_ch_layout;
-	AVSampleFormat m_swr_sample_fmt;
-
-	SafeQueue<AVFrame*> m_frameQueueData;
-	std::thread m_tRead;
-	bool m_bRun = false;
-
-	double m_timebase = 0.0;
-};
-#endif

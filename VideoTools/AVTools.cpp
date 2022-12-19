@@ -2,7 +2,6 @@
 
 AVTools::AVTools()
 {
-    _demux = new CDemultiplexer();
 }
 
 AVTools::~AVTools()
@@ -12,10 +11,10 @@ AVTools::~AVTools()
 
 bool AVTools::run()
 {
-    if (!_demux->Open("D:/documents/OneDrive/video/QQÊÓÆµ¸ãÇ®.mp4"))
+    if (!_demux.Open("D:/documents/OneDrive/video/QQÊÓÆµ¸ãÇ®.mp4"))
         return false;
 
-    _demux->Start(this);
+    _demux.Start(this);
 
 //    if (!_audioDecoder.Open(_demux))
 //        return false;
