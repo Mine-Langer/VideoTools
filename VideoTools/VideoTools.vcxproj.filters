@@ -30,6 +30,27 @@
     <Filter Include="Conversion">
       <UniqueIdentifier>{ed23ba18-17d9-4f32-8b5b-fe95470e8ce4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="解复用器">
+      <UniqueIdentifier>{2ec6fae7-dd1a-4676-a59e-50ff895739d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="重封装复用器">
+      <UniqueIdentifier>{d63c6b5a-1be4-4837-8cc7-813e8b803c94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="音频解码">
+      <UniqueIdentifier>{ece7f3da-0c7f-4749-8071-8b0e7abe42c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="音频编码">
+      <UniqueIdentifier>{fde98fe6-5d18-4e05-a73f-74fba6f2f76c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="图像编码">
+      <UniqueIdentifier>{0f639671-b6ca-4c60-8af4-d9c5e0146bf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="图像解码">
+      <UniqueIdentifier>{2b384269-2716-42bd-85b6-f06e51964d87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="视频滤镜">
+      <UniqueIdentifier>{9917ae4a-c3ce-4d78-9b0a-10141e2bc03b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="avtools.qrc">
@@ -61,28 +82,10 @@
     <ClCompile Include="Composition\Composite.cpp">
       <Filter>Composition</Filter>
     </ClCompile>
-    <ClCompile Include="VideoDecoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Demultiplexer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FilterVideo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Composition\AVTextureBar.cpp">
       <Filter>Composition</Filter>
     </ClCompile>
     <ClCompile Include="AVTools.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioDecoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoEncoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioEncoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="capture\captureScreen.cpp">
@@ -94,14 +97,32 @@
     <ClCompile Include="Conversion\qvideoinfo.cpp">
       <Filter>Conversion</Filter>
     </ClCompile>
-    <ClCompile Include="Remultiplexer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DxAudioPlayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoEncoder.cpp">
+      <Filter>图像编码</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDecoder.cpp">
+      <Filter>图像解码</Filter>
+    </ClCompile>
+    <ClCompile Include="Remultiplexer.cpp">
+      <Filter>重封装复用器</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterVideo.cpp">
+      <Filter>视频滤镜</Filter>
+    </ClCompile>
+    <ClCompile Include="Demultiplexer.cpp">
+      <Filter>解复用器</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioDecoder.cpp">
+      <Filter>音频解码</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioEncoder.cpp">
+      <Filter>音频编码</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -117,32 +138,11 @@
     <ClInclude Include="Composition\Composite.h">
       <Filter>Composition</Filter>
     </ClInclude>
-    <ClInclude Include="VideoDecoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Demultiplexer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SafeQueue.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FilterVideo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioDecoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VideoEncoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioEncoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="capture\captureScreen.h">
       <Filter>capture</Filter>
-    </ClInclude>
-    <ClInclude Include="Remultiplexer.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AVTools.h">
       <Filter>Header Files</Filter>
@@ -155,6 +155,27 @@
     </ClInclude>
     <ClInclude Include="avSync.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioEncoder.h">
+      <Filter>音频编码</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioDecoder.h">
+      <Filter>音频解码</Filter>
+    </ClInclude>
+    <ClInclude Include="Demultiplexer.h">
+      <Filter>解复用器</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterVideo.h">
+      <Filter>视频滤镜</Filter>
+    </ClInclude>
+    <ClInclude Include="Remultiplexer.h">
+      <Filter>重封装复用器</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoDecoder.h">
+      <Filter>图像解码</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoEncoder.h">
+      <Filter>图像编码</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
