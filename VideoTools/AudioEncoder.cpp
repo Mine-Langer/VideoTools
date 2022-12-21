@@ -30,6 +30,7 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
 	
 	m_pStream = avformat_new_stream(formatCtx, nullptr);
 	m_pStream->time_base = m_pCodecCtx->time_base;
+	m_pStream->id = formatCtx->nb_streams - 1;
 
 	if (formatCtx->oformat->flags & AVFMT_GLOBALHEADER)
 		m_pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -209,6 +210,8 @@ bool CAudioEncoder::ReadPacketFromFifo()
 
 		av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
 		pkt->stream_index = m_pStream->index;
+		pkt->opaque = new int;
+		memcpy(pkt->opaque, &outputFrame->nb_samples, sizeof(int));
 
 		m_pEvent->AudioEvent(pkt);
 

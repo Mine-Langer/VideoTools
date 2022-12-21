@@ -125,7 +125,12 @@ void CRemultiplexer::OnWork()
             if (m_audioPktQueue.Pop(pkt_a)) {
                 if (pkt_a == nullptr)
                     break;
-
+                if (pkt_a->opaque)
+				{
+					int nSanples = *(int*)pkt_a->opaque;
+					audioIdx += nSanples;
+                    delete pkt_a->opaque;
+				}
                 av_interleaved_write_frame(m_pFormatCtx, pkt_a);
                 av_packet_free(&pkt_a);
             }
