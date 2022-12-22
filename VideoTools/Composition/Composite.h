@@ -91,6 +91,5 @@ private:
 	std::thread m_tv_demux;
 
 	AVState m_state = NotStarted;
-	int m_type = 0; // 0: 预览播放  1：保存文件
 
 };

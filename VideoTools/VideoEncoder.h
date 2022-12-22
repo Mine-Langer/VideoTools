@@ -6,7 +6,7 @@ class IEncoderEvent
 public:
 	virtual bool VideoEvent(AVPacket* pkt) = 0;
 
-	virtual bool AudioEvent(AVPacket* pkt) = 0;
+	virtual bool AudioEvent(AVPacket* pkt, int64_t pts) = 0;
 };
 
 class CVideoEncoder
@@ -24,6 +24,8 @@ public:
 	void Release();
 
 	AVRational GetTimeBase();
+
+	uint64_t GetIndex();
 
 private:
 	void OnWork();

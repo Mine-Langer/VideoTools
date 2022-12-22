@@ -132,7 +132,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="QPushButton" name="btnVideoSplit">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -140,7 +140,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>PushButton</string>
+            <string>视频分割</string>
            </property>
            <property name="checkable">
             <bool>true</bool>

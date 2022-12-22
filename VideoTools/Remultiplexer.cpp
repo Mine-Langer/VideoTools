@@ -83,9 +83,10 @@ bool CRemultiplexer::VideoEvent(AVPacket* pkt)
     return true;
 }
 
-bool CRemultiplexer::AudioEvent(AVPacket* pkt)
+bool CRemultiplexer::AudioEvent(AVPacket* pkt, int64_t pts)
 {
     m_audioPktQueue.MaxSizePush(pkt, &m_bRun);
+    m_audioPtsQueue.MaxSizePush(pts, &m_bRun);
 
     return true;
 }
@@ -95,7 +96,7 @@ void CRemultiplexer::OnWork()
     // Ð´ÎÄ¼þÍ·
     avformat_write_header(m_pFormatCtx, nullptr);
 
-    int audioIdx = 0, videoIdx = 0;
+    int64_t audioIdx = 0, videoIdx = 0;
     bool endV = false, endA = false;
     while (m_bRun)
     {
@@ -107,17 +108,11 @@ void CRemultiplexer::OnWork()
         if (0 > av_compare_ts(videoIdx, m_videoEncoder.GetTimeBase(), audioIdx, m_audioEncoder.GetTimeBase()))
         {
             AVPacket* v_pkt = nullptr;
-            //m_videoPktQueue.Pop(v_pkt);
-            v_pkt = m_videoPktQueue.Front();
-
-            if (v_pkt) 
+            if (m_videoPktQueue.Pop(v_pkt)) //v_pkt = m_videoPktQueue.Front();
             {
-                videoIdx++;
                 av_interleaved_write_frame(m_pFormatCtx, v_pkt);
-            //    av_packet_free(&v_pkt);
+                videoIdx++;
             }
-            else
-                endV = true;
         }
         else
         {
@@ -125,14 +120,12 @@ void CRemultiplexer::OnWork()
             if (m_audioPktQueue.Pop(pkt_a)) {
                 if (pkt_a == nullptr)
                     break;
-                if (pkt_a->opaque)
-				{
-					int nSanples = *(int*)pkt_a->opaque;
-					audioIdx += nSanples;
-                    delete pkt_a->opaque;
-				}
+
+                m_audioPtsQueue.Pop(audioIdx);
+
                 av_interleaved_write_frame(m_pFormatCtx, pkt_a);
                 av_packet_free(&pkt_a);
+                audioIdx += 1024;
             }
             else
                 endA = true;

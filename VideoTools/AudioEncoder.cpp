@@ -103,39 +103,9 @@ bool CAudioEncoder::PushFrameToFifo(AVFrame* frameData)
 	return true;
 }
 
-AVPacket* CAudioEncoder::GetPacketFromFifo(int* aIdx)
+int CAudioEncoder::GetIndex()
 {
-	int fifosize = av_audio_fifo_size(m_pAudioFifo);
-	if (fifosize >= m_pCodecCtx->frame_size)
-	{
-		const int framesize = FFMIN(fifosize, m_pCodecCtx->frame_size);
-
-		AVFrame* pFrame = AllocOutputFrame(framesize);
-
-		av_audio_fifo_read(m_pAudioFifo, (void**)pFrame->data, framesize);
-		pFrame->pts = m_frameIndex;
-		m_frameIndex += pFrame->nb_samples;
-		*aIdx = m_frameIndex;
-
-		if (0 > avcodec_send_frame(m_pCodecCtx, pFrame)) {
-			av_frame_free(&pFrame);
-			return nullptr;
-		}
-
-		AVPacket* pkt = av_packet_alloc();
-		if (0 > avcodec_receive_packet(m_pCodecCtx, pkt)) {
-			av_frame_free(&pFrame);
-			av_packet_free(&pkt);
-			return nullptr;
-		}
-		av_frame_free(&pFrame);
-
-		av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
-		pkt->stream_index = m_pStream->index;
-
-		return pkt;
-	}
-	return nullptr;
+	return m_frameIndex;
 }
 
 void CAudioEncoder::OnWork()
@@ -210,10 +180,8 @@ bool CAudioEncoder::ReadPacketFromFifo()
 
 		av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
 		pkt->stream_index = m_pStream->index;
-		pkt->opaque = new int;
-		memcpy(pkt->opaque, &outputFrame->nb_samples, sizeof(int));
 
-		m_pEvent->AudioEvent(pkt);
+		m_pEvent->AudioEvent(pkt, m_frameIndex);
 
 		int realtime = pkt->pts * av_q2d(m_pCodecCtx->time_base);
 		printf("pts:%lld  realtime:%d  framesize:%d\r\n", pkt->pts, realtime, frameSize);

@@ -80,6 +80,11 @@ AVRational CVideoEncoder::GetTimeBase()
 	return m_pCodecCtx->time_base;
 }
 
+uint64_t CVideoEncoder::GetIndex()
+{
+	return m_pts;
+}
+
 void CVideoEncoder::OnWork()
 {
 	AVFrame* pFrame = nullptr;
@@ -92,21 +97,25 @@ void CVideoEncoder::OnWork()
 			if (!pFrame)
 				break;
 
-			pFrame->pts = m_pts++;
-			if (0 == avcodec_send_frame(m_pCodecCtx, pFrame))
-			{
-				AVPacket* pkt = av_packet_alloc();
-				if (0 == avcodec_receive_packet(m_pCodecCtx, pkt))
+			while (true)
+			{	
+				pFrame->pts = m_pts++;
+				if (0 == avcodec_send_frame(m_pCodecCtx, pFrame))
 				{
-					av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
-					pkt->stream_index = m_pStream->index;
-					m_pEvent->VideoEvent(pkt);
-				}
-				else
-				{
-					av_packet_free(&pkt);
+					AVPacket* pkt = av_packet_alloc();
+					if (0 == avcodec_receive_packet(m_pCodecCtx, pkt))
+					{
+						av_packet_rescale_ts(pkt, m_pCodecCtx->time_base, m_pStream->time_base);
+						pkt->stream_index = m_pStream->index;
+						m_pEvent->VideoEvent(pkt);
+					}
+					else
+					{
+						av_packet_free(&pkt);
+					}
 				}
 			}
+			av_frame_free(&pFrame);
 		}
 	}
 }

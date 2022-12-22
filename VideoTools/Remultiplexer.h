@@ -29,7 +29,7 @@ public:
 private:
 	virtual bool VideoEvent(AVPacket* pkt) override;
 
-	virtual bool AudioEvent(AVPacket* pkt) override;
+	virtual bool AudioEvent(AVPacket* pkt, int64_t pts) override;
 
 private:
 	void OnWork();
@@ -47,6 +47,7 @@ private:
 	SafeQueue<AVFrame*> m_audioFrameQueue;
 	SafeQueue<AVFrame*> m_videoFrameQueue;
 
+	SafeQueue<int64_t> m_audioPtsQueue;
 	SafeQueue<AVPacket*> m_audioPktQueue;
 	SafeQueue<AVPacket*> m_videoPktQueue;
 };

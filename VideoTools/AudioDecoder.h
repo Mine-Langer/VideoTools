@@ -28,7 +28,7 @@ public:
 	bool SendPacket(AVPacket* pkt);
 
 	void GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
-	bool SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
+	int SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
 	
 	AVChannelLayout GetChannelLayout();
 	double Timebase();

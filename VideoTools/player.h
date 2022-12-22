@@ -28,10 +28,8 @@ public:
 
 	void Release();
 
-/// <summary>
-/// composite function
-/// </summary>
-	void SendAudioFrane(AVFrame* frame);
+	void SendAudioFrame(AVFrame* frame);
+	void SendVideoFrame(AVFrame* frame);
 
 	void PlayAudio();
 

@@ -65,8 +65,17 @@ void Composite::Play(std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vec
 {
 	m_nType = 1; // ²¥·Å
 
+	m_outputWidth = m_videoWidth;
+	m_outputHeight = m_videoHeight;
+
 	m_player.SetView(m_hWndView, m_videoWidth, m_videoHeight);
-	SDL_Rect rect;
+	
+	m_tv_demux = std::thread(&Composite::OpenImage, this, vecImage);
+
+	m_ta_demux = std::thread(&Composite::OpenAudio, this, vecMusic);
+
+	m_player.Start();
+	/*SDL_Rect rect;
 	for (int i = 0; i < vecImage.size(); i++)
 	{
 		std::string strFile = vecMusic[i].filename.toStdString();
@@ -103,7 +112,7 @@ void Composite::Play(std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vec
 		m_audioDecoder.Start(this);
 		
 		m_player.PlayAudio();
-	}
+	}*/
 
 }
 
@@ -118,6 +127,7 @@ bool Composite::InitWnd(HWND pWnd, int width, int height)
 
 bool Composite::SaveFile(const char* szOutput, std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vecMusic)
 {
+	m_nType = 2;
 	av_channel_layout_default(&m_out_ch_layout, 2);
 	m_out_sample_rate = 44100;
 	m_out_sample_fmt = AV_SAMPLE_FMT_FLTP;
@@ -140,7 +150,10 @@ bool Composite::VideoEvent(AVFrame* frame)
 	if (frame != nullptr)
 		vdata = av_frame_clone(frame);
 
-	m_remux.SendFrame(vdata, AVMEDIA_TYPE_VIDEO);
+	if (m_nType == 1)
+		m_player.SendVideoFrame(vdata);
+	else
+		m_remux.SendFrame(vdata, AVMEDIA_TYPE_VIDEO);
 
 	return true;
 }
@@ -150,7 +163,7 @@ bool Composite::AudioEvent(AVFrame* frame)
 	bool bRun = (m_state != Stopped);
 	
 	if (m_nType == 1)
-		m_player.SendAudioFrane(frame);
+		m_player.SendAudioFrame(frame);
 	else
 		m_remux.SendFrame(frame, AVMEDIA_TYPE_AUDIO);
 

@@ -18,7 +18,7 @@ public:
 
 	bool PushFrame(AVFrame* frame);
 
-	AVPacket* GetPacketFromFifo(int* aIdx);
+	int GetIndex();
 
 private:
 	void OnWork();

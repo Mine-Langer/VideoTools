@@ -121,9 +121,14 @@ void CPlayer::Release()
 }
 
 
-void CPlayer::SendAudioFrane(AVFrame* frame)
+void CPlayer::SendAudioFrame(AVFrame* frame)
 {
 	m_audioFrameQueue.MaxSizePush(frame, &m_bRun);
+}
+
+void CPlayer::SendVideoFrame(AVFrame* frame)
+{
+	m_videoFrameQueue.MaxSizePush(frame, &m_bRun);
 }
 
 void CPlayer::PlayAudio()
