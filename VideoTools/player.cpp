@@ -50,17 +50,13 @@ bool CPlayer::Open(const char* szInput)
 	return true;
 }
 
-void CPlayer::SetView(HWND hWnd, int w, int h)
+void CPlayer::SetView(HWND hWnd)
 {
-	m_videoDecoder.SetSwsConfig(&m_rect, w, h);
+	if (!m_pWindow)
+		m_pWindow = SDL_CreateWindowFrom(hWnd);
 
-	m_pWindow = SDL_CreateWindowFrom(hWnd);
-
-	m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
-
-	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
-
-	//PlayAudio();
+	if (!m_pRender)
+		m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
 }
 
 void CPlayer::SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int samples)
@@ -77,9 +73,11 @@ void CPlayer::SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int sampl
 
 void CPlayer::Start()
 {
-	m_demux.Start(this);
-	m_videoDecoder.Start(this);
-	m_audioDecoder.Start(this);
+	//m_demux.Start(this);
+	//m_videoDecoder.Start(this);
+	//m_audioDecoder.Start(this);
+	
+	PlayAudio();
 
 	m_bRun = true;
 	m_tRender = std::thread(&CPlayer::OnRenderProc, this);
@@ -139,6 +137,19 @@ void CPlayer::PlayAudio()
 		return;
 	}
 	SDL_PauseAudio(0);
+}
+
+void CPlayer::CalcImageView(SDL_Rect rect)
+{
+	m_rect = rect;
+
+	if (m_pTexture)
+	{
+		SDL_DestroyTexture(m_pTexture);
+		m_pTexture = nullptr;
+	}
+
+	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
 }
 
 void CPlayer::OnRenderProc()

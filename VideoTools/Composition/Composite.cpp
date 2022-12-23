@@ -18,8 +18,11 @@ void Composite::OpenImage(std::vector<ItemElem> vecImage)
 
 		if (m_demuxImage.Open(szFilename.c_str()))
 		{
+			SDL_Rect rect;
 			m_videoDecoder.Open(&m_demuxImage);
-			m_videoDecoder.SetSwsConfig(nullptr, m_outputWidth, m_outputHeight);
+			m_videoDecoder.SetSwsConfig(&rect, m_outputWidth, m_outputHeight);
+			if (m_nType == 1)
+				m_player.CalcImageView(rect);
 
 			m_demuxImage.Start(this);
 
@@ -40,9 +43,11 @@ void Composite::OpenAudio(std::vector<ItemElem> vecAudio)
 		std::string szFilename = vecAudio[i].filename.toStdString();
 		if (m_demuxMusic.Open(szFilename.c_str()))
 		{
-			m_demuxMusic.SetUniqueStream(true, AVMEDIA_TYPE_VIDEO);
+			m_demuxMusic.SetUniqueStream(m_nType!=1, AVMEDIA_TYPE_VIDEO);
 			m_audioDecoder.Open(&m_demuxMusic);
-			m_audioDecoder.SetSwrContext(m_out_ch_layout, m_out_sample_fmt, m_out_sample_rate);
+			int nbSamples = m_audioDecoder.SetSwrContext(m_out_ch_layout, m_out_sample_fmt, m_out_sample_rate);
+			if (m_nType == 1)
+				m_player.SetAudioSpec(m_out_sample_rate, m_out_ch_layout, nbSamples);
 
 			m_demuxMusic.Start(this);
 
@@ -67,14 +72,18 @@ void Composite::Play(std::vector<ItemElem>& vecImage, std::vector<ItemElem>& vec
 
 	m_outputWidth = m_videoWidth;
 	m_outputHeight = m_videoHeight;
+	av_channel_layout_default(&m_out_ch_layout, 2);
+	m_out_sample_rate = 44100;
+	m_out_sample_fmt = AV_SAMPLE_FMT_S16;
 
-	m_player.SetView(m_hWndView, m_videoWidth, m_videoHeight);
+	m_player.SetView(m_hWndView);
 	
 	m_tv_demux = std::thread(&Composite::OpenImage, this, vecImage);
 
 	m_ta_demux = std::thread(&Composite::OpenAudio, this, vecMusic);
 
 	m_player.Start();
+
 	/*SDL_Rect rect;
 	for (int i = 0; i < vecImage.size(); i++)
 	{

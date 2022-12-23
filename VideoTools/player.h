@@ -14,7 +14,7 @@ public:
 
 	bool Open(const char* szInput);
 
-	void SetView(HWND hWnd, int w, int h);
+	void SetView(HWND hWnd);
 
 	void SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int samples);
 
@@ -32,6 +32,8 @@ public:
 	void SendVideoFrame(AVFrame* frame);
 
 	void PlayAudio();
+
+	void CalcImageView(SDL_Rect rect);
 
 private:
 	void OnPlayProc();
