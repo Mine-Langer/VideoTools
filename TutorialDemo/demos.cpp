@@ -592,3 +592,185 @@ bool CM3u8Test::OpenUrl(const char* szUrl)
 
 	return true;
 }
+
+/**************************************************************************/
+HttpClient::HttpClient()
+{
+	avformat_network_init();
+}
+
+HttpClient::~HttpClient()
+{
+	avformat_network_deinit();
+}
+
+void HttpClient::Run()
+{
+	int ret = 0;
+	AVDictionary* options = nullptr;
+	AVIOContext* client = nullptr;
+
+	av_log_set_level(AV_LOG_TRACE);
+
+	if ((ret = av_dict_set(&options, "listen", "2", 0)) < 0) {
+		char szError[256] = { 0 };
+		fprintf(stderr, "Failed to set listen mode for server: %s\n", av_make_error_string(szError, 256, ret));
+	}
+
+	if ((ret = avio_open2(&_server, "", AVIO_FLAG_WRITE, nullptr, &options))) {
+		char szError[256] = { 0 };
+		fprintf(stderr, "Failed to open server: %s\n", av_make_error_string(szError, 256, ret));
+	}
+
+	while (true)
+	{
+		ret = avio_accept(_server, &client);
+		if (ret < 0)
+			break;
+	}
+}
+
+/***********************************************************************************************/
+AVPixelFormat HWDecode::hw_pix_fmt = AV_PIX_FMT_NONE;
+HWDecode::HWDecode()
+{
+}
+
+HWDecode::~HWDecode()
+{
+}
+
+bool HWDecode::Open(const char* szFile)
+{
+	AVHWDeviceType type;
+	type = av_hwdevice_find_type_by_name("d3d11va");
+
+	src_packet = av_packet_alloc();
+
+	if (0 != avformat_open_input(&InputFmtCtx, szFile, nullptr, nullptr))
+		return false;
+
+	if (0 > avformat_find_stream_info(InputFmtCtx, nullptr))
+		return false;
+	
+	const AVCodec* codec = nullptr;
+	video_stream = av_find_best_stream(InputFmtCtx, AVMEDIA_TYPE_VIDEO, -1, -1, &codec, 0);
+	if (video_stream < 0)
+		return false;
+
+	int i = 0;
+	while (true)
+	{
+		const AVCodecHWConfig* config = avcodec_get_hw_config(codec, i++);
+		if (!config)
+			return false;
+
+		if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX && config->device_type == type)
+		{
+			hw_pix_fmt = config->pix_fmt;
+			break;
+		}
+	}
+
+	InputCodecCtx = avcodec_alloc_context3(codec);
+	AVStream* pStream = InputFmtCtx->streams[video_stream];
+
+	if (0 > avcodec_parameters_to_context(InputCodecCtx, pStream->codecpar))
+		return false;
+
+	InputCodecCtx->get_format = GetHWFormat;
+
+	if (!HwDecoderInit(type))
+		return false;
+
+	if (0 > avcodec_open2(InputCodecCtx, codec, nullptr))
+		return false;
+		
+	fopen_s(&fOut, "hw_out.mp4", "w+b");
+
+	while (true)
+	{
+		if (0 > av_read_frame(InputFmtCtx, src_packet))
+			break;
+
+		if (video_stream == src_packet->stream_index)
+		{
+			DecodeWrite(src_packet);
+		}
+		av_packet_unref(src_packet);
+	}
+	DecodeWrite(nullptr);
+
+	fclose(fOut);
+	av_packet_free(&src_packet);
+	avcodec_free_context(&InputCodecCtx);
+	avformat_close_input(&InputFmtCtx);
+	av_buffer_unref(&hw_device_ctx);
+
+	return true;
+}
+
+bool HWDecode::HwDecoderInit(const AVHWDeviceType type)
+{
+	if (0 > av_hwdevice_ctx_create(&hw_device_ctx, type, nullptr, nullptr, 0))
+		return false;
+
+	InputCodecCtx->hw_device_ctx = av_buffer_ref(hw_device_ctx);
+	
+	return true;
+}
+
+AVPixelFormat HWDecode::GetHWFormat(AVCodecContext* ctx, const AVPixelFormat* pix_fmts)
+{
+	const AVPixelFormat* p = nullptr;
+	for (p = pix_fmts; *p != -1; p++)
+	{
+		if (*p == hw_pix_fmt)
+			return *p;
+	}
+	fprintf(stderr, "Failed to get HW surface format.\n");
+	return AV_PIX_FMT_NONE;
+}
+
+bool HWDecode::DecodeWrite(AVPacket* packet)
+{
+	if (0 > avcodec_send_packet(InputCodecCtx, packet))
+		return false;
+	
+	while (true)
+	{
+		AVFrame* frame = av_frame_alloc();
+		if (0 > avcodec_receive_frame(InputCodecCtx, frame))
+		{
+			av_frame_free(&frame);
+			return false;
+		}
+
+		AVFrame* tmpFrame = nullptr;
+		AVFrame* sw_frame = av_frame_alloc();
+		if (frame->format == hw_pix_fmt)
+		{
+			if (0 > av_hwframe_transfer_data(sw_frame, frame, 0))
+			{
+				av_frame_free(&sw_frame);
+				av_frame_free(&frame);
+				return false;
+			}
+			tmpFrame = sw_frame;
+		}
+		else
+			tmpFrame = frame;
+
+		int size = av_image_get_buffer_size((AVPixelFormat)tmpFrame->format, tmpFrame->width, tmpFrame->height, 1);
+		uint8_t* buffer = (uint8_t*)av_malloc(size);
+		int ret = av_image_copy_to_buffer(buffer, size, tmpFrame->data, tmpFrame->linesize, (AVPixelFormat)tmpFrame->format, tmpFrame->width, tmpFrame->height, 1);
+		
+		fwrite(buffer, 1, size, fOut);
+
+		av_frame_free(&frame);
+		av_frame_free(&sw_frame);
+		av_freep(&buffer);
+	}
+
+	return true;
+}

@@ -20,8 +20,8 @@ private slots:
 
 private:
 	Ui::AVMainWnd ui;
-	HLCapture m_capture; //录屏
-	CompositeView m_compositeView; // 合成
-	QVideoConversion m_conversion; // 格式转换
+	HLCapture* m_capture; //录屏
+	CompositeView* m_compositeView; // 合成
+	QVideoConversion* m_conversion; // 格式转换
 	QWidget* m_pCurrentWidget = nullptr;
 };

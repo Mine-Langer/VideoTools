@@ -133,6 +133,7 @@
     <ClCompile Include="demos.cpp" />
     <ClCompile Include="drawText.cpp" />
     <ClCompile Include="FilterVideo.cpp" />
+    <ClCompile Include="ImageConvert.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +142,7 @@
     <ClInclude Include="demos.h" />
     <ClInclude Include="drawText.h" />
     <ClInclude Include="FilterVideo.h" />
+    <ClInclude Include="ImageConvert.h" />
     <ClInclude Include="SafeQueue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

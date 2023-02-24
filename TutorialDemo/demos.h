@@ -162,6 +162,52 @@ private:
 	AVCodecContext* m_pCodecCtx = nullptr;
 };
 
+
+class HttpClient
+{
+public:
+	HttpClient();
+	~HttpClient();
+
+	void Run();
+
+
+private:
+	AVIOContext* _server = nullptr;
+};
+
+
+class HWDecode
+{
+public:
+	HWDecode();
+	~HWDecode();
+
+	bool Open(const char* szFile);
+
+
+private:
+	bool HwDecoderInit(const AVHWDeviceType type);
+
+	static AVPixelFormat GetHWFormat(AVCodecContext* ctx, const AVPixelFormat* pix_fmts);
+
+	bool DecodeWrite(AVPacket* packet);
+
+private:
+	AVFormatContext* InputFmtCtx = nullptr;
+	AVCodecContext* InputCodecCtx = nullptr;
+
+	AVBufferRef* hw_device_ctx = nullptr;
+
+	AVPacket* src_packet = nullptr;
+
+	FILE* fOut = nullptr;
+
+	int video_stream = -1;
+
+	static AVPixelFormat hw_pix_fmt;
+};
+
 int OnFilterAudio(const char* szDur);
 
 int OnFilteringAudio(const char* szInput);

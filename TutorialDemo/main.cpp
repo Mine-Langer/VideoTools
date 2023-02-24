@@ -5,6 +5,7 @@
 #include "FilterVideo.h"
 #include "demos.h"
 #include "ConvertDemo.h"
+#include "ImageConvert.h"
 
 #undef main
 int main()
@@ -22,8 +23,19 @@ int main()
 	//CTransAAC t;
 	//t.Run("D:/CloudMusic/Brotherhood.mp3", "output.aac");
 
+#if 0
 	ConvertDemo cd;
 	cd.Save("output.mp4", "G:/CloudMusic/The Titan.mp3"); // G:\CloudMusic\The Titan.mp3  D:/CloudMusic/Brotherhood.mp3
+#elif 0
+	HWDecode hwd;
+	hwd.Open("D:/documents/OneDrive/video/QQ视频搞钱.mp4");
+#elif 1
+	ImageConvert imgCvt;
+	imgCvt.Open("D:/tools/RoboticProcessAutomation/src/resource/Click_screen.gif");
+	imgCvt.SetOutput();
+	imgCvt.Work();
+
+#endif
 
 	system("pause");
     return 0;
