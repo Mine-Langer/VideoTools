@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <VCProjectVersion>16.0</VCProjectVersion>
+    <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{087b7a9e-59a4-427e-a548-c54578d1e466}</ProjectGuid>
+    <ProjectGuid>{36798b4e-4b9d-4d12-9bf5-1b77ce31ea9c}</ProjectGuid>
     <RootNamespace>TutorialDemo</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -104,12 +104,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../library/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\library\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../library/lib/win64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\library\lib\win64</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -129,21 +129,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConvertDemo.cpp" />
-    <ClCompile Include="demos.cpp" />
-    <ClCompile Include="drawText.cpp" />
-    <ClCompile Include="FilterVideo.cpp" />
-    <ClCompile Include="ImageConvert.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="AudioRecorder.cpp" />
+    <ClCompile Include="AudioTranscode.cpp" />
+    <ClCompile Include="ListAVDevice.cpp" />
+    <ClCompile Include="TutorialDemo.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="common.h" />
-    <ClInclude Include="ConvertDemo.h" />
-    <ClInclude Include="demos.h" />
-    <ClInclude Include="drawText.h" />
-    <ClInclude Include="FilterVideo.h" />
-    <ClInclude Include="ImageConvert.h" />
-    <ClInclude Include="SafeQueue.h" />
+    <ClInclude Include="AudioRecorder.h" />
+    <ClInclude Include="AudioTranscode.h" />
+    <ClInclude Include="ffmpeg.h" />
+    <ClInclude Include="ListAVDevice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,7 +7,12 @@
 #undef main
 int main(int argc, char *argv[])
 {
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+    // QApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+
     QApplication a(argc, argv);
+    
     QTextCodec::setCodecForLocale(QTextCodec::codecForName("utf-8"));
 
     AVMainWnd w;
