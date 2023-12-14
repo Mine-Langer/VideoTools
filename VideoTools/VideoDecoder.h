@@ -31,7 +31,7 @@ public:
 
 	void Stop();
 
-	bool SendPacket(AVPacket* pkt);
+	void SendPacket(AVPacket* pkt);
 
 	void Clear();
 

@@ -64,4 +64,5 @@ extern "C"
 
 
 
+enum AVType { TAudio, TVideo, TAll };
 

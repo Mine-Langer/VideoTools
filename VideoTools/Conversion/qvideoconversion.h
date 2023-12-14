@@ -1,8 +1,8 @@
 #pragma once
-
 #include <QWidget>
 #include <QVector>
 #include "ui_qvideoconversion.h"
+#include "Common.h"
 #include "../Demultiplexer.h"
 #include "../Remultiplexer.h"
 
@@ -15,8 +15,13 @@ public:
 	~QVideoConversion();
 
 
+	void setAVType(AVType type);
+
+
 private:
-	
+	void InitView();
+
+private:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
 	virtual void CleanPacket() override;
 
@@ -31,8 +36,12 @@ signals:
 
 private slots:
 	void OnBtnAddFileClick();
+	void OnBtnAddPathClicked();
 	void OnBtnStartClick();
 	void CvtStatusSlot(int ntype);
+	void OnBtnChangeDirClicked();
+	void OnBtnOpenPathClicked();
+	void OnBtnOutputFmtClicked();
 
 private:
 	Ui::QVideoConversion ui;
@@ -44,7 +53,11 @@ private:
 	CVideoDecoder	m_videoDecoder;
 	CAudioDecoder	m_audioDecoder;
 
+	AVType m_avType;
+
+	QString m_szOutputSuffix;
 	QString m_szOutName = "output.flv";		// 转换后文件名
+	int m_outputBitRate = 320000;
 	int m_nOutWidth = 1280;
 	int m_nOutHeight = 720;
 };

@@ -47,12 +47,14 @@ void AVMainWnd::OnBtnMenuClicked()
 	{
 		ui.labelTitle->setText("ÊÓÆµ×ª»»");
 		layout->addWidget(m_conversion);
+		m_conversion->setAVType(TVideo);
 		m_pCurrentWidget = m_conversion;
 	}
 	else if (btnMenu == ui.btnAudioTrans)
 	{
 		ui.labelTitle->setText("ÒôÆµ×ª»»");
 		layout->addWidget(m_conversion);
+		m_conversion->setAVType(TAudio);
 		m_pCurrentWidget = m_conversion;
 	}
 	m_pCurrentWidget->setVisible(true);

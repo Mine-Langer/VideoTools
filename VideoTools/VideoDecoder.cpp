@@ -168,19 +168,9 @@ void CVideoDecoder::Stop()
 		m_thread.join();
 }
 
-bool CVideoDecoder::SendPacket(AVPacket* pkt)
-{
-	if (pkt == nullptr)
-		m_srcVPktQueue.MaxSizePush(pkt, &m_bRun);
-	else 
-	{
-		AVPacket* tpkt = av_packet_clone(pkt);
-		if (!tpkt)
-			return false;
-		m_srcVPktQueue.MaxSizePush(tpkt, &m_bRun);
-	}
-
-	return true;
+void CVideoDecoder::SendPacket(AVPacket* pkt)
+{	
+	m_srcVPktQueue.MaxSizePush(pkt, &m_bRun);
 }
 
 void CVideoDecoder::Clear()

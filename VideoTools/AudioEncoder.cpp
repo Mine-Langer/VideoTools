@@ -10,7 +10,8 @@ CAudioEncoder::~CAudioEncoder()
 
 }
 
-bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
+bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId, 
+	AVSampleFormat sampleFmt, int sampleRate, int bitRate)
 {
 	const AVCodec* pCodec = avcodec_find_encoder(codecId);
 	if (pCodec == nullptr)
@@ -22,9 +23,9 @@ bool CAudioEncoder::InitAudio(AVFormatContext* formatCtx, AVCodecID codecId)
 
 	m_pCodecCtx->codec_id = codecId;
 	av_channel_layout_default(&m_pCodecCtx->ch_layout, 2);
-	m_pCodecCtx->sample_fmt = pCodec->sample_fmts ? pCodec->sample_fmts[0] : AV_SAMPLE_FMT_FLTP;
-	m_pCodecCtx->sample_rate = 44100;
-	m_pCodecCtx->bit_rate = 96000;
+	m_pCodecCtx->sample_fmt = sampleFmt;
+	m_pCodecCtx->sample_rate = sampleRate;
+	m_pCodecCtx->bit_rate = bitRate;
 	m_pCodecCtx->strict_std_compliance = FF_COMPLIANCE_EXPERIMENTAL;
 	m_pCodecCtx->time_base = { 1, m_pCodecCtx->sample_rate };
 	

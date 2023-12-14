@@ -4,6 +4,9 @@
 #include "AudioRecorder.h"
 #include "AudioTranscode.h"
 
+int audio_idx;
+int runAAC(const char* szInput, const char* szOutput);
+
 int main()
 {
 #if 0

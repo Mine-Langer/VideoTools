@@ -25,7 +25,7 @@ public:
 	// 等待解码完成
 	bool WaitFinished();
 
-	bool SendPacket(AVPacket* pkt);
+	void SendPacket(AVPacket* pkt);
 
 	void GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
 	int SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);

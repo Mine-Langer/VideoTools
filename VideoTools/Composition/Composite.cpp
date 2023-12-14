@@ -145,7 +145,7 @@ bool Composite::SaveFile(const char* szOutput, std::vector<ItemElem>& vecImage, 
 
 	m_ta_demux = std::thread(&Composite::OpenAudio, this, vecMusic);
 
-	if (!m_remux.SetOutput(szOutput, m_outputWidth, m_outputHeight, m_out_ch_layout, m_out_sample_fmt, m_out_sample_rate))
+	if (!m_remux.SetOutput(szOutput, m_outputWidth, m_outputHeight, m_out_ch_layout, m_out_sample_fmt, m_out_sample_rate, 320000))
 		return false;
 
 	m_remux.Start(this);

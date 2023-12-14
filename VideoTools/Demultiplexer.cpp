@@ -32,18 +32,9 @@ bool CDemultiplexer::Open(const char* szInput, const AVInputFormat* ifmt, AVDict
 	if (0 > avformat_find_stream_info(m_pFormatCtx, nullptr))
 		return false;
 
-	for (int i = 0; i < m_pFormatCtx->nb_streams; i++)
-	{
-		if (m_pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
-		{
-			m_videoIndex = i;
-		}
-		else if (m_pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
-		{
-			m_audioIndex = i;
-		}
-	}
-
+	m_videoIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+	m_audioIndex = av_find_best_stream(m_pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+	
 	return true;
 }
 
@@ -116,8 +107,8 @@ AVFormatContext* CDemultiplexer::FormatContext()
 
 void CDemultiplexer::OnDemuxFunction()
 {
-	AVPacket* pkt = av_packet_alloc();
 	int aidx = 0, vidx = 0;
+	int err = 0;
 	while (m_bRun)
 	{
 		if (m_seek)
@@ -126,14 +117,20 @@ void CDemultiplexer::OnDemuxFunction()
 			m_pEvent->CleanPacket();
 			m_seek = false;
 		}
-		if (0 > av_read_frame(m_pFormatCtx, pkt))
+
+		AVPacket* pkt = av_packet_alloc();
+		if (0 > (err = av_read_frame(m_pFormatCtx, pkt)))
 		{
-			if (m_audioIndex >= 0)
-				m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);
-			if (m_videoIndex >= 0)
-				m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_VIDEO);
-			m_bRun = false;
-			printf("input file demux over. \n");
+			av_packet_free(&pkt);
+			if (err == AVERROR_EOF)
+			{
+				if (m_audioIndex >= 0)
+					m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_AUDIO);
+				if (m_videoIndex >= 0)
+					m_pEvent->DemuxPacket(nullptr, AVMEDIA_TYPE_VIDEO);
+				m_bRun = false;
+				printf("input file demux over. \n");
+			}
 		}
 		else
 		{
@@ -151,12 +148,11 @@ void CDemultiplexer::OnDemuxFunction()
 				//printf("	demux a video packet. %d\n", vidx++);
 				m_pEvent->DemuxPacket(pkt, AVMEDIA_TYPE_VIDEO);
 			}
-			//printf("pkt idx[%d][%d] pkt times:%.2f  duration:%.2f\n", pkt->stream_index, idxArr[pkt->stream_index],
-			//	av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base)*pkt->pts,
-			//	av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base) * pkt->duration);
+			printf("pkt idx[%d] pkt times:%.2f  duration:%.2f\n", pkt->stream_index,
+				av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base)*pkt->pts,
+				av_q2d(m_pFormatCtx->streams[pkt->stream_index]->time_base) * pkt->duration);
 		}
 	}
-	av_packet_free(&pkt);
 
 	Release();
 }

@@ -27,40 +27,34 @@ void AudioTranscode::Run()
 
 bool AudioTranscode::open_input_file(const char* filename)
 {
-	/* Open the input file to read from it. */
 	if (0 > avformat_open_input(&input_format_context, filename, nullptr, nullptr)) {
 		return false;
 	}
 
-	/* Get information on the input file (number of streams etc.). */
 	if (0 > avformat_find_stream_info(input_format_context, nullptr)) {
 		return false;
 	}
 
 	const AVCodec* input_codec = nullptr;
-	int idx = av_find_best_stream(input_format_context, AVMEDIA_TYPE_AUDIO, -1, -1, &input_codec, 0);
-	if (0 > idx)
+	audio_index = av_find_best_stream(input_format_context, AVMEDIA_TYPE_AUDIO, -1, -1, &input_codec, 0);
+	if (0 > audio_index)
 		return false;
 
-	const AVStream* stream = input_format_context->streams[idx];
+	const AVStream* stream = input_format_context->streams[audio_index];
 
-	/* Allocate a new decoding context. */
 	input_codec_context = avcodec_alloc_context3(input_codec);
 	if (!input_codec_context) {
 		return false;
 	}
 
-	/* Initialize the stream parameters with demuxer information. */
 	if (0 > avcodec_parameters_to_context(input_codec_context, stream->codecpar)) {
 		return false;
 	}
 
-	/* Open the decoder for the audio stream to use it later. */
 	if (0 > avcodec_open2(input_codec_context, input_codec, NULL)) {
 		return false;
 	}
 
-	/* Set the packet timebase for the decoder. */
 	input_codec_context->pkt_timebase = stream->time_base;
 	
 	return true;
@@ -145,122 +139,89 @@ bool AudioTranscode::write_output_file_header()
 
 void AudioTranscode::OnWork()
 {
+	int ret = 0;
+	AVFrame* input_frame = av_frame_alloc();
+	input_packet = av_packet_alloc();
+
 	while (true)
 	{
-		const int output_frame_size = output_codec_context->frame_size;
-		int finished = 0;
-	
-		while (av_audio_fifo_size(fifo) < output_frame_size)
+		ret = decodeAudioFrame(input_frame);
+		if (ret == 1)
 		{
-			if (readDecodeConvertAndStore(&finished))
-				return;
-
-			if (finished)
-				break;
+			ret = convertStore(input_frame);
+			if (ret == 1)
+				loadEncodeAndWrite();
+			//encodeAudioFrame(input_frame);
 		}
-
-		while (av_audio_fifo_size(fifo) >= output_frame_size || (finished && av_audio_fifo_size(fifo) > 0))
-		{
-			if (!loadEncodeAndWrite())
-				return;
-		}
-
-
-		if (finished) {
-
+		else if (ret == 2){
+			break;
 		}
 	}
+
+	av_frame_free(&input_frame);
+	av_packet_free(&input_packet);
 
 	av_write_trailer(output_format_context);
 }
 
-bool AudioTranscode::readDecodeConvertAndStore(int* finished)
+int AudioTranscode::decodeAudioFrame(AVFrame* frame)
 {
-	bool bRet = false;
-	int data_present;
-	AVFrame* inputFrame = av_frame_alloc();
-	if (!decodeAudioFrame(inputFrame, &data_present, finished))
-		return false;
-
-	uint8_t** converted_input_samples = nullptr;
-	do 
-	{
-		if (*finished) {
-			bRet = true;
-			break;
+	int err = av_read_frame(input_format_context, input_packet);
+	if (err < 0) {
+		if (err == AVERROR_EOF) {
+			return 2;
 		}
-
-		if (data_present) {
-			if (0 > av_samples_alloc_array_and_samples(&converted_input_samples, nullptr,
-				output_codec_context->ch_layout.nb_channels, inputFrame->nb_samples,
-				output_codec_context->sample_fmt, 0))
-				break;
-
-			if (0 > swr_convert(resample_context, converted_input_samples, inputFrame->nb_samples, 
-				(const uint8_t**)inputFrame->extended_data, inputFrame->nb_samples))
-				break;
-
-			if (0 > av_audio_fifo_realloc(fifo, av_audio_fifo_size(fifo)+inputFrame->nb_samples))
-				break;
-
-			if (inputFrame->nb_samples > av_audio_fifo_write(fifo,(void**)converted_input_samples,inputFrame->nb_samples))
-				break;
-
-			bRet = true;
-		}
-	} while (false);
+		return 0;
+	}
 	
-	if (converted_input_samples)
-		av_freep(&converted_input_samples[0]);
-	av_freep(&converted_input_samples);
-	av_frame_free(&inputFrame);
-	return bRet;
+	if (input_packet->stream_index != audio_index) {
+		av_packet_unref(input_packet);
+		return 0;
+	}
+
+	err = avcodec_send_packet(input_codec_context, input_packet);
+	if (err < 0) {
+		av_packet_unref(input_packet);
+		return 0;
+	}
+
+	av_packet_unref(input_packet);
+	err = avcodec_receive_frame(input_codec_context, frame);
+	if (err < 0)
+		return 0;
+
+	return 1;
 }
 
-bool AudioTranscode::decodeAudioFrame(AVFrame* frame, int* data_present, int* finished)
+int AudioTranscode::convertStore(AVFrame* frame)
 {
-	bool bRet = false;
-	AVPacket* inputPacket = av_packet_alloc();
-	*data_present = 0;
-	*finished = 0;
+	AVFrame* cvt_frame = av_frame_alloc();
+	cvt_frame->nb_samples = frame->nb_samples;
+	cvt_frame->format = output_codec_context->sample_fmt;
+	cvt_frame->sample_rate = output_codec_context->sample_rate;
+	av_channel_layout_copy(&cvt_frame->ch_layout, &output_codec_context->ch_layout);
+	if (0 > av_frame_get_buffer(cvt_frame, 0)) {
+		av_frame_free(&cvt_frame);
+		return 0;
+	}
 
-	do 
-	{
-		int err = av_read_frame(input_format_context, inputPacket);
-		if (0 > err)
-		{
-			if (err == AVERROR_EOF)
-				*finished = true;
-			else
-				break;
-		}
+	if (0 > swr_convert(resample_context, cvt_frame->data, cvt_frame->nb_samples, 
+		(const uint8_t**)frame->data, frame->nb_samples)) { 
+		av_frame_free(&cvt_frame);
+		return 0;
+	}
 
-		if (0 > avcodec_send_packet(input_codec_context, inputPacket))
-			break;
+	cvt_frame->pts = frame->pts;
+	cvt_frame->best_effort_timestamp = frame->best_effort_timestamp;
 
-		err = avcodec_receive_frame(input_codec_context, frame);
-		if (err == AVERROR(EAGAIN)) {
-			bRet = true;
-			break;
-		}
-		else if (err == AVERROR_EOF) {
-			*finished = 1;
-			bRet = true;
-			break;
-		}
-		else if (err < 0) {
-			break;
-		}
-		else {
-			*data_present = true;
-			bRet = true;
-			break;
-		}
+	int frame_size = cvt_frame->nb_samples;
+	int fifo_size = av_audio_fifo_size(fifo);
+	av_audio_fifo_realloc(fifo, frame_size + fifo_size);
+	av_audio_fifo_write(fifo, (void**)cvt_frame->data, frame_size);
 
-	} while (false);
-	
-	av_packet_free(&inputPacket);
-	return bRet;
+	av_frame_free(&cvt_frame);
+
+	return 1;
 }
 
 bool AudioTranscode::loadEncodeAndWrite()
@@ -283,8 +244,7 @@ bool AudioTranscode::loadEncodeAndWrite()
 		return false;
 	}
 
-	int data_written;
-	if (!encodeAudioFrame(output_frame, &data_written)) {
+	if (!encodeAudioFrame(output_frame)) {
 		av_frame_free(&output_frame);
 		return false;
 	}
@@ -292,44 +252,36 @@ bool AudioTranscode::loadEncodeAndWrite()
 	return false;
 }
 
-bool AudioTranscode::encodeAudioFrame(AVFrame* frame, int* data_present)
+int AudioTranscode::encodeAudioFrame(AVFrame* frame)
 {
 	AVPacket* output_packet = av_packet_alloc();
-	bool bRet = false;
 
 	if (frame) {
 		frame->pts = pts;
 		pts += frame->nb_samples;
 	}
 
-	*data_present = 0;
+	int err = avcodec_send_frame(output_codec_context, frame);
+	if (err < 0 && err != AVERROR_EOF) {
+		av_packet_free(&output_packet);
+		return 0;
+	}
 
-	do 
-	{
-		int err = avcodec_send_frame(output_codec_context, frame);
-		if (err < 0 && err != AVERROR_EOF) {
-			break;
-		}
-
-		err = avcodec_receive_packet(output_codec_context, output_packet);
-		if (err == AVERROR(EAGAIN) || err == AVERROR_EOF) {
-			bRet = true;
-			break;
-		}
-		else if (err < 0) {
-			break;
-		}
-		else {
-			bRet = true;
-			*data_present = true;
-		}
-
-		if (*data_present || (0 > av_write_frame(output_format_context, output_packet)))
-			break;
-	} while (false);
+	err = avcodec_receive_packet(output_codec_context, output_packet);
+	if (err < 0) {
+		av_packet_free(&output_packet);
+		return 0;
+	}
+	else if (err == AVERROR(EAGAIN) || err == AVERROR_EOF) {
+		av_packet_free(&output_packet);
+		return 1;
+	}
+	else {
+		av_write_frame(output_format_context, output_packet);
+	}
 	
 	av_packet_free(&output_packet);
-	return bRet;
+	return 1;
 }
 
 void AudioTranscode::clean()

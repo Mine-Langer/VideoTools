@@ -8,7 +8,8 @@ public:
 	CAudioEncoder();
 	~CAudioEncoder();
 
-	bool InitAudio(AVFormatContext* formatCtx, AVCodecID codecId);
+	bool InitAudio(AVFormatContext* formatCtx, AVCodecID codecId,
+		AVSampleFormat sampleFmt=AV_SAMPLE_FMT_FLTP,int sampleRate=44100,int bitRate=96000);
 
 	void Start(IEncoderEvent* pEvt);
 

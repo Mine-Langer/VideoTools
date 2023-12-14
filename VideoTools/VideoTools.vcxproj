@@ -107,6 +107,7 @@
     <ClCompile Include="AudioEncoder.cpp" />
     <ClCompile Include="capture\captureScreen.cpp" />
     <ClCompile Include="Composition\AVTextureBar.cpp" />
+    <ClCompile Include="Conversion\OptionSelectWnd.cpp" />
     <ClCompile Include="Conversion\qvideoconversion.cpp" />
     <ClCompile Include="Conversion\qvideoinfo.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
@@ -128,6 +129,7 @@
     <ClCompile Include="main.cpp" />
     <QtUic Include="capture\hlcapture.ui" />
     <QtUic Include="Composition\CompositeView.ui" />
+    <QtUic Include="Conversion\optionSelect.ui" />
     <QtUic Include="Conversion\qvideoconversion.ui" />
     <QtUic Include="Conversion\qvideoinfo.ui" />
   </ItemGroup>
@@ -137,6 +139,7 @@
     <ClInclude Include="capture\captureScreen.h" />
     <QtMoc Include="Conversion\qvideoconversion.h" />
     <QtMoc Include="Conversion\qvideoinfo.h" />
+    <QtMoc Include="Conversion\OptionSelectWnd.h" />
     <ClInclude Include="DxAudioPlayer.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="Remultiplexer.h" />

@@ -42,9 +42,9 @@ bool QVideoInfo::Open(const QString& szFile)
 	int s = int(duration - (3600 * h)) % 60;
 
 	ui.labelFileName->setText(filename);
-	ui.labelFormat->setText(QString("%1: %2").arg(QStringLiteral("格式")).arg(format.toUpper()));
-	ui.labelDuration->setText(QString("%1: %2:%3:%4").arg(QStringLiteral("时长")).arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
-	ui.labelSize->setText(QString("%1: %2 MB").arg(QStringLiteral("大小")).arg(filesize * 1.00 / 1024 / 1024));
-	ui.labelRevolutionRatio->setText(QString("%1: %2x%3").arg(QStringLiteral("分辨率")).arg(w).arg(height));
+	ui.labelFormat->setText(QString("%1: %2").arg("格式").arg(format.toUpper()));
+	ui.labelDuration->setText(QString("%1: %2:%3:%4").arg("时长").arg(h, 2, 10, QLatin1Char('0')).arg(m, 2, 10, QLatin1Char('0')).arg(s, 2, 10, QLatin1Char('0')));
+	ui.labelSize->setText(QString("%1: %2 MB").arg("大小").arg(filesize * 1.00 / 1024 / 1024));
+	ui.labelRevolutionRatio->setText(QString("%1: %2x%3").arg("分辨率").arg(w).arg(height));
 	return true;
 }

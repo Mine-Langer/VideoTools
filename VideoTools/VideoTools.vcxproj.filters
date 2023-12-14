@@ -124,6 +124,9 @@
     <ClCompile Include="AudioEncoder.cpp">
       <Filter>音频编码</Filter>
     </ClCompile>
+    <ClCompile Include="Conversion\OptionSelectWnd.cpp">
+      <Filter>Conversion</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -200,6 +203,9 @@
     <QtMoc Include="Conversion\qvideoinfo.h">
       <Filter>Conversion</Filter>
     </QtMoc>
+    <QtMoc Include="Conversion\OptionSelectWnd.h">
+      <Filter>Conversion</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="AVMainWnd.ui">
@@ -215,6 +221,9 @@
       <Filter>Conversion</Filter>
     </QtUic>
     <QtUic Include="Conversion\qvideoinfo.ui">
+      <Filter>Conversion</Filter>
+    </QtUic>
+    <QtUic Include="Conversion\optionSelect.ui">
       <Filter>Conversion</Filter>
     </QtUic>
   </ItemGroup>

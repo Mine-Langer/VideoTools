@@ -8,7 +8,8 @@ CRemultiplexer::~CRemultiplexer()
 {
 }
 
-bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight, AVChannelLayout chLayout, AVSampleFormat sampleFmt, int sampleRate)
+bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight, 
+    AVChannelLayout chLayout, AVSampleFormat sampleFmt, int sampleRate, int bitRate)
 {
     if (0 > avformat_alloc_output_context2(&m_pFormatCtx, nullptr, nullptr, szOutput))
         return false;
@@ -17,7 +18,7 @@ bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight, AV
 
     if (pOutFmt->audio_codec) 
     {
-        m_audioEncoder.InitAudio(m_pFormatCtx, pOutFmt->audio_codec);
+        m_audioEncoder.InitAudio(m_pFormatCtx, pOutFmt->audio_codec, sampleFmt, sampleRate, bitRate);
     }
 
     if (pOutFmt->video_codec) 
@@ -37,16 +38,15 @@ bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight, AV
 void CRemultiplexer::SendFrame(AVFrame* frame, int nType)
 {
     if (nType == AVMEDIA_TYPE_VIDEO)
-    {
-        AVFrame* tframe = nullptr;
-        if (frame)
-            tframe = av_frame_clone(frame);
+	{
+		AVFrame* tframe = nullptr;
+		if (frame)
+			tframe = av_frame_clone(frame);
         m_videoEncoder.PushFrame(tframe);
     }
     else if (nType == AVMEDIA_TYPE_AUDIO)
     {
-        if (frame)
-            m_audioEncoder.PushFrame(frame);
+        m_audioEncoder.PushFrame(frame); // 此frame已经是alloc 转换过得
     }
 }
 
@@ -77,6 +77,11 @@ bool CRemultiplexer::Start(IRemuxEvent* pEvt)
     return false;
 }
 
+void CRemultiplexer::SetType(AVType type)
+{
+    m_avType = type;
+}
+
 bool CRemultiplexer::VideoEvent(AVPacket* pkt)
 {
     m_videoPktQueue.MaxSizePush(pkt, &m_bRun);
@@ -95,11 +100,12 @@ void CRemultiplexer::OnWork()
 {
     // 写文件头
     avformat_write_header(m_pFormatCtx, nullptr);
-
+    int ret = 0;
     int64_t audioIdx = 0, videoIdx = 0;
     bool endV = false, endA = false;
     while (m_bRun)
     {
+#if 0
         if (m_videoPktQueue.Empty()){
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             continue;
@@ -132,6 +138,17 @@ void CRemultiplexer::OnWork()
         }
         if (endV && endA)
             break;
+#endif
+        if (m_avType == TAudio)
+            ret = WriteAudio(audioIdx);
+        else if (m_avType == TVideo)
+            ret = WriteImage(videoIdx);
+        else if (m_avType == TAll)
+            ret = WriteVideo(videoIdx, audioIdx);
+        
+        if (ret == 0)
+            break;
+
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("save file overd.\n");
@@ -140,4 +157,53 @@ void CRemultiplexer::OnWork()
     Release();
 
     m_pEvent->RemuxEvent(1);
+}
+
+int CRemultiplexer::WriteAudio(int64_t& idx)
+{
+	AVPacket* pkt_a = nullptr; // m_audioEncoder.GetPacketFromFifo(&audioIdx);
+	if (m_audioPktQueue.Pop(pkt_a)) 
+    {
+		if (pkt_a == nullptr)
+			return 0;
+
+		m_audioPtsQueue.Pop(idx);
+
+		av_interleaved_write_frame(m_pFormatCtx, pkt_a);
+		av_packet_free(&pkt_a);
+        idx += 1024;
+	}
+    return 1;
+}
+
+int CRemultiplexer::WriteImage(int64_t& idx)
+{
+	AVPacket* v_pkt = nullptr;
+	if (m_videoPktQueue.Pop(v_pkt)) //v_pkt = m_videoPktQueue.Front();
+	{
+        if (v_pkt == nullptr)
+            return 0;
+
+		av_interleaved_write_frame(m_pFormatCtx, v_pkt);
+        idx++;
+	}
+    return 1;
+}
+
+int CRemultiplexer::WriteVideo(int64_t& v_idx, int64_t& a_idx)
+{
+    int aret = 0, vret = 0;
+	// 判断音视频帧时序
+	if (0 > av_compare_ts(v_idx, m_videoEncoder.GetTimeBase(), a_idx, m_audioEncoder.GetTimeBase()))
+	{
+        vret = WriteImage(v_idx);
+	}
+	else
+	{
+        aret = WriteAudio(a_idx);
+	}
+    if (vret == 0 && aret == 0)
+        return 0;
+    
+    return 1;
 }

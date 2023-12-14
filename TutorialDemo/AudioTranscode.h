@@ -19,13 +19,13 @@ public:
 private:
 	void OnWork();
 
-	bool readDecodeConvertAndStore(int* finished);
+	int decodeAudioFrame(AVFrame* frame);
 
-	bool decodeAudioFrame(AVFrame* frame, int* data_present, int* finished);
+	int convertStore(AVFrame* frame);
 
 	bool loadEncodeAndWrite();
 
-	bool encodeAudioFrame(AVFrame* frame, int* data_present);
+	int encodeAudioFrame(AVFrame* frame);
 
 	void clean();
 
@@ -35,6 +35,9 @@ private:
 	SwrContext* resample_context = NULL;
 	AVAudioFifo* fifo = NULL;
 
+	AVPacket* input_packet = nullptr;
+
+	int audio_index = -1;
 	int64_t pts = 0;
 };
 
