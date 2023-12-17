@@ -27,6 +27,18 @@
     <ClCompile Include="AudioTranscode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="CmdUtils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ffmpeg_tools.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="sync_queue.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="objpool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ListAVDevice.h">
@@ -39,6 +51,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="AudioTranscode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CmdUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ffmpeg_tools.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="sync_queue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="objpool.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

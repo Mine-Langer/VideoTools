@@ -127,6 +127,9 @@
     <ClCompile Include="Conversion\OptionSelectWnd.cpp">
       <Filter>Conversion</Filter>
     </ClCompile>
+    <ClCompile Include="Conversion\QAudioConvertWnd.cpp">
+      <Filter>Conversion</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -206,6 +209,9 @@
     <QtMoc Include="Conversion\OptionSelectWnd.h">
       <Filter>Conversion</Filter>
     </QtMoc>
+    <QtMoc Include="Conversion\QAudioConvertWnd.h">
+      <Filter>Conversion</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="AVMainWnd.ui">
@@ -226,5 +232,11 @@
     <QtUic Include="Conversion\optionSelect.ui">
       <Filter>Conversion</Filter>
     </QtUic>
+    <QtUic Include="Conversion\AudioConvert.ui">
+      <Filter>Conversion</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="format.json" />
   </ItemGroup>
 </Project>

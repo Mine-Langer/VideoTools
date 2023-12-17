@@ -108,6 +108,7 @@
     <ClCompile Include="capture\captureScreen.cpp" />
     <ClCompile Include="Composition\AVTextureBar.cpp" />
     <ClCompile Include="Conversion\OptionSelectWnd.cpp" />
+    <ClCompile Include="Conversion\QAudioConvertWnd.cpp" />
     <ClCompile Include="Conversion\qvideoconversion.cpp" />
     <ClCompile Include="Conversion\qvideoinfo.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
@@ -129,6 +130,7 @@
     <ClCompile Include="main.cpp" />
     <QtUic Include="capture\hlcapture.ui" />
     <QtUic Include="Composition\CompositeView.ui" />
+    <QtUic Include="Conversion\AudioConvert.ui" />
     <QtUic Include="Conversion\optionSelect.ui" />
     <QtUic Include="Conversion\qvideoconversion.ui" />
     <QtUic Include="Conversion\qvideoinfo.ui" />
@@ -140,6 +142,7 @@
     <QtMoc Include="Conversion\qvideoconversion.h" />
     <QtMoc Include="Conversion\qvideoinfo.h" />
     <QtMoc Include="Conversion\OptionSelectWnd.h" />
+    <QtMoc Include="Conversion\QAudioConvertWnd.h" />
     <ClInclude Include="DxAudioPlayer.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="Remultiplexer.h" />
@@ -159,6 +162,9 @@
     <ClInclude Include="capture\CRecoder.h" />
     <QtMoc Include="capture\hlcapture.h" />
     <ClInclude Include="Common.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="format.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

@@ -131,14 +131,22 @@
   <ItemGroup>
     <ClCompile Include="AudioRecorder.cpp" />
     <ClCompile Include="AudioTranscode.cpp" />
+    <ClCompile Include="CmdUtils.cpp" />
+    <ClCompile Include="ffmpeg_tools.cpp" />
     <ClCompile Include="ListAVDevice.cpp" />
+    <ClCompile Include="objpool.cpp" />
+    <ClCompile Include="sync_queue.cpp" />
     <ClCompile Include="TutorialDemo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioRecorder.h" />
     <ClInclude Include="AudioTranscode.h" />
+    <ClInclude Include="CmdUtils.h" />
     <ClInclude Include="ffmpeg.h" />
+    <ClInclude Include="ffmpeg_tools.h" />
     <ClInclude Include="ListAVDevice.h" />
+    <ClInclude Include="objpool.h" />
+    <ClInclude Include="sync_queue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

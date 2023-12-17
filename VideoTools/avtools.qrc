@@ -3,4 +3,7 @@
         <file>res/frame.png</file>
         <file>res/music.png</file>
     </qresource>
+    <qresource prefix="/AvTools">
+        <file>format.json</file>
+    </qresource>
 </RCC>

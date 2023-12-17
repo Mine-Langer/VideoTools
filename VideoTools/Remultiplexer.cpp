@@ -82,6 +82,12 @@ void CRemultiplexer::SetType(AVType type)
     m_avType = type;
 }
 
+void CRemultiplexer::WaitFinished()
+{
+    if (m_thread.joinable())
+        m_thread.join();
+}
+
 bool CRemultiplexer::VideoEvent(AVPacket* pkt)
 {
     m_videoPktQueue.MaxSizePush(pkt, &m_bRun);
@@ -105,40 +111,6 @@ void CRemultiplexer::OnWork()
     bool endV = false, endA = false;
     while (m_bRun)
     {
-#if 0
-        if (m_videoPktQueue.Empty()){
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            continue;
-        }
-        // ÅÐ¶ÏÒôÊÓÆµÖ¡Ê±Ðò
-        if (0 > av_compare_ts(videoIdx, m_videoEncoder.GetTimeBase(), audioIdx, m_audioEncoder.GetTimeBase()))
-        {
-            AVPacket* v_pkt = nullptr;
-            if (m_videoPktQueue.Pop(v_pkt)) //v_pkt = m_videoPktQueue.Front();
-            {
-                av_interleaved_write_frame(m_pFormatCtx, v_pkt);
-                videoIdx++;
-            }
-        }
-        else
-        {
-            AVPacket* pkt_a = nullptr; // m_audioEncoder.GetPacketFromFifo(&audioIdx);
-            if (m_audioPktQueue.Pop(pkt_a)) {
-                if (pkt_a == nullptr)
-                    break;
-
-                m_audioPtsQueue.Pop(audioIdx);
-
-                av_interleaved_write_frame(m_pFormatCtx, pkt_a);
-                av_packet_free(&pkt_a);
-                audioIdx += 1024;
-            }
-            else
-                endA = true;
-        }
-        if (endV && endA)
-            break;
-#endif
         if (m_avType == TAudio)
             ret = WriteAudio(audioIdx);
         else if (m_avType == TVideo)
@@ -148,8 +120,6 @@ void CRemultiplexer::OnWork()
         
         if (ret == 0)
             break;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     printf("save file overd.\n");
     av_write_trailer(m_pFormatCtx);

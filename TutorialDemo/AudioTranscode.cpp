@@ -5,10 +5,10 @@
 
 void AudioTranscode::Run()
 {
-	if (!open_input_file("F:/CloudMusic/Paradox Interactive - The Titan.mp3"))
+	if (!open_input_file("output.aac")) // "F:/CloudMusic/Paradox Interactive - The Titan.mp3"
 		return;
 
-	if (!open_output_file("output.aac"))
+	if (!open_output_file("output.mp3"))
 		return;
 
 	if (!init_resampler())

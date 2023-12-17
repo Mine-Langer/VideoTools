@@ -16,7 +16,6 @@ QVideoConversion::QVideoConversion(QWidget *parent)
 
 	InitView();
 
-
 	connect(ui.btnAddFile, SIGNAL(clicked()), this, SLOT(OnBtnAddFileClick()));
 	connect(ui.btnAddPath, SIGNAL(clicked()), this, SLOT(OnBtnAddPathClicked()));
 	connect(ui.btnStart, SIGNAL(clicked()), this, SLOT(OnBtnStartClick()));
@@ -31,10 +30,10 @@ QVideoConversion::~QVideoConversion()
 }
 
 
-void QVideoConversion::setAVType(AVType type)
-{
-	m_avType = type;
-}
+// void QVideoConversion::setAVType(AVType type)
+// {
+// 	m_avType = type;
+// }
 
 void QVideoConversion::InitView()
 {
@@ -79,24 +78,19 @@ void QVideoConversion::RemuxEvent(int nType)
 void QVideoConversion::OnBtnAddFileClick()
 {
 	QString szTitle, szFilter;
-	if (m_avType == TAudio) {
-		szTitle = "请选择音频文件";
-		szFilter = "音频文件(*.mp3 *.aac *.wav);;所有文件(*.*)";
-	}
-	else if (m_avType == TVideo) {
-		szTitle = "请选择视频文件";
-		szFilter = "All Format (*.swf *.webm *.avi *.mp4 *.mov *.flv *.mpeg *.rm *.rmvb *.asf *.f4v *.mkv *.wmv)";
-	}
+
+	szTitle = "请选择视频文件";
+	szFilter = "All Format (*.swf *.webm *.avi *.mp4 *.mov *.flv *.mpeg *.rm *.rmvb *.asf *.f4v *.mkv *.wmv)";
 
 	QString szFileName = QFileDialog::getOpenFileName(this, szTitle, "", szFilter);
 	if (szFileName.isEmpty())
 		return;
 
-	QListWidgetItem* pItem = new QListWidgetItem(ui.videoListWnd);
-	QVideoInfo* videoInfo = new QVideoInfo(szFileName, ui.videoListWnd);
-	pItem->setSizeHint(QSize(300, 80));
+	QListWidgetItem* pItem = new QListWidgetItem(ui.ListWnd);
+	QVideoInfo* videoInfo = new QVideoInfo(szFileName, ui.ListWnd);
+	pItem->setSizeHint(QSize(300, 60));
 
-	ui.videoListWnd->setItemWidget(pItem, videoInfo);
+	ui.ListWnd->setItemWidget(pItem, videoInfo);
 
 	m_vecFiles.append(szFileName);
 }
@@ -116,59 +110,17 @@ void QVideoConversion::OnBtnAddPathClicked()
 
 void QVideoConversion::OnBtnStartClick()
 {
-	QString szOutputPath = ui.lineEditOutputPath->text();
-	for (int i = 0; i < m_vecFiles.size(); i++)
-	{
-		std::string szFile = m_vecFiles[i].toStdString();
-		QFileInfo fileInfo(m_vecFiles[i]);
-		QString fileName = fileInfo.fileName();
-		fileName = fileName.left(fileName.indexOf(".")+1);
-		
-		const char* cfilename = szFile.c_str();
-		if (!m_demux.Open(cfilename))
-			return;
-
-		if (m_avType == TVideo)
-		{
-			int srcWidth, srcHeight;
-			AVPixelFormat srcFormat;
-			if (m_videoDecoder.Open(&m_demux))
-			{
-				m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
-				m_videoDecoder.SetSwsConfig();
-			}
-		}
-
-		int sample_rate = 0;
-		AVChannelLayout ch_layout = {};
-		AVSampleFormat sample_fmt = AV_SAMPLE_FMT_NONE;
-		if (m_audioDecoder.Open(&m_demux))
-		{			
-			m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
-			m_audioDecoder.SetSwrContext(ch_layout, sample_fmt, sample_rate);
-		}
-				
-		std::string strName = (szOutputPath + "\\" + fileName + m_szOutputSuffix).toStdString();
-		if (!m_remux.SetOutput(strName.c_str(), m_nOutWidth, m_nOutHeight, ch_layout, sample_fmt, sample_rate, m_outputBitRate))
-			return;
-		
-		m_remux.SetType(m_avType);
-
-		m_demux.Start(this);
-
-		if (m_avType == TVideo)
-			m_videoDecoder.Start(this);
-
-		m_audioDecoder.Start(this);
-
-		m_remux.Start(this);
-	}	
+	ui.btnStart->setEnabled(false);
+	m_convertThread = std::thread(&QVideoConversion::ConvertThread, this);
 }
 
 void QVideoConversion::CvtStatusSlot(int ntype)
 {
 	if (ntype == 1)
-		QMessageBox::information(this, QStringLiteral("格式转换完成"), QStringLiteral("提示"));
+	{
+		ui.btnStart->setEnabled(true);
+		QMessageBox::information(this, "格式转换完成", "提示", "确定");
+	}
 }
 
 void QVideoConversion::OnBtnChangeDirClicked()
@@ -198,4 +150,61 @@ void QVideoConversion::OnBtnOutputFmtClicked()
 			m_szOutputSuffix = szFormat;
 			ui.btnOuputFormat->setText(szFormat + " " + szValue);
 		});
+}
+
+void QVideoConversion::ConvertThread()
+{
+	QString szOutputPath = ui.lineEditOutputPath->text();
+	for (int i = 0; i < m_vecFiles.size(); i++)
+	{
+		std::string szFile = m_vecFiles[i].toStdString();
+		QFileInfo fileInfo(m_vecFiles[i]);
+		QString fileName = fileInfo.fileName();
+		fileName = fileName.left(fileName.indexOf(".") + 1);
+
+		const char* cfilename = szFile.c_str();
+		if (!m_demux.Open(cfilename))
+			return;
+
+
+		
+		int srcWidth, srcHeight;
+		AVPixelFormat srcFormat;
+		if (m_videoDecoder.Open(&m_demux))
+		{
+			m_videoDecoder.GetSrcParameter(srcWidth, srcHeight, srcFormat);
+			m_videoDecoder.SetSwsConfig();
+		}
+		
+		int sample_rate = 0;
+		AVChannelLayout ch_layout = {};
+		AVSampleFormat sample_fmt = AV_SAMPLE_FMT_NONE;
+		if (m_audioDecoder.Open(&m_demux))
+		{
+			m_audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
+			m_audioDecoder.SetSwrContext(ch_layout, sample_fmt, sample_rate);
+		}
+
+		std::string strName = (szOutputPath + "\\" + fileName + m_szOutputSuffix).toStdString();
+		if (!m_remux.SetOutput(strName.c_str(), m_nOutWidth, m_nOutHeight, ch_layout, sample_fmt, sample_rate, m_outputBitRate))
+			return;
+
+		m_remux.SetType(TAll);
+
+		m_demux.Start(this);
+
+		m_videoDecoder.Start(this);
+
+		m_audioDecoder.Start(this);
+
+		m_remux.Start(this);
+
+		m_demux.WaitFinished();
+		m_audioDecoder.WaitFinished();
+		m_videoDecoder.WaitFinished();
+
+		m_remux.WaitFinished();
+	}
+
+	emit CvtStatusSig(1);
 }

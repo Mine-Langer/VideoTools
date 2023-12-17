@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>QVideoConversion</class>
- <widget class="QWidget" name="QVideoConversion">
+ <class>QAudioConvertWnd</class>
+ <widget class="QWidget" name="QAudioConvertWnd">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>683</width>
-    <height>405</height>
+    <width>693</width>
+    <height>384</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QVideoConversion</string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -114,7 +114,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QListWidget" name="ListWnd"/>
+    <widget class="QListWidget" name="ListItemWnd"/>
    </item>
    <item>
     <widget class="QFrame" name="frame_3">
@@ -469,7 +469,6 @@
    </item>
   </layout>
  </widget>
- <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections/>
 </ui>

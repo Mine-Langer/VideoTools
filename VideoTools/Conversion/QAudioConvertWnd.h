@@ -1,25 +1,23 @@
 #pragma once
+
 #include <QWidget>
-#include <QVector>
-#include "ui_qvideoconversion.h"
+#include "ui_AudioConvert.h"
 #include "Common.h"
 #include "../Demultiplexer.h"
 #include "../Remultiplexer.h"
 
-class QVideoConversion : public QWidget, public IDemuxEvent, public IDecoderEvent, public IRemuxEvent
+class QAudioConvertWnd  : public QWidget, public IDemuxEvent, public IDecoderEvent, public IRemuxEvent
 {
 	Q_OBJECT
 
 public:
-	QVideoConversion(QWidget *parent = Q_NULLPTR);
-	~QVideoConversion();
-
-
-	// void setAVType(AVType type);
-
+	QAudioConvertWnd(QWidget *parent);
+	~QAudioConvertWnd();
 
 private:
 	void InitView();
+
+	void ConvertThread();
 
 private:
 	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
@@ -31,7 +29,6 @@ private:
 
 	virtual void RemuxEvent(int nType) override;
 
-	void ConvertThread();
 
 signals:
 	void CvtStatusSig(int ntype);
@@ -46,16 +43,16 @@ private slots:
 	void OnBtnOutputFmtClicked();
 
 private:
-	Ui::QVideoConversion ui;
+	Ui::QAudioConvertWnd ui;
 
 	QVector<QString> m_vecFiles;
 
 	CDemultiplexer	m_demux;	// 解封装视频文件
 	CRemultiplexer	m_remux;	// 重封装视频文件
-	CVideoDecoder	m_videoDecoder;
+//	CVideoDecoder	m_videoDecoder;
 	CAudioDecoder	m_audioDecoder;
 
-	AVType m_avType = TVideo;
+	AVType m_avType = TAudio;
 
 	QString m_szOutputSuffix;
 	QString m_szOutName = "output.flv";		// 转换后文件名
@@ -64,4 +61,5 @@ private:
 	int m_nOutHeight = 720;
 
 	std::thread m_convertThread;
+
 };

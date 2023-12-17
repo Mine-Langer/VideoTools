@@ -334,12 +334,6 @@ bin/x64/output.flv
 .vs/VideoTools/FileContentIndex/b871e50c-3f55-4906-8382-a4dd071c582f.vsidx
 .vs/VideoTools/FileContentIndex/6dd099e4-bba4-4bed-a4a0-b35705436972.vsidx
 .vs/VideoTools/FileContentIndex/53231715-b146-4ab6-9836-a31328e23391.vsidx
-x64/Debug/HLAVTools.exp
-x64/Debug/HLAVTools.lib
-x64/Debug/HLAVTools.exp
-x64/Debug/HLAVTools.lib
-x64/Debug/HLAVTools.lib
-x64/Debug/HLAVTools.exp
 x64/Release/HLAVTools.lib
 x64/Release/HLAVTools.exp
 .vs/VideoTools/FileContentIndex/71fa1627-21e1-4ddb-a8dc-cfa14bf21dc7.vsidx
@@ -350,8 +344,6 @@ x64/Release/HLAVTools.exp
 .vs/VideoTools/FileContentIndex/5b721717-edad-454c-8d51-b88ba44a09b2.vsidx
 .vs/VideoTools/FileContentIndex/0b51657f-e828-43ae-914c-984bd083e4f3.vsidx
 .vs/VideoTools/FileContentIndex/07c576a0-267c-4cbd-9b1c-fb29beb95136.vsidx
-x64/Debug/HLAVTools.exp
-x64/Debug/HLAVTools.lib
 .vs/VideoTools/FileContentIndex/0daa715e-baf4-456e-98c9-21742233e241.vsidx
 .vs/VideoTools/FileContentIndex/7034e325-5cdb-4120-a71c-a5c97b2c8f6a.vsidx
 .vs/VideoTools/FileContentIndex/b46b0f5d-796e-402d-aaf5-d86c633d387b.vsidx
@@ -449,10 +441,6 @@ bin/x64/hw_out.mp4
 TutorialDemo/x64/Release/vc143.pdb
 .vs/VideoTools/FileContentIndex/db2f9b88-15cd-4f5a-a9dc-a05c1458190a.vsidx
 .vs/VideoTools/FileContentIndex/94927322-3320-4e50-9891-09ccc95eeb30.vsidx
-x64/Debug/HLAVTools.exp
-x64/Debug/HLAVTools.lib
-x64/Debug/HLAVTools.exp
-x64/Debug/HLAVTools.lib
 .vs/VideoTools/FileContentIndex/125d34b5-af73-41c7-ad5b-fe158ff81ac5.vsidx
 .vs/VideoTools/FileContentIndex/2511f172-db58-41a9-a03c-d54bbd0ade48.vsidx
 .vs/VideoTools/FileContentIndex/86973c57-1ea6-4178-9661-e7699fcc8585.vsidx
@@ -465,5 +453,13 @@ x64/Debug/HLAVTools.lib
 .vs/VideoTools/FileContentIndex/57c0ae61-1236-4015-af2a-bae12a277c93.vsidx
 VideoTools/x64/Debug/moc/moc_OptionSelectWnd.cpp
 VideoTools/x64/Debug/uic/ui_optionSelect.h
+bin/x64/output.mp3
+.vs/VideoTools/FileContentIndex/f4cb61c5-eea3-48ff-96b0-d54d7808ccb9.vsidx
+.vs/VideoTools/FileContentIndex/b1b5023a-bef9-482e-8c91-6631148304dd.vsidx
+.vs/VideoTools/FileContentIndex/9585072c-d42e-449b-8817-f9362403578d.vsidx
+.vs/VideoTools/FileContentIndex/9218f103-788c-4b48-a53b-f3c64a24eb98.vsidx
+.vs/VideoTools/FileContentIndex/23ae7d65-ce24-406e-9ff2-4a4cd0437750.vsidx
+VideoTools/x64/Debug/moc/moc_QAudioConvertWnd.cpp
+VideoTools/x64/Debug/uic/ui_AudioConvert.h
 x64/Debug/HLAVTools.exp
 x64/Debug/HLAVTools.lib

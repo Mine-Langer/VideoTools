@@ -119,6 +119,7 @@ void CAudioEncoder::OnWork()
 		else
 		{
 			if (frame == nullptr) {
+				m_pEvent->AudioEvent(nullptr, -1);
 				break;
 			}
 			else

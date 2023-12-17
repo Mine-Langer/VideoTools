@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QJsonObject>
 #include "../Common.h"
 #include "ui_optionSelect.h"
 #include <QHash>
@@ -31,6 +32,5 @@ private:
 	Ui::OptionSelectWnd ui;
 
 	AVType avType;
-	QHash<QString, QVector<QString>> videoHashValue;
-	QHash<QString, QVector<QString>> audioHashValue;
+	QJsonObject m_fmtConfig;
 };

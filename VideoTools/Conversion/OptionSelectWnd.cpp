@@ -1,4 +1,7 @@
 #include "OptionSelectWnd.h"
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QFile>
 
 OptionSelectWnd::OptionSelectWnd(QWidget *parent)
 	: QWidget(parent)
@@ -22,34 +25,49 @@ void OptionSelectWnd::setType(AVType type)
 	avType = type;
 	if (avType == TAudio) {
 		ui.label_title->setText("音频");
-		for (auto v = audioHashValue.begin(); v != audioHashValue.end(); v++) {
-			ui.listFormat->addItem(v.key());
+		QJsonArray jsArr = m_fmtConfig.value("audio").toArray();
+		for (int i = 0; i < jsArr.size(); i++) {
+			ui.listFormat->addItem(jsArr.at(i).toObject().value("type").toString());
 		}
 		
 	}
 	else if (avType == TVideo) {
 		ui.label_title->setText("视频");
+		QJsonArray jsArr = m_fmtConfig.value("video").toArray();
+		for (int i = 0; i < jsArr.size(); i++) {
+			ui.listFormat->addItem(jsArr.at(i).toObject().value("type").toString());
+		}
 	}
 }
 
 void OptionSelectWnd::Init()
 {
-	audioHashValue["MP3"] = { "高品质","中品质","低品质" };
-	audioHashValue["WAV"] = { "无损" };
-	audioHashValue["M4A"] = { "高品质","中品质","低品质" };
-	audioHashValue["WMA"] = { "高品质","中品质","低品质" };
-	audioHashValue["AAC"] = { "高品质","中品质","低品质" };
-	audioHashValue["FLAC"] = { "无损" };
+	QFile file(":/AvTools/format.json");
+	if (!file.open(QIODevice::ReadOnly))
+		return;
+	QByteArray data(file.readAll());
+	file.close();
 
-	audioHashValue["M4R"] = { "高品质","中品质","低品质" };
-	audioHashValue["OGG"] = { "高品质","中品质","低品质" };
+	QJsonDocument jsDoc = QJsonDocument::fromJson(data);
+	m_fmtConfig = jsDoc.object();
 }
 
 void OptionSelectWnd::listFormatItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
 {
 	QString szItemVal = current->text();
+	int idx = ui.listFormat->row(current);
+	QString fmt;
+	if (avType == TAudio)
+		fmt = "audio";
+	else if (avType == TVideo)
+		fmt = "video";
+
+	QJsonArray jsArr = m_fmtConfig.value(fmt).toArray();
+	QVariantList varParamList = jsArr.at(idx).toObject().value("param").toArray().toVariantList(); 	
+	QVariant varSizeList = jsArr.at(idx).toObject().value("size").toVariant();
 	ui.listQuality->clear();
-	ui.listQuality->addItems(audioHashValue[szItemVal].toList());
+	for (QVariant var : varParamList)
+		ui.listQuality->addItem(var.toString());
 }
 
 void OptionSelectWnd::listQualityItemPressed(QListWidgetItem* item)

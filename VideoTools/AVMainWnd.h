@@ -2,10 +2,11 @@
 
 #include <QWidget>
 #include "ui_AVMainWnd.h"
-#include "capture/hlcapture.h"
-#include "Composition/CompositeView.h"
-#include "Conversion/qvideoconversion.h"
 
+class HLCapture;
+class CompositeView;
+class QVideoConversion;
+class QAudioConvertWnd;
 class AVMainWnd : public QWidget
 {
 	Q_OBJECT
@@ -16,12 +17,13 @@ public:
 
 
 private slots:
-	void OnBtnMenuClicked();
+	void OnFunctionsItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
 
 private:
 	Ui::AVMainWnd ui;
 	HLCapture* m_capture; //录屏
 	CompositeView* m_compositeView; // 合成
 	QVideoConversion* m_conversion; // 格式转换
+	QAudioConvertWnd* m_audioConvert;
 	QWidget* m_pCurrentWidget = nullptr;
 };

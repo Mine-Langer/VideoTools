@@ -31,6 +31,8 @@ public:
 
 	void SetType(AVType type);
 
+	void WaitFinished();
+
 private:
 	virtual bool VideoEvent(AVPacket* pkt) override;
 

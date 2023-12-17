@@ -15,8 +15,46 @@ extern "C" {
 #include <libswresample/swresample.h>
 #include <libswscale/swscale.h>
 #include <libavdevice/avdevice.h>
-
+#include <libavutil/avstring.h>
+#include <libavutil/bprint.h>
+#include <libavutil/channel_layout.h>
+#include <libavutil/dict.h>
+#include <libavutil/display.h>
+#include <libavutil/fifo.h>
+#include <libavutil/hwcontext.h>
+#include <libavutil/intreadwrite.h>
+//#include <libavutil/libm.h>
+#include <libavutil/mathematics.h>
+#include <libavutil/opt.h>
+#include <libavutil/parseutils.h>
+#include <libavutil/pixdesc.h>
+#include <libavutil/samplefmt.h>
+//#include <libavutil/thread.h>
+#include <libavutil/threadmessage.h>
+#include <libavutil/time.h>
+#include <libavutil/timestamp.h>
+#include <libavcodec/version.h>
+#include <libavformat/avformat.h>
+#include <libavutil/macros.h>
+#include <libavutil/common.h>
+#include <libavutil/error.h>
+#include <libavutil/frame.h>
+#include <libavutil/mem.h>
+#include <libavutil/cpu.h>
+#include <libavutil/eval.h>
+#include <libavfilter/avfilter.h>
 }
+
+#include <windows.h>
+#include <stdint.h>
+#include <string.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdatomic.h>
+#include <stdlib.h>
+#include <time.h>
+#include <atomic>
+#include <climits>
 
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avdevice.lib")
