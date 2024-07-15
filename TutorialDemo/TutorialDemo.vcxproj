@@ -129,24 +129,41 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioDecoder.cpp" />
+    <ClCompile Include="AudioEncoder.cpp" />
     <ClCompile Include="AudioRecorder.cpp" />
-    <ClCompile Include="AudioTranscode.cpp" />
-    <ClCompile Include="CmdUtils.cpp" />
-    <ClCompile Include="ffmpeg_tools.cpp" />
-    <ClCompile Include="ListAVDevice.cpp" />
-    <ClCompile Include="objpool.cpp" />
-    <ClCompile Include="sync_queue.cpp" />
-    <ClCompile Include="TutorialDemo.cpp" />
+    <ClCompile Include="AVFrame.cpp" />
+    <ClCompile Include="Demultiplexer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="RecordTest.cpp" />
+    <ClCompile Include="Remultiplexer.cpp" />
+    <ClCompile Include="Screen\CScreenDXGI.cpp" />
+    <ClCompile Include="Screen\CScreenGDI.cpp" />
+    <ClCompile Include="Screen\ScreenFFmpeg.cpp" />
+    <ClCompile Include="Screen\ScreenRecoder.cpp" />
+    <ClCompile Include="Transcode.cpp" />
+    <ClCompile Include="VideoDecoder.cpp" />
+    <ClCompile Include="VideoEncoder.cpp" />
+    <ClCompile Include="VideoRecorder.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioDecoder.h" />
+    <ClInclude Include="AudioEncoder.h" />
     <ClInclude Include="AudioRecorder.h" />
-    <ClInclude Include="AudioTranscode.h" />
-    <ClInclude Include="CmdUtils.h" />
-    <ClInclude Include="ffmpeg.h" />
-    <ClInclude Include="ffmpeg_tools.h" />
-    <ClInclude Include="ListAVDevice.h" />
-    <ClInclude Include="objpool.h" />
-    <ClInclude Include="sync_queue.h" />
+    <ClInclude Include="AVFrame.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="Demultiplexer.h" />
+    <ClInclude Include="RecordTest.h" />
+    <ClInclude Include="Remultiplexer.h" />
+    <ClInclude Include="SafeQueue.h" />
+    <ClInclude Include="Screen\CScreenDXGI.h" />
+    <ClInclude Include="Screen\CScreenGDI.h" />
+    <ClInclude Include="Screen\ScreenFFmpeg.h" />
+    <ClInclude Include="Screen\ScreenRecoder.h" />
+    <ClInclude Include="Transcode.h" />
+    <ClInclude Include="VideoDecoder.h" />
+    <ClInclude Include="VideoEncoder.h" />
+    <ClInclude Include="VideoRecorder.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

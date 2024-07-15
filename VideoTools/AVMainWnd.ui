@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>664</width>
-    <height>453</height>
+    <width>853</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="font">
@@ -16,7 +16,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>AVMainWnd</string>
+   <string>视频转换器</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -62,13 +62,13 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>120</width>
+          <width>140</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>120</width>
+          <width>140</width>
           <height>16777215</height>
          </size>
         </property>

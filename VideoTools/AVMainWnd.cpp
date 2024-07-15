@@ -17,6 +17,7 @@ AVMainWnd::AVMainWnd(QWidget *parent)
 	m_audioConvert = new QAudioConvertWnd(this);
 	ui.stackedWidget->addWidget(m_conversion);
 	ui.stackedWidget->addWidget(m_audioConvert);
+	ui.stackedWidget->addWidget(new QWidget());
 	ui.stackedWidget->addWidget(m_capture);
 	ui.stackedWidget->addWidget(m_compositeView);
 }

@@ -1,238 +1,271 @@
+#include "RecordTest.h"
 #include "AudioRecorder.h"
+#include <avrt.h>
 
-const AVSampleFormat requireAudioFmt = AV_SAMPLE_FMT_FLTP;
-AudioRecorder::AudioRecorder(std::string filePath, std::string device)
-	:outFile(filePath),deviceName(device)
+
+int64_t getCurTimestamp()// 获取毫秒级时间戳（13位）
 {
-	avdevice_register_all();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
-AudioRecorder::~AudioRecorder()
+static std::string GetCurrTimeString()
+{
+	const char* time_fmt = "%Y-%m-%d %H:%M:%S";
+	time_t t = time(nullptr);
+	char time_str[64];
+	struct tm out_tm;
+	localtime_s(&out_tm, &t);
+	strftime(time_str, sizeof(time_str), time_fmt, &out_tm);
+
+	return time_str;
+}
+
+CAudioRecorder::CAudioRecorder(int CaptureType)
+{
+	CoInitialize(nullptr);
+}
+
+CAudioRecorder::~CAudioRecorder()
 {
 	Stop();
+	Release();
+	CoUninitialize();
 }
 
-void AudioRecorder::Open()
+void CAudioRecorder::Start(IRecordEvent* pEvt)
 {
-	///input context ///////////////////////////////////////////////////////////////////////
-	AVDictionary* options = nullptr;
-	int ret = 0;
+	m_pRecordEvent = pEvt;
 
-	deviceName = listAVDevice.DS_GetDefaultDevice("a");
-	if (deviceName == "") {
-		throw std::runtime_error("Fail to get default audio device, maybe no microphone.");
-	}
-	deviceName = "audio=" + deviceName;
-	const AVInputFormat* inputFormat = av_find_input_format("dshow");
-
-	ret = avformat_open_input(&audioInFormatCtx, deviceName.c_str(), inputFormat, &options);
-	if (ret!= 0)
-		throw std::runtime_error("Couldn't open input audio stream.");
-
-	if (0 > avformat_find_stream_info(audioInFormatCtx, nullptr))
-		throw std::runtime_error("Couldn't find audio stream information.");
-
-	const AVCodec* audioInCodec = nullptr;
-	int audioIdx = av_find_best_stream(audioInFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, &audioInCodec, 0);
-	if (0 > audioIdx)
-		throw std::runtime_error("Couldn't find a audio stream.");
-	
-	audioInStream = audioInFormatCtx->streams[audioIdx];
-	audioInCodecCtx = avcodec_alloc_context3(audioInCodec);
-	avcodec_parameters_to_context(audioInCodecCtx, audioInStream->codecpar);
-
-	if (0 > avcodec_open2(audioInCodecCtx, audioInCodec, nullptr))
-		throw std::runtime_error("Could not open video codec.");
-
-	swr_alloc_set_opts2(&audioConverter,
-		&audioInCodecCtx->ch_layout,
-		requireAudioFmt,
-		audioInCodecCtx->sample_rate,
-		&audioInCodecCtx->ch_layout,
-		(AVSampleFormat)audioInStream->codecpar->format,
-		audioInStream->codecpar->sample_rate,
-		0, nullptr);
-	swr_init(audioConverter);
-
-	audioFifo = av_audio_fifo_alloc(requireAudioFmt, audioInCodecCtx->ch_layout.nb_channels,
-		audioInCodecCtx->sample_rate * 2);
-	
-	/// output context ///////////////////////////////////////////
-	ret = avformat_alloc_output_context2(&audioOutFormatCtx, nullptr, "adts", nullptr);
-	if (0 > ret)
-		throw std::runtime_error("Failed to alloc ouput context");
-
-	ret = avio_open2(&audioOutFormatCtx->pb, outFile.c_str(), AVIO_FLAG_WRITE, nullptr, nullptr);
-	if (0 > ret)
-		throw std::runtime_error("Fail to open output file.");
-
-	const AVCodec* audioOutCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
-	if (!audioOutCodec)
-		throw std::runtime_error("Fail to find aac encoder. Please check your DLL.");
-
-	audioOutCodecCtx = avcodec_alloc_context3(audioOutCodec);
-	audioOutCodecCtx->ch_layout = audioInStream->codecpar->ch_layout;
-	audioOutCodecCtx->sample_rate = audioInStream->codecpar->sample_rate;
-	audioOutCodecCtx->sample_fmt = audioOutCodec->sample_fmts[0];
-	audioOutCodecCtx->bit_rate = 32000;
-	audioOutCodecCtx->time_base.num = 1;
-	audioOutCodecCtx->time_base.den = audioOutCodecCtx->sample_rate;
-
-	if (audioOutFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
-		audioOutCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-
-	if (0 > avcodec_open2(audioOutCodecCtx, audioOutCodec, nullptr))
-		throw std::runtime_error("Fail to open ouput audio encoder.");
-
-	//Add a new stream to output,should be called by the user before avformat_write_header() for muxing
-	audioOutStream = avformat_new_stream(audioOutFormatCtx, audioOutCodec);
-
-	if (audioOutStream == nullptr)
-		throw std::runtime_error("Fail to new a audio stream.");
-
-	avcodec_parameters_from_context(audioOutStream->codecpar, audioOutCodecCtx);
-
-	// write file header
-	if (avformat_write_header(audioOutFormatCtx, nullptr) < 0)
-		throw std::runtime_error("Fail to write header for audio.");
+	m_bRun = true;
+	m_thread = std::thread(&CAudioRecorder::Work, this);
 }
 
-void AudioRecorder::Start()
+void CAudioRecorder::Stop()
 {
-	audioThread = std::thread([this]() {
-		this->isRun = true;
-		puts("Start record."); fflush(stdout);
-		try {
-			this->StartEncode();
-		}
-		catch (std::exception e) {
-			this->failReason = e.what();
-		}
-	});
+	m_bRun = false;
+	if (m_thread.joinable())
+		m_thread.join();
 }
 
-void AudioRecorder::Stop()
+
+
+int CAudioRecorder::get_nb_channels()
 {
-	bool r = isRun.exchange(false);
-	if (!r) return; //avoid run twice
-	if (audioThread.joinable())
-		audioThread.join();
-
-	int ret = av_write_trailer(audioOutFormatCtx);
-	if (ret < 0) 
-		throw std::runtime_error("can not write file trailer.");
-	avio_close(audioOutFormatCtx->pb);
-
-	swr_free(&audioConverter);
-	av_audio_fifo_free(audioFifo);
-
-	avcodec_free_context(&audioInCodecCtx);
-	avcodec_free_context(&audioOutCodecCtx);
-
-	avformat_close_input(&audioInFormatCtx);
-	avformat_free_context(audioOutFormatCtx);
-	puts("Stop record."); fflush(stdout);
+	return m_pWaveFmt->nChannels;
 }
 
-std::string AudioRecorder::GetLastError()
+int CAudioRecorder::get_nb_bits_sample()
 {
-	return failReason;
+	return m_pWaveFmt->wBitsPerSample;
 }
 
-void AudioRecorder::StartEncode()
+int CAudioRecorder::get_sample_rate()
 {
-	AVFrame* inputFrame = av_frame_alloc();
-	AVPacket* inputPacket = av_packet_alloc();
+	return m_pWaveFmt->nSamplesPerSec;
+}
 
-	AVPacket* outputPacket = av_packet_alloc();
-	uint64_t  frameCount = 0;
+int CAudioRecorder::get_nb_samples()
+{
+	return m_nb_samples;
+}
 
-	int ret;
+bool CAudioRecorder::reInit()
+{
+	Release();
+	return Init(m_CaptureType);
+}
 
-	while (isRun) {
+bool CAudioRecorder::Init(int CapType)
+{
+	m_CaptureType = CapType;
 
-		//  decoding
-		ret = av_read_frame(audioInFormatCtx, inputPacket);
-		if (ret < 0) {
-			throw std::runtime_error("can not read frame");
-		}
-		ret = avcodec_send_packet(audioInCodecCtx, inputPacket);
-		if (ret < 0) {
-			throw std::runtime_error("can not send pkt in decoding");
-		}
-		ret = avcodec_receive_frame(audioInCodecCtx, inputFrame);
-		if (ret < 0) {
-			throw std::runtime_error("can not receive frame in decoding");
-		}
-		//--------------------------------
-		// encoding
+	m_pDevice = GetDefaultDevice();
+	if (!m_pDevice)
+		return false;
 
-		uint8_t** cSamples = nullptr;
-		ret = av_samples_alloc_array_and_samples(&cSamples, NULL, audioOutCodecCtx->ch_layout.nb_channels, inputFrame->nb_samples, requireAudioFmt, 0);
-		if (ret < 0) {
-			throw std::runtime_error("Fail to alloc samples by av_samples_alloc_array_and_samples.");
-		}
-		ret = swr_convert(audioConverter, cSamples, inputFrame->nb_samples, (const uint8_t**)inputFrame->extended_data, inputFrame->nb_samples);
-		if (ret < 0) {
-			throw std::runtime_error("Fail to swr_convert.");
-		}
-		if (av_audio_fifo_space(audioFifo) < inputFrame->nb_samples) throw std::runtime_error("audio buffer is too small.");
+	HRESULT hr = S_FALSE;
+	DWORD dwTaskIndex = 0;
 
-		ret = av_audio_fifo_write(audioFifo, (void**)cSamples, inputFrame->nb_samples);
-		if (ret < 0) {
-			throw std::runtime_error("Fail to write fifo");
-		}
+	hr = m_pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, reinterpret_cast<void**>(&m_pAudioClient));
+	if (FAILED(hr)) return false;
 
-		av_freep(&cSamples[0]);
+	hr = m_pAudioClient->GetMixFormat(&m_pWaveFmt);
+	if (FAILED(hr)) return false;
 
-		av_frame_unref(inputFrame);
-		av_packet_unref(inputPacket);
+	AdjustFormat(m_pWaveFmt);
 
-		while (av_audio_fifo_size(audioFifo) >= audioOutCodecCtx->frame_size) {
-			AVFrame* outputFrame = av_frame_alloc();
-			outputFrame->nb_samples = audioOutCodecCtx->frame_size;
-			outputFrame->ch_layout = audioInCodecCtx->ch_layout;
-			outputFrame->format = requireAudioFmt;
-			outputFrame->sample_rate = audioOutCodecCtx->sample_rate;
+	if (SOUNDCARD == m_CaptureType)
+		hr = m_pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK, 1000000, 0, m_pWaveFmt, 0);
+	else
+		hr = m_pAudioClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, 1000000, 0, m_pWaveFmt, 0);
+	if (FAILED(hr)) return false;
 
-			ret = av_frame_get_buffer(outputFrame, 0);
-			assert(ret >= 0);
-			ret = av_audio_fifo_read(audioFifo, (void**)outputFrame->data, audioOutCodecCtx->frame_size);
-			assert(ret >= 0);
+	if (FAILED(m_pAudioClient->GetBufferSize(&m_nb_samples)))
+		return false;
 
-			outputFrame->pts = frameCount * audioOutStream->time_base.den * 1024 / audioOutCodecCtx->sample_rate;
+	if (FAILED(m_pAudioClient->GetService(__uuidof(IAudioCaptureClient), reinterpret_cast<void**>(&m_pAudioCaptureClient))))
+		return false;
 
-			ret = avcodec_send_frame(audioOutCodecCtx, outputFrame);
-			if (ret < 0) {
-				throw std::runtime_error("Fail to send frame in encoding");
-			}
-			av_frame_free(&outputFrame);
-			ret = avcodec_receive_packet(audioOutCodecCtx, outputPacket);
-			if (ret == AVERROR(EAGAIN)) {
-				continue;
-			}
-			else if (ret < 0) {
-				throw std::runtime_error("Fail to receive packet in encoding");
-			}
-
-
-			outputPacket->stream_index = audioOutStream->index;
-			outputPacket->duration = audioOutStream->time_base.den * 1024 / audioOutCodecCtx->sample_rate;
-			outputPacket->dts = outputPacket->pts = frameCount * audioOutStream->time_base.den * 1024 / audioOutCodecCtx->sample_rate;
-
-			frameCount++;
-
-			ret = av_write_frame(audioOutFormatCtx, outputPacket);
-			av_packet_unref(outputPacket);
-
-		}
-
-
-
+	if (SOUNDCARD == m_CaptureType)
+		m_hTask = AvSetMmThreadCharacteristics(_T("Capture"), &dwTaskIndex);
+	else
+		m_hTask = AvSetMmThreadCharacteristics(_T("Audio"), &dwTaskIndex);
+	if (!m_hTask)
+	{
+		DWORD dwErr = GetLastError();
+		printf("AvSetMmThreadCharacteristics failed with error: %d\r\n", dwErr);
+		return false;
 	}
 
-	av_packet_free(&inputPacket);
-	av_packet_free(&outputPacket);
-	av_frame_free(&inputFrame);
-	printf("encode %lu audio packets in total.\n", frameCount);
+	if (FAILED(m_pAudioClient->Start()))
+		return false;
+
+	m_Inited = true;
+
+	printf("采样声道数=%d\n", m_pWaveFmt->nChannels);
+	printf("采样声道存储比特数=%d\n", m_pWaveFmt->wBitsPerSample);
+	printf("采样率=%d\n", m_pWaveFmt->nSamplesPerSec);
+	printf("一帧音频的采样点数量=%d\n", m_nb_samples);
+
+	return true;
+}
+
+void CAudioRecorder::Release()
+{
+	if (m_hTask)
+	{
+		AvRevertMmThreadCharacteristics(m_hTask);
+		m_hTask = nullptr;
+	}
+
+	if (m_pAudioCaptureClient)
+	{
+		m_pAudioCaptureClient->Release();
+		m_pAudioCaptureClient = nullptr;
+	}
+
+	if (m_pWaveFmt)
+	{
+		CoTaskMemFree(m_pWaveFmt);
+		m_pWaveFmt = nullptr;
+	}
+
+	if (m_pAudioClient)
+	{
+		if (m_Inited)
+			m_pAudioClient->Stop();
+
+		m_pAudioClient->Release();
+		m_pAudioClient = nullptr;
+	}
+
+	if (m_pDevice)
+	{
+		m_pDevice->Release();
+		m_pDevice = nullptr;
+	}
+
+	m_Inited = false;
+}
+
+IMMDevice* CAudioRecorder::GetDefaultDevice()
+{
+	IMMDevice* pDevice = nullptr;
+	IMMDeviceEnumerator* pMMDeviceEnum = nullptr;
+
+	HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, 
+		CLSCTX_ALL, __uuidof(IMMDeviceEnumerator), (void**)&pMMDeviceEnum);
+	if (FAILED(hr))
+		return nullptr;
+
+	if (SOUNDCARD == m_CaptureType)
+		hr = pMMDeviceEnum->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice);
+	else
+		hr = pMMDeviceEnum->GetDefaultAudioEndpoint(eCapture, eConsole, &pDevice);
+
+	if (pMMDeviceEnum)
+	{
+		pMMDeviceEnum->Release();
+		pMMDeviceEnum = nullptr;
+	}
+
+	return pDevice;
+}
+
+bool CAudioRecorder::AdjustFormat(WAVEFORMATEX* pwfx)
+{
+	if (pwfx->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+		pwfx->wFormatTag = WAVE_FORMAT_PCM;
+	}
+	else if (pwfx->wFormatTag == WAVE_FORMAT_EXTENSIBLE)
+	{
+		PWAVEFORMATEXTENSIBLE pEx = reinterpret_cast<PWAVEFORMATEXTENSIBLE>(pwfx);
+		if (IsEqualGUID(KSDATAFORMAT_SUBTYPE_IEEE_FLOAT, pEx->SubFormat))
+		{
+			pEx->SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
+			pEx->Samples.wValidBitsPerSample = 16;
+		}
+	}
+
+	pwfx->wBitsPerSample = 16;
+	pwfx->nBlockAlign = pwfx->nChannels * pwfx->wBitsPerSample / 8;
+	pwfx->nAvgBytesPerSec = pwfx->nBlockAlign * pwfx->nSamplesPerSec;
+
+	return true;
+}
+
+void CAudioRecorder::Work()
+{
+	HRESULT hr = 0;
+	UINT32 nextPacketSize = 0;
+	UINT32 numFramesToRead;
+	DWORD  dwFlags;
+	uint8_t* pData = nullptr;
+
+	uint8_t buffer[10000] = { 0 };
+	int64_t timestamp = getCurTimestamp();
+	int i = 0;
+	int size = 0;
+
+	while (m_bRun)
+	{
+		hr = m_pAudioCaptureClient->GetNextPacketSize(&nextPacketSize);
+		if (FAILED(hr)) {
+			m_bRun = false;
+			return;
+		}
+
+		if (nextPacketSize != 0)
+		{
+			hr = m_pAudioCaptureClient->GetBuffer(&pData, &numFramesToRead, &dwFlags, nullptr, nullptr);
+			if (FAILED(hr))
+			{
+				//录制系统声音时，扬声器突然停止播放触发的错误
+				m_bRun = false;
+				return ;
+			}
+
+			if (dwFlags & AUDCLNT_BUFFERFLAGS_SILENT)
+			{
+				pData = nullptr;
+			}
+
+			if (!pData) 
+			{
+				m_bRun = false;
+				return;
+			}
+
+			int pDataLen = numFramesToRead * m_pWaveFmt->nBlockAlign;
+			if (m_pRecordEvent)
+				m_pRecordEvent->AudioBufEvent(pData, numFramesToRead, getCurTimestamp());
+
+			m_pAudioCaptureClient->ReleaseBuffer(numFramesToRead);
+		}
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			continue;
+		}
+	}
 }

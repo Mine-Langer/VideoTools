@@ -1,5 +1,6 @@
 #include "hlcapture.h"
 #include "CaptureViewWidget.h"
+#include "AudioRecoder/AudioRecoder.h"
 #include <QStandardPaths>
 #include <QBitmap>
 #include <QDateTime>

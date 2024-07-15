@@ -463,3 +463,14 @@ VideoTools/x64/Debug/moc/moc_QAudioConvertWnd.cpp
 VideoTools/x64/Debug/uic/ui_AudioConvert.h
 x64/Debug/HLAVTools.exp
 x64/Debug/HLAVTools.lib
+bin/x64/test.aac
+bin/x64/record_audio.mp3
+bin/x64/record.pcm
+.vs/VideoTools/v17/DocumentLayout.json
+.vs/VideoTools/FileContentIndex/d2202d9e-8684-4d95-9b1e-7dfb2753b41c.vsidx
+.vs/VideoTools/FileContentIndex/84e702ca-2373-4fe6-b0f2-8e749d93fbee.vsidx
+.vs/VideoTools/FileContentIndex/4fa2e8a7-a6ee-41e6-ace6-9432a67fbb2e.vsidx
+.vs/VideoTools/FileContentIndex/3dbb473a-9468-4cb6-88cb-b4384db3442a.vsidx
+.vs/VideoTools/FileContentIndex/01db5e24-ed6e-41f9-bcd6-0eb06ea06420.vsidx
+x64/Debug/HLAVTools.exp
+x64/Debug/HLAVTools.lib

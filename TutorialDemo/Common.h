@@ -46,15 +46,24 @@ extern "C" {
 }
 
 #include <windows.h>
-#include <stdint.h>
-#include <string.h>
 #include <errno.h>
 #include <limits.h>
-#include <stdatomic.h>
+#include <tchar.h>
 #include <stdlib.h>
+#include <cstdio>
 #include <time.h>
 #include <atomic>
 #include <climits>
+#include <string>
+#include <vector>
+#include <queue>
+#include <chrono>
+#include <cstdint>
+#include <thread>
+#include <cassert>
+
+#include "SafeQueue.h"
+#include "AVFrame.h"
 
 #pragma comment(lib, "avcodec.lib")
 #pragma comment(lib, "avdevice.lib")
@@ -64,4 +73,9 @@ extern "C" {
 #pragma comment(lib, "swresample.lib")
 #pragma comment(lib, "swscale.lib")
 
+using namespace std;
 
+
+// 标识录音类型
+#define SOUNDCARD  1
+#define MICROPHONE 2

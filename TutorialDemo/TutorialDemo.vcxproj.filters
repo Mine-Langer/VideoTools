@@ -13,56 +13,110 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Recorder">
+      <UniqueIdentifier>{17d62f25-ed26-45f8-8442-89020adcff38}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TutorialDemo.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ListAVDevice.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="RecordTest.cpp">
+      <Filter>Recorder</Filter>
     </ClCompile>
     <ClCompile Include="AudioRecorder.cpp">
+      <Filter>Recorder</Filter>
+    </ClCompile>
+    <ClCompile Include="AVFrame.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="AudioTranscode.cpp">
+    <ClCompile Include="AudioDecoder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="CmdUtils.cpp">
+    <ClCompile Include="Demultiplexer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ffmpeg_tools.cpp">
+    <ClCompile Include="Transcode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="sync_queue.cpp">
+    <ClCompile Include="VideoDecoder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="objpool.cpp">
+    <ClCompile Include="VideoEncoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Remultiplexer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioEncoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\ScreenRecoder.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\CScreenDXGI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\CScreenGDI.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoRecorder.cpp">
+      <Filter>Recorder</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\ScreenFFmpeg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ListAVDevice.h">
+    <ClInclude Include="Common.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="AudioRecorder.h">
+      <Filter>Recorder</Filter>
+    </ClInclude>
+    <ClInclude Include="RecordTest.h">
+      <Filter>Recorder</Filter>
+    </ClInclude>
+    <ClInclude Include="AVFrame.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ffmpeg.h">
+    <ClInclude Include="AudioDecoder.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="AudioTranscode.h">
+    <ClInclude Include="Demultiplexer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CmdUtils.h">
+    <ClInclude Include="Transcode.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ffmpeg_tools.h">
+    <ClInclude Include="SafeQueue.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="sync_queue.h">
+    <ClInclude Include="VideoDecoder.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="objpool.h">
+    <ClInclude Include="VideoEncoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Remultiplexer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioEncoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\ScreenRecoder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\CScreenDXGI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\CScreenGDI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoRecorder.h">
+      <Filter>Recorder</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\ScreenFFmpeg.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

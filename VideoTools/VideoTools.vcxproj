@@ -103,6 +103,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AudioDecoder.cpp" />
+    <ClCompile Include="AudioRecoder\AudioRecoder.cpp" />
     <ClCompile Include="AVTools.cpp" />
     <ClCompile Include="AudioEncoder.cpp" />
     <ClCompile Include="capture\captureScreen.cpp" />
@@ -137,6 +138,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioEncoder.h" />
+    <ClInclude Include="AudioRecoder\AudioRecoder.h" />
     <ClInclude Include="avSync.h" />
     <ClInclude Include="capture\captureScreen.h" />
     <QtMoc Include="Conversion\qvideoconversion.h" />

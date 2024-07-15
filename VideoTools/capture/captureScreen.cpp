@@ -54,7 +54,6 @@ bool CaptureScreen::Init(int x, int y, int w, int h)
 	if (!m_pYUVBuffer)
 		return false;
 
-
 	return true;
 }
 

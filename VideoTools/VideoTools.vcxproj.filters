@@ -21,15 +21,6 @@
       <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
       <Extensions>ts</Extensions>
     </Filter>
-    <Filter Include="capture">
-      <UniqueIdentifier>{46f9104b-822f-4507-8dbc-73871e442811}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Composition">
-      <UniqueIdentifier>{bd7b2baf-419c-4af5-8a36-c77c3172a8d7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Conversion">
-      <UniqueIdentifier>{ed23ba18-17d9-4f32-8b5b-fe95470e8ce4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="解复用器">
       <UniqueIdentifier>{2ec6fae7-dd1a-4676-a59e-50ff895739d6}</UniqueIdentifier>
     </Filter>
@@ -51,6 +42,18 @@
     <Filter Include="视频滤镜">
       <UniqueIdentifier>{9917ae4a-c3ce-4d78-9b0a-10141e2bc03b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="屏幕录像">
+      <UniqueIdentifier>{46f9104b-822f-4507-8dbc-73871e442811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="视频合成">
+      <UniqueIdentifier>{bd7b2baf-419c-4af5-8a36-c77c3172a8d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="格式转换">
+      <UniqueIdentifier>{ed23ba18-17d9-4f32-8b5b-fe95470e8ce4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="音频录制">
+      <UniqueIdentifier>{a6b481a6-33fe-4ad4-b284-b30dfe20c6e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="avtools.qrc">
@@ -65,37 +68,37 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="capture\CRecoder.cpp">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClCompile>
     <ClCompile Include="capture\hlcapture.cpp">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClCompile>
     <ClCompile Include="capture\CaptureViewWidget.cpp">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClCompile>
     <ClCompile Include="capture\CapAudio.cpp">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClCompile>
     <ClCompile Include="Composition\CompositeView.cpp">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </ClCompile>
     <ClCompile Include="Composition\Composite.cpp">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </ClCompile>
     <ClCompile Include="Composition\AVTextureBar.cpp">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </ClCompile>
     <ClCompile Include="AVTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="capture\captureScreen.cpp">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClCompile>
     <ClCompile Include="Conversion\qvideoconversion.cpp">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </ClCompile>
     <ClCompile Include="Conversion\qvideoinfo.cpp">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </ClCompile>
     <ClCompile Include="DxAudioPlayer.cpp">
       <Filter>Source Files</Filter>
@@ -125,10 +128,13 @@
       <Filter>音频编码</Filter>
     </ClCompile>
     <ClCompile Include="Conversion\OptionSelectWnd.cpp">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </ClCompile>
     <ClCompile Include="Conversion\QAudioConvertWnd.cpp">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioRecoder\AudioRecoder.cpp">
+      <Filter>音频录制</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -136,19 +142,19 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="capture\CRecoder.h">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClInclude>
     <ClInclude Include="capture\CapAudio.h">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClInclude>
     <ClInclude Include="Composition\Composite.h">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </ClInclude>
     <ClInclude Include="SafeQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="capture\captureScreen.h">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </ClInclude>
     <ClInclude Include="AVTools.h">
       <Filter>Header Files</Filter>
@@ -183,34 +189,37 @@
     <ClInclude Include="VideoEncoder.h">
       <Filter>图像编码</Filter>
     </ClInclude>
+    <ClInclude Include="AudioRecoder\AudioRecoder.h">
+      <Filter>音频录制</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="AVMainWnd.h">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="capture\hlcapture.h">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </QtMoc>
     <QtMoc Include="capture\CaptureViewWidget.h">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </QtMoc>
     <QtMoc Include="Composition\CompositeView.h">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </QtMoc>
     <QtMoc Include="Composition\AVTextureBar.h">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </QtMoc>
     <QtMoc Include="Conversion\qvideoconversion.h">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtMoc>
     <QtMoc Include="Conversion\qvideoinfo.h">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtMoc>
     <QtMoc Include="Conversion\OptionSelectWnd.h">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtMoc>
     <QtMoc Include="Conversion\QAudioConvertWnd.h">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
@@ -218,22 +227,22 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="capture\hlcapture.ui">
-      <Filter>capture</Filter>
+      <Filter>屏幕录像</Filter>
     </QtUic>
     <QtUic Include="Composition\CompositeView.ui">
-      <Filter>Composition</Filter>
+      <Filter>视频合成</Filter>
     </QtUic>
     <QtUic Include="Conversion\qvideoconversion.ui">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtUic>
     <QtUic Include="Conversion\qvideoinfo.ui">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtUic>
     <QtUic Include="Conversion\optionSelect.ui">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtUic>
     <QtUic Include="Conversion\AudioConvert.ui">
-      <Filter>Conversion</Filter>
+      <Filter>格式转换</Filter>
     </QtUic>
   </ItemGroup>
   <ItemGroup>

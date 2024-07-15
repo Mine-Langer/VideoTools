@@ -46,7 +46,8 @@ void CapturingDialog::RetranslateUi(QDialog* dialog) {
 	capture_button_->setText(QApplication::translate("CapturingDialog", "Capture", nullptr));
 }
 
-void CapturingDialog::on_captureButton_clicked() {
+void CapturingDialog::on_captureButton_clicked() 
+{
 
 
 

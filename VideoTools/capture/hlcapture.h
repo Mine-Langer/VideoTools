@@ -2,8 +2,8 @@
 #pragma execution_character_set("utf-8")
 #include <QtWidgets/QWidget>
 #include <QTimer>
-#include "ui_hlcapture.h"
 #include "CRecoder.h"
+#include "ui_hlcapture.h"
 
 class CapturingDialog;
 class HLCapture : public QWidget
@@ -30,6 +30,7 @@ private:
 
     CapturingDialog* m_pCapWidget = nullptr;
     CRecoder m_recoder;
+    class CAudioRecoder* m_pAudioRecoder;
 
     int m_videoType = 0; // 视频选项 0：全屏  1：区域
     eAudioOpt m_audioType = NoAudio; // 音频选项 0：不录声音 1：系统声音 2：麦克风声音 3：全部录制

@@ -29,7 +29,7 @@ bool CRemultiplexer::SetOutput(const char* szOutput, int vWidth, int vHeight,
     if (0 > avio_open(&m_pFormatCtx->pb, szOutput, AVIO_FLAG_WRITE))
         return false;
 
-    av_dump_format(m_pFormatCtx, 0, szOutput, 1);
+   // av_dump_format(m_pFormatCtx, 0, szOutput, 1);
 
     return true;
 }
@@ -74,7 +74,7 @@ bool CRemultiplexer::Start(IRemuxEvent* pEvt)
     m_bRun = true;
     m_thread = std::thread(&CRemultiplexer::OnWork, this);
 
-    return false;
+    return true;
 }
 
 void CRemultiplexer::SetType(AVType type)
