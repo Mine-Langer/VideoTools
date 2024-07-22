@@ -13,6 +13,7 @@ CPlayer::~CPlayer()
 
 bool CPlayer::Open(const char* szInput)
 {
+#if 0
 	if (!m_demux.Open(szInput))
 		return false;
 
@@ -46,17 +47,20 @@ bool CPlayer::Open(const char* szInput)
 		// ÉèÖÃSDL_AudioSpecÊôÐÔ
 		SetAudioSpec(sample_rate, ch_layout, samples);
 	}
-
+#endif
 	return true;
 }
 
-void CPlayer::SetView(HWND hWnd)
+void CPlayer::SetView(HWND hWnd, int w, int h)
 {
 	if (!m_pWindow)
 		m_pWindow = SDL_CreateWindowFrom(hWnd);
 
 	if (!m_pRender)
 		m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
+
+	m_scrWidth = w;
+	m_scrHeight = h;
 }
 
 void CPlayer::SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int samples)
@@ -71,14 +75,22 @@ void CPlayer::SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int sampl
 }
 
 
-void CPlayer::Start()
+void CPlayer::StartPlay()
 {
 	//m_demux.Start(this);
 	//m_videoDecoder.Start(this);
 	//m_audioDecoder.Start(this);
 	
-	PlayAudio();
+	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
+	{
+		printf("SDL_OpenAudio failed.\n");
+		return;
+	}
+	SDL_PauseAudio(0);
+}
 
+void CPlayer::StartRender()
+{
 	m_bRun = true;
 	m_tRender = std::thread(&CPlayer::OnRenderProc, this);
 }
@@ -96,7 +108,7 @@ void CPlayer::Pause()
 
 void CPlayer::Seek(uint64_t pts_time)
 {
-	m_demux.SetPosition(pts_time);
+//	m_demux.SetPosition(pts_time);
 }
 
 void CPlayer::Release()
@@ -121,35 +133,62 @@ void CPlayer::Release()
 
 void CPlayer::SendAudioFrame(AVFrame* frame)
 {
-	m_audioFrameQueue.MaxSizePush(frame, &m_bRun);
+	AVFrame* tframe = nullptr;
+	if (frame)
+		tframe = av_frame_clone(frame);
+	m_audioFrameQueue.MaxSizePush(tframe, &m_bRun);
 }
 
 void CPlayer::SendVideoFrame(AVFrame* frame)
 {
-	m_videoFrameQueue.MaxSizePush(frame, &m_bRun);
+	AVFrame* tframe = nullptr;
+	if (frame)
+		tframe = av_frame_clone(frame);
+	m_videoFrameQueue.MaxSizePush(tframe, &m_bRun);
 }
 
-void CPlayer::PlayAudio()
-{
-	if (0 > SDL_OpenAudio(&m_audioSpec, nullptr))
-	{
-		printf("SDL_OpenAudio failed.\n");
-		return;
-	}
-	SDL_PauseAudio(0);
-}
 
 void CPlayer::CalcImageView(SDL_Rect rect)
 {
-	m_rect = rect;
-
-	if (m_pTexture)
+	if (memcmp(&rect, &m_rect, sizeof(SDL_Rect)) != 0)
 	{
-		SDL_DestroyTexture(m_pTexture);
-		m_pTexture = nullptr;
+		m_rect = rect;
+		if (m_pTexture)
+		{
+			SDL_DestroyTexture(m_pTexture);
+			m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
+		}
 	}
+	else
+	{
+		if (!m_pTexture)
+			m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
+	}
+}
 
-	m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
+void CPlayer::CalcDisplayRect(int _x, int _y, int scrWidth, int scrHeight, int picWidth, int picHeight, AVRational pic_sar)
+{
+	AVRational aspect_ratio = pic_sar;
+	int64_t width, height, x, y;
+
+	if (av_cmp_q(aspect_ratio, av_make_q(0, 1)) <= 0)
+		aspect_ratio = av_make_q(1, 1);
+
+	aspect_ratio = av_mul_q(aspect_ratio, av_make_q(picWidth, picHeight));
+
+	/* XXX: we suppose the screen has a 1.0 pixel ratio */
+	height = scrHeight;
+	width = av_rescale(height, aspect_ratio.num, aspect_ratio.den) & ~1;
+	if (width > scrWidth) {
+		width = scrWidth;
+		height = av_rescale(width, aspect_ratio.den, aspect_ratio.num) & ~1;
+	}
+	x = (scrWidth - width) / 2;
+	y = (scrHeight - height) / 2;
+	m_rect.x = _x + x;
+	m_rect.y = _y + y;
+	m_rect.w = FFMAX((int)width, 1);
+	m_rect.h = FFMAX((int)height, 1);
 }
 
 void CPlayer::OnRenderProc()
@@ -158,34 +197,39 @@ void CPlayer::OnRenderProc()
 	AVFrame* pFrame = nullptr;
 	while (m_bRun)
 	{
-		if (!m_videoFrameQueue.Pop(pFrame)) {
+		pFrame = m_videoFrameQueue.Front();
+		if (!pFrame) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 			continue;
 		}
-
+#if 1
 		if (pFrame)
 		{
+			CalcDisplayRect(0, 0, m_scrWidth, m_scrHeight, pFrame->width, pFrame->height, pFrame->sample_aspect_ratio);
+			CalcImageView(m_rect);
+
 			SDL_UpdateYUVTexture(m_pTexture, nullptr, pFrame->data[0], pFrame->linesize[0],
 				pFrame->data[1], pFrame->linesize[1], pFrame->data[2], pFrame->linesize[2]);
 			SDL_RenderClear(m_pRender);
 			SDL_RenderCopy(m_pRender, m_pTexture, nullptr, &m_rect);
-
+#if 0
 			double _pts = pFrame->best_effort_timestamp * m_videoDecoder.Timebase();
 			delay = m_avSync.CalcDelay(_pts);
 			if (delay > 0)	
 				std::this_thread::sleep_for(std::chrono::microseconds(delay));
 
 			//printf("video pts:%lld, timebase:%f, time:%f \n", pFrame->best_effort_timestamp, m_videoDecoder.Timebase(), _pts);
-
+#endif
 			SDL_RenderPresent(m_pRender);
-			
-			if (!m_pause)
-				av_frame_free(&pFrame);			
+			std::this_thread::sleep_for(std::chrono::milliseconds(40));
+			//if (!m_pause)
+			//	av_frame_free(&pFrame);			
 
-			m_avSync.SetVideoShowTime();
+//			m_avSync.SetVideoShowTime();
 		}
 		else
 			m_bRun = false;
+#endif
 	}
 }
 
@@ -207,9 +251,9 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 		int wlen = len < pFrame->linesize[0] ? len : pFrame->linesize[0];
 		SDL_memset(stream, 0, wlen);
 		SDL_MixAudio(stream, pFrame->data[0], wlen, SDL_MIX_MAXVOLUME);
-		double rpts = pFrame->best_effort_timestamp * pThis->m_audioDecoder.Timebase();
-		pThis->m_avSync.SetAudioClock(rpts);
-		printf("audio pts:%lld, timebase:%f time:%f \r\n", pFrame->best_effort_timestamp, pThis->m_audioDecoder.Timebase(), rpts);
+		//double rpts = pFrame->best_effort_timestamp * pThis->m_audioDecoder.Timebase();
+		//pThis->m_avSync.SetAudioClock(rpts);
+		//printf("audio pts:%lld, timebase:%f time:%f \r\n", pFrame->best_effort_timestamp, pThis->m_audioDecoder.Timebase(), rpts);
 		av_frame_free(&pFrame);
 	}
 	else
@@ -218,6 +262,7 @@ void CPlayer::OnAudioCallback(void* userdata, Uint8* stream, int len)
 	}
 }
 
+#if 0
 bool CPlayer::DemuxPacket(AVPacket* pkt, int type)
 {
 	if (type == AVMEDIA_TYPE_VIDEO)
@@ -264,3 +309,4 @@ bool CPlayer::AudioEvent(AVFrame* frame)
 
 	return true;
 }
+#endif

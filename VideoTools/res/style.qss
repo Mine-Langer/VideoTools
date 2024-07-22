@@ -1,0 +1,82 @@
+QWidget
+{
+    font-family: "微软雅黑";
+}
+
+/*正常状态或者鼠标松开按钮的状态*/
+QPushButton
+{
+  background-color:rgb(240,230,200);
+  color: rgb(0, 0, 2);
+  border-style: outset;
+  border-color: beige;
+  border-radius: 10px;
+  font-family: "微软雅黑";
+}
+
+/*hover按钮悬浮*/
+QPushButton:hover
+{
+    background-color:rgb(30, 140, 20);
+    border-radius: 10px;
+    color: rgb(0, 0, 0);
+}
+
+/*鼠标按下按钮时的状态*/
+QPushButton:checked
+{
+    background-color:rgb(20, 150, 90);
+    border-radius: 10px;
+    color: rgb(255, 255, 0);
+}
+
+QListWidget
+{
+    border: 1px solid gray;         /*边界线:宽度、颜色*/
+    background: transparent;        /*表格背景色*/
+    color: black;                   /*前景色：文字颜色*/
+    /*margin:5px,5px,0px,50px;*/    /*上、下、左、右，间距*/
+}
+QListWidget::item:hover
+{
+    show-decoration-selected:5;
+    background:skyblue;
+}
+
+QListWidget::item:selected
+{
+    /*border:0px;*/
+    background:lightgray;
+    padding:0px;
+    margin:0px;
+    color:red;
+}
+
+/*上次选择后保留的状态，鼠标离开后显示*/
+QListWidget::item:selected:!active
+{
+    border-width:0px;
+    background:lightgreen;
+}
+
+QMenu 
+{
+    background-color: #2e2e2e; /* 设置背景颜色 */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* 设置边框样式 */
+    color: #ffffff; /* 设置文本颜色 */
+    /* padding: 2px 20px;  设置内边距 */
+}
+QMenu::item 
+{
+    width: 100px;
+    height: 20px;
+    text-align: center;
+    background: #2e2e2e; /* 设置背景颜色 */
+    padding: 4px 2px 4px 20px; /* 设置内边距 */
+    margin: 0px; /* 设置外边距 */
+}
+QMenu::item:selected 
+{
+    background:rgba(82,130,164,1); /* 设置选中状态的背景颜色 */
+    border:1px solid rgba(82,130,164,1); /* 设置选中状态的边框颜色 */
+}

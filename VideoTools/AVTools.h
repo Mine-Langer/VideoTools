@@ -1,23 +1,24 @@
 #pragma once
-//test
-#include "Demultiplexer.h"
-//#include "AudioDecoder.h"
-//#include "AudioEncoder.h"
+#pragma execution_character_set("utf-8")
 
-class AVTools :public IDemuxEvent
+#include <QVector>
+#include <QVariantList>
+#include <QVariantMap>
+
+class AVTools 
 {
 public:
-	AVTools();
-	~AVTools();
+	static bool InitConfig();
 
-	bool run();
-	
+	static QStringList AudioFormatList();
+
+	static QStringList VideoFormatList();
+
+	static QVariantMap ParamData(const QString& szKey);
+
 private:
-	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
-
-
-private:
-	CDemultiplexer	_demux;
-	//CAudioDecoder	_audioDecoder;
+	static QVector<QString> VecAudioFormat;
+	static QVector<QString> VecVideoFormat;
+	static QVariantList		VariantConfigData;
 };
 

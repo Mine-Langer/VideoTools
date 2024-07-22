@@ -1,63 +1,57 @@
 #pragma once
 #include "Demultiplexer.h"
-#include "VideoDecoder.h"
 
-class CAudioDecoder 
+class CAudioDecoder
 {
 public:
 	CAudioDecoder();
 	~CAudioDecoder();
 
-	// 打开指定音频文件
-	bool Open(const char* szInput);
+	bool Open(const std::string& strFile);
+	bool Open(CDemultiplexer& demux);
 
-	bool Open(CDemultiplexer* pDemux);
+	void Start(IDecoderEvent* pEvt);
+		
+	void Close();
 
-	// 打开音频设备
-	bool OpenMicrophone(const char* szUrl);
-
-	bool Start(IDecoderEvent* pEvt);
-
-	void Stop();
-
-	void Clear();
-
-	// 等待解码完成
-	bool WaitFinished();
-
-	void SendPacket(AVPacket* pkt);
-
+	// 获取原始音频流(PCM) 的采样率、单帧单声道采样数
 	void GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt);
-	int SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate);
-	
-	AVChannelLayout GetChannelLayout();
-	double Timebase();
 
-	// 转码
-	AVFrame* ConvertFrame(AVFrame* frame);
+
+	// 设置重采样参数 
+	// @param	ch_layout		声道布局
+	// @param	sample_fmt		重采样格式
+	// @param	sample_rate		重采样采样率
+	bool SetSwr(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate, int& nb_samples);
+
+	bool SendPacket(AVPacket* pkt);
+
+	double GetTimebase() const;
 
 protected:
-
-	void OnDecodeFunction();
-
-	void Release();
+	void Work();
 
 private:
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwrContext* m_pSwrCtx = nullptr;
-	IDecoderEvent* m_pEvent = nullptr;
 
-	double m_timebase = 0.0;
+	//AVFrame* m_srcFrame = nullptr;
+	//AVFrame* m_dstFrame = nullptr;
 
-	AVChannelLayout m_swr_ch_layout;
-	AVSampleFormat m_swr_sample_fmt = AV_SAMPLE_FMT_NONE;
-	int m_swr_sample_rate = 0;
+	IDecoderEvent* m_DecoderEvt;
+
+	AVChannelLayout		m_swr_ch_layout;
+	enum AVSampleFormat	m_swr_sample_fmt;
+	int					m_swr_sample_rate;
+	int					m_swr_nb_samples;
+
+	double m_timebase;
+	double m_duration;
+	double m_rate;
+
+	SafeQueue<AVPacket*> m_PktQueue;
 
 	bool m_bRun = false;
-	enum AVState m_state = NotStarted;
-	std::thread m_thread;
-
-
-	SafeQueue<AVPacket*> m_srcAPktQueue;
+	std::thread m_DecodeThread;
 };
 

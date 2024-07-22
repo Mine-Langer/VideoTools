@@ -10,48 +10,21 @@ CAudioDecoder::~CAudioDecoder()
 
 }
 
-bool CAudioDecoder::Open(const char* szInput)
+bool CAudioDecoder::Open(const std::string& strFile)
 {
-#if 0
-	if (!m_demux.Open(szInput))
-		return false;
+	return true;
+}
 
-	AVStream* pStream = m_demux.FormatContext()->streams[m_demux.AudioStreamIndex()];
-	if (!pStream)
-		return false;
+bool CAudioDecoder::Open(CDemultiplexer& demux)
+{
+	AVStream* pStream = demux.GetFormatCtx()->streams[demux.GetAudioIdx()];
 
 	m_pCodecCtx = avcodec_alloc_context3(nullptr);
 	if (!m_pCodecCtx)
-		return false;
-
-	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
-		return false;
-
-	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
-	if (!pCodec)
-		return false;
-
-	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
 	m_pCodecCtx->pkt_timebase = pStream->time_base;
-#endif
-
-	return true;
-}
-
-bool CAudioDecoder::Open(CDemultiplexer* pDemux)
-{
-	AVStream* pStream = pDemux->FormatContext()->streams[pDemux->AudioStreamIndex()];
-	if (!pStream)
-		return false;
-
-	m_pCodecCtx = avcodec_alloc_context3(nullptr);
-	if (!m_pCodecCtx)
-		return false;
-
-	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
-		return false;
+	avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar);
 
 	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
 	if (!pCodec)
@@ -60,100 +33,54 @@ bool CAudioDecoder::Open(CDemultiplexer* pDemux)
 	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
-	m_pCodecCtx->pkt_timebase = pStream->time_base;
-	m_timebase = av_q2d(m_pCodecCtx->time_base);
-
+	m_timebase = av_q2d(pStream->time_base);
+	m_duration = m_timebase * (pStream->duration * 1.0);
+	m_rate = m_pCodecCtx->sample_rate;
+	
 	return true;
 }
 
-bool CAudioDecoder::OpenMicrophone(const char* szUrl)
+void CAudioDecoder::Start(IDecoderEvent* pEvt)
 {
-#if 0
-	const AVInputFormat* ifmt = av_find_input_format("dshow");
-	if (!ifmt)
-		return false;
-
-	if (!m_demux.Open(szUrl, ifmt, nullptr))
-		return false;
-
-	AVStream* pStream = m_demux.FormatContext()->streams[m_demux.AudioStreamIndex()];
-	if (!pStream)
-		return false;
-
-	m_pCodecCtx = avcodec_alloc_context3(nullptr);
-	if (!m_pCodecCtx)
-		return false;
-
-	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
-		return false;
-
-	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
-	if (!pCodec)
-		return false;
-
-	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
-		return false;
-#endif
-	return true;
-}
-
-bool CAudioDecoder::Start(IDecoderEvent* pEvt)
-{
-	m_pEvent = pEvt;
-	if (!m_pEvent)
-		return false;
+	m_DecoderEvt = pEvt;
 
 	m_bRun = true;
-	m_state = Started;
-	m_thread = std::thread(&CAudioDecoder::OnDecodeFunction, this);
-
-	return true;
+	m_DecodeThread = std::thread(&CAudioDecoder::Work, this);
 }
 
-void CAudioDecoder::Stop()
+void CAudioDecoder::Close()
 {
-	m_state = Stopped;
-	if (m_thread.joinable())
-		m_thread.join();
-}
+	m_bRun = false;
+	if (m_DecodeThread.joinable())
+		m_DecodeThread.join();
 
-void CAudioDecoder::Clear()
-{
-	while (!m_srcAPktQueue.Empty())
+	while (true)
 	{
 		AVPacket* pkt = nullptr;
-		m_srcAPktQueue.Pop(pkt);
-		if (pkt)
-			av_packet_free(&pkt);
+		if (m_PktQueue.Pop(pkt))
+		{
+			if (pkt)
+				av_packet_free(&pkt);
+		}
+		else
+		{
+			break;
+		}
 	}
-}
 
-bool CAudioDecoder::WaitFinished()
-{
-	return true;
-}
+	if (m_pSwrCtx)
+	{
+		swr_close(m_pSwrCtx);
+		swr_free(&m_pSwrCtx);
+		m_pSwrCtx = nullptr;
+	}
 
-void CAudioDecoder::SendPacket(AVPacket* pkt)
-{
-	m_srcAPktQueue.MaxSizePush(pkt, &m_bRun);
-}
-
-void CAudioDecoder::Release()
-{
 	if (m_pCodecCtx)
 	{
 		avcodec_close(m_pCodecCtx);
 		avcodec_free_context(&m_pCodecCtx);
 		m_pCodecCtx = nullptr;
 	}
-
-	if (m_pSwrCtx)
-	{
-		swr_free(&m_pSwrCtx);
-		m_pSwrCtx = nullptr;
-	}
-
-	Clear();
 }
 
 void CAudioDecoder::GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout, enum AVSampleFormat& sample_fmt)
@@ -163,110 +90,143 @@ void CAudioDecoder::GetSrcParameter(int& sample_rate, AVChannelLayout& ch_layout
 	sample_fmt = m_pCodecCtx->sample_fmt;
 }
 
-int CAudioDecoder::SetSwrContext(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate)
+bool CAudioDecoder::SetSwr(AVChannelLayout ch_layout, enum AVSampleFormat sample_fmt, int sample_rate, int& nb_samples)
 {
 	m_swr_ch_layout = ch_layout;
-	m_swr_sample_rate = sample_rate;
 	m_swr_sample_fmt = sample_fmt;
+	m_swr_sample_rate = sample_rate;
 
 	if (0 > swr_alloc_set_opts2(&m_pSwrCtx, &m_swr_ch_layout, m_swr_sample_fmt, m_swr_sample_rate,
 		&m_pCodecCtx->ch_layout, m_pCodecCtx->sample_fmt, m_pCodecCtx->sample_rate, 0, nullptr))
-		return -1;
+		return false;
+	
+	if (!m_pSwrCtx || 0 > swr_init(m_pSwrCtx))
+		return false;
 
-	if (0 > swr_init(m_pSwrCtx))
-		return -1;
-
-	int nb_samples = (int)av_rescale_rnd(swr_get_delay(m_pSwrCtx, m_pCodecCtx->sample_rate) + m_pCodecCtx->frame_size,
+	// 这是ffmepg官方示例提供的计算重采样之后的 单帧单声道采样数 的方法
+	// 注意，frame_size 是原始的 单帧单声道采样数 不是原始帧的byte个数
+	// 例如AV_SAMPLE_FMT_S16，单帧如有1024个采样数，则单帧byte个数是1024*声道数*sizeof(short)
+	// 单帧单声道采样数和采样率相关
+	m_swr_nb_samples = (int)av_rescale_rnd(
+		swr_get_delay(m_pSwrCtx, m_pCodecCtx->sample_rate) + m_pCodecCtx->frame_size,
 		m_swr_sample_rate, m_pCodecCtx->sample_rate, AV_ROUND_INF);
+	
+	nb_samples = m_swr_nb_samples;
 
-	return nb_samples;
+	return true;
 }
 
-
-AVChannelLayout CAudioDecoder::GetChannelLayout()
+void CAudioDecoder::Work()
 {
-	return m_pCodecCtx->ch_layout;
-}
-
-double CAudioDecoder::Timebase()
-{
-	return m_timebase;  
-}
-
-void CAudioDecoder::OnDecodeFunction()
-{
-	int error = 0;
+	int ret = 0;
 	AVPacket* pkt = nullptr;
 	AVFrame* srcFrame = av_frame_alloc();
 
-	while (m_state != Stopped && m_bRun)
+	while (m_bRun)
 	{
-		if (m_state == Paused)
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		else
+		if (m_PktQueue.Pop(pkt))
 		{
-			if (!m_srcAPktQueue.Pop(pkt))
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			if (pkt == nullptr)
+			{
+				if (m_DecoderEvt)
+					m_DecoderEvt->AudioEvent(nullptr);
+				m_bRun = false; // 结束
+			}
 			else
 			{
-				if (pkt == nullptr) {
-					// 结束标志
-					printf(" audio decode overed.\n");
-					m_pEvent->AudioEvent(nullptr);
-					break;
-				}
+				if (0 > avcodec_send_packet(m_pCodecCtx, pkt))
+					m_bRun = false;
 				else
 				{
-					error = avcodec_send_packet(m_pCodecCtx, pkt);
-					if (error < 0)
+					// 解码器解码得到原始PCM帧
+					while (ret = avcodec_receive_frame(m_pCodecCtx, srcFrame), m_bRun)
 					{
-						av_packet_free(&pkt);
-						continue;
+						if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+							break;
+						else if (ret < 0)
+							m_bRun = false;
+						else if (ret == 0)
+						{
+							/*uint8_t** dst_buf = NULL;
+							int dst_buf_size = 0;
+							
+							// 为重采样目标PCM帧分配存储空间
+							dst_buf = (uint8_t**)calloc(m_swr_ch_layout.nb_channels, sizeof(uint8_t*));
+
+							if (0 > av_samples_alloc(dst_buf, &dst_buf_size,
+								m_swr_ch_layout.nb_channels, srcFrame->nb_samples, m_swr_sample_fmt, 1))
+							{
+								m_bRun = false;
+							}
+							else
+							{
+								// 重采样并填充buffer
+								ret = swr_convert(m_pSwrCtx, dst_buf, srcFrame->nb_samples, (const uint8_t**)srcFrame->data, srcFrame->nb_samples);
+
+								if (m_DecoderEvt)
+									m_DecoderEvt->AudioEvent(dst_buf, ret, srcFrame->best_effort_timestamp, m_timebase, m_rate);
+							}
+							av_freep(&dst_buf[0]);
+							free(dst_buf);*/
+
+							//为重采样目标PCM帧分配存储空间
+							AVFrame* dstFrame = av_frame_alloc();
+							dstFrame->nb_samples = srcFrame->nb_samples;
+							dstFrame->format = m_swr_sample_fmt;
+							dstFrame->sample_rate = m_swr_sample_rate;
+							av_channel_layout_copy(&dstFrame->ch_layout, &m_swr_ch_layout);
+
+							if (0 > av_frame_get_buffer(dstFrame, 0))
+							{
+								av_frame_free(&dstFrame);
+								m_bRun = false;
+								break;
+							}
+
+							if (0 > swr_convert(m_pSwrCtx, dstFrame->data, dstFrame->nb_samples, (const uint8_t**)srcFrame->data, srcFrame->nb_samples))
+							{
+								av_frame_free(&dstFrame);
+								m_bRun = false;
+								break;
+							}
+							dstFrame->pts = srcFrame->pts;
+							dstFrame->best_effort_timestamp = srcFrame->best_effort_timestamp;
+
+							// int realtime = pkt->pts * av_q2d(m_pCodecCtx->time_base);
+							// printf("audio decoder -> pts:%lld  realtime:%d  .\r\n", pkt->pts, realtime);
+
+							if (m_DecoderEvt)
+								m_DecoderEvt->AudioEvent(dstFrame);
+
+							av_frame_free(&dstFrame);
+							av_frame_unref(srcFrame);
+						}
 					}
-					av_packet_free(&pkt);
-
-					error = avcodec_receive_frame(m_pCodecCtx, srcFrame);
-					if (error < 0)
-					{
-						continue;
-					}
-
-					AVFrame* cvtFrame = ConvertFrame(srcFrame);
-
-					//printf(" audio decode a frame: pts(%lld)\n", cvtFrame->pts);
-					m_pEvent->AudioEvent(cvtFrame);
-
-					av_frame_unref(srcFrame);
 				}
+				av_packet_free(&pkt);
 			}
 		}
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
 	}
-	av_frame_free(&srcFrame);
 
-	Release();
+	av_frame_free(&srcFrame);
+	printf("Input file audio decoding completed.......\r\n");
 }
 
-AVFrame* CAudioDecoder::ConvertFrame(AVFrame* frame)
+bool CAudioDecoder::SendPacket(AVPacket* pkt)
 {
-	AVFrame* dstFrame = av_frame_alloc();
-	dstFrame->nb_samples = frame->nb_samples;
-	dstFrame->format = m_swr_sample_fmt;
-	dstFrame->sample_rate = m_swr_sample_rate;
-	av_channel_layout_copy(&dstFrame->ch_layout, &m_swr_ch_layout);
+	AVPacket* tpkt = nullptr;
+	if (pkt)
+		tpkt = av_packet_clone(pkt);
+	m_PktQueue.MaxSizePush(tpkt, &m_bRun);
 
-	if (0 > av_frame_get_buffer(dstFrame, 0))
-	{
-		av_frame_free(&dstFrame);
-		return nullptr;
-	}
+	return true;
+}
 
-	if (0 > swr_convert(m_pSwrCtx, dstFrame->data, dstFrame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples))
-	{
-		av_frame_free(&dstFrame);
-		return nullptr;
-	}
-	dstFrame->pts = frame->pts;
-	dstFrame->best_effort_timestamp = frame->best_effort_timestamp;
-
-	return dstFrame;
+double CAudioDecoder::GetTimebase() const
+{
+	return m_timebase;
 }

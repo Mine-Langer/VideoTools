@@ -21,24 +21,6 @@
       <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
       <Extensions>ts</Extensions>
     </Filter>
-    <Filter Include="解复用器">
-      <UniqueIdentifier>{2ec6fae7-dd1a-4676-a59e-50ff895739d6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="重封装复用器">
-      <UniqueIdentifier>{d63c6b5a-1be4-4837-8cc7-813e8b803c94}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="音频解码">
-      <UniqueIdentifier>{ece7f3da-0c7f-4749-8071-8b0e7abe42c8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="音频编码">
-      <UniqueIdentifier>{fde98fe6-5d18-4e05-a73f-74fba6f2f76c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="图像编码">
-      <UniqueIdentifier>{0f639671-b6ca-4c60-8af4-d9c5e0146bf6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="图像解码">
-      <UniqueIdentifier>{2b384269-2716-42bd-85b6-f06e51964d87}</UniqueIdentifier>
-    </Filter>
     <Filter Include="视频滤镜">
       <UniqueIdentifier>{9917ae4a-c3ce-4d78-9b0a-10141e2bc03b}</UniqueIdentifier>
     </Filter>
@@ -50,9 +32,6 @@
     </Filter>
     <Filter Include="格式转换">
       <UniqueIdentifier>{ed23ba18-17d9-4f32-8b5b-fe95470e8ce4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="音频录制">
-      <UniqueIdentifier>{a6b481a6-33fe-4ad4-b284-b30dfe20c6e9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -67,38 +46,8 @@
     <ClCompile Include="AVMainWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="capture\CRecoder.cpp">
-      <Filter>屏幕录像</Filter>
-    </ClCompile>
-    <ClCompile Include="capture\hlcapture.cpp">
-      <Filter>屏幕录像</Filter>
-    </ClCompile>
-    <ClCompile Include="capture\CaptureViewWidget.cpp">
-      <Filter>屏幕录像</Filter>
-    </ClCompile>
-    <ClCompile Include="capture\CapAudio.cpp">
-      <Filter>屏幕录像</Filter>
-    </ClCompile>
-    <ClCompile Include="Composition\CompositeView.cpp">
-      <Filter>视频合成</Filter>
-    </ClCompile>
-    <ClCompile Include="Composition\Composite.cpp">
-      <Filter>视频合成</Filter>
-    </ClCompile>
-    <ClCompile Include="Composition\AVTextureBar.cpp">
-      <Filter>视频合成</Filter>
-    </ClCompile>
     <ClCompile Include="AVTools.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="capture\captureScreen.cpp">
-      <Filter>屏幕录像</Filter>
-    </ClCompile>
-    <ClCompile Include="Conversion\qvideoconversion.cpp">
-      <Filter>格式转换</Filter>
-    </ClCompile>
-    <ClCompile Include="Conversion\qvideoinfo.cpp">
-      <Filter>格式转换</Filter>
     </ClCompile>
     <ClCompile Include="DxAudioPlayer.cpp">
       <Filter>Source Files</Filter>
@@ -106,55 +55,91 @@
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VideoEncoder.cpp">
-      <Filter>图像编码</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoDecoder.cpp">
-      <Filter>图像解码</Filter>
-    </ClCompile>
-    <ClCompile Include="Remultiplexer.cpp">
-      <Filter>重封装复用器</Filter>
-    </ClCompile>
     <ClCompile Include="FilterVideo.cpp">
       <Filter>视频滤镜</Filter>
     </ClCompile>
-    <ClCompile Include="Demultiplexer.cpp">
-      <Filter>解复用器</Filter>
+    <ClCompile Include="OptionSelectWnd.cpp">
+      <Filter>格式转换</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatConversion.cpp">
+      <Filter>格式转换</Filter>
+    </ClCompile>
+    <ClCompile Include="qvideoinfo.cpp">
+      <Filter>格式转换</Filter>
+    </ClCompile>
+    <ClCompile Include="captureScreen.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureViewWidget.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="hlcapture.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="AVTextureBar.cpp">
+      <Filter>视频合成</Filter>
+    </ClCompile>
+    <ClCompile Include="CompositeView.cpp">
+      <Filter>视频合成</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoCutupWnd.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AudioDecoder.cpp">
-      <Filter>音频解码</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AudioEncoder.cpp">
-      <Filter>音频编码</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Conversion\OptionSelectWnd.cpp">
+    <ClCompile Include="AudioRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AVFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoEncoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Demultiplexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Remultiplexer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Transcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\CScreenDXGI.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\CScreenGDI.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\ScreenFFmpeg.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="Screen\ScreenRecoder.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="Transcoder.cpp">
       <Filter>格式转换</Filter>
     </ClCompile>
-    <ClCompile Include="Conversion\QAudioConvertWnd.cpp">
-      <Filter>格式转换</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioRecoder\AudioRecoder.cpp">
-      <Filter>音频录制</Filter>
+    <ClCompile Include="VideoSynthesis.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="capture\CRecoder.h">
-      <Filter>屏幕录像</Filter>
-    </ClInclude>
-    <ClInclude Include="capture\CapAudio.h">
-      <Filter>屏幕录像</Filter>
-    </ClInclude>
-    <ClInclude Include="Composition\Composite.h">
-      <Filter>视频合成</Filter>
-    </ClInclude>
     <ClInclude Include="SafeQueue.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="capture\captureScreen.h">
-      <Filter>屏幕录像</Filter>
     </ClInclude>
     <ClInclude Include="AVTools.h">
       <Filter>Header Files</Filter>
@@ -168,84 +153,137 @@
     <ClInclude Include="avSync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AudioEncoder.h">
-      <Filter>音频编码</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioDecoder.h">
-      <Filter>音频解码</Filter>
-    </ClInclude>
-    <ClInclude Include="Demultiplexer.h">
-      <Filter>解复用器</Filter>
-    </ClInclude>
     <ClInclude Include="FilterVideo.h">
       <Filter>视频滤镜</Filter>
     </ClInclude>
-    <ClInclude Include="Remultiplexer.h">
-      <Filter>重封装复用器</Filter>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="captureScreen.h">
+      <Filter>屏幕录像</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioEncoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioRecorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AVFrame.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoDecoder.h">
-      <Filter>图像解码</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoEncoder.h">
-      <Filter>图像编码</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AudioRecoder\AudioRecoder.h">
-      <Filter>音频录制</Filter>
+    <ClInclude Include="VideoRecorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Demultiplexer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Remultiplexer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Transcode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\CScreenDXGI.h">
+      <Filter>屏幕录像</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\CScreenGDI.h">
+      <Filter>屏幕录像</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\ScreenFFmpeg.h">
+      <Filter>屏幕录像</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen\ScreenRecoder.h">
+      <Filter>屏幕录像</Filter>
+    </ClInclude>
+    <ClInclude Include="Transcoder.h">
+      <Filter>格式转换</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoSynthesis.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="AVMainWnd.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="capture\hlcapture.h">
-      <Filter>屏幕录像</Filter>
+    <QtMoc Include="OptionSelectWnd.h">
+      <Filter>格式转换</Filter>
     </QtMoc>
-    <QtMoc Include="capture\CaptureViewWidget.h">
-      <Filter>屏幕录像</Filter>
+    <QtMoc Include="qvideoinfo.h">
+      <Filter>格式转换</Filter>
     </QtMoc>
-    <QtMoc Include="Composition\CompositeView.h">
+    <QtMoc Include="AVTextureBar.h">
       <Filter>视频合成</Filter>
     </QtMoc>
-    <QtMoc Include="Composition\AVTextureBar.h">
+    <QtMoc Include="CompositeView.h">
       <Filter>视频合成</Filter>
     </QtMoc>
-    <QtMoc Include="Conversion\qvideoconversion.h">
+    <QtMoc Include="CaptureViewWidget.h">
+      <Filter>屏幕录像</Filter>
+    </QtMoc>
+    <QtMoc Include="hlcapture.h">
+      <Filter>屏幕录像</Filter>
+    </QtMoc>
+    <QtMoc Include="FormatConversion.h">
       <Filter>格式转换</Filter>
     </QtMoc>
-    <QtMoc Include="Conversion\qvideoinfo.h">
-      <Filter>格式转换</Filter>
-    </QtMoc>
-    <QtMoc Include="Conversion\OptionSelectWnd.h">
-      <Filter>格式转换</Filter>
-    </QtMoc>
-    <QtMoc Include="Conversion\QAudioConvertWnd.h">
-      <Filter>格式转换</Filter>
+    <QtMoc Include="VideoCutupWnd.h">
+      <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <QtUic Include="AVMainWnd.ui">
+    <ResourceCompile Include="HLAVTools.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\logo.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Xsd Include="res\style.qss">
+      <Filter>Resource Files</Filter>
+    </Xsd>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="Forms\AudioConvert.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="capture\hlcapture.ui">
-      <Filter>屏幕录像</Filter>
+    <QtUic Include="Forms\AVMainWnd.ui">
+      <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Composition\CompositeView.ui">
-      <Filter>视频合成</Filter>
+    <QtUic Include="Forms\CompositeView.ui">
+      <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Conversion\qvideoconversion.ui">
-      <Filter>格式转换</Filter>
+    <QtUic Include="Forms\hlcapture.ui">
+      <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Conversion\qvideoinfo.ui">
-      <Filter>格式转换</Filter>
+    <QtUic Include="Forms\optionSelect.ui">
+      <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Conversion\optionSelect.ui">
-      <Filter>格式转换</Filter>
+    <QtUic Include="Forms\FormatConversion.ui">
+      <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Conversion\AudioConvert.ui">
-      <Filter>格式转换</Filter>
+    <QtUic Include="Forms\qvideoinfo.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="Forms\VideoCutup.ui">
+      <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
   <ItemGroup>
-    <None Include="format.json" />
+    <None Include="res\format.json">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

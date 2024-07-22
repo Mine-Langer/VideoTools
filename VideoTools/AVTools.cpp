@@ -1,41 +1,64 @@
 #include "AVTools.h"
+#include <QFile>
+#include <QMap>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 
-AVTools::AVTools()
+QVector<QString> AVTools::VecAudioFormat;
+QVector<QString> AVTools::VecVideoFormat;
+QVariantList	 AVTools::VariantConfigData;
+
+bool AVTools::InitConfig()
 {
+	QFile file(":/AvTools/res/format.json");
+	if (!file.open(QIODevice::ReadOnly))
+		return false;
+
+	QByteArray data(file.readAll());
+	file.close();
+
+	QString szKey;
+	QJsonDocument jsDoc = QJsonDocument::fromJson(data);
+	QJsonObject fmtConfig = jsDoc.object();
+	QJsonArray jsArr = fmtConfig.value("audio").toArray();
+	for (int i = 0; i < jsArr.size(); i++) 
+	{
+		VecAudioFormat.append(jsArr.at(i).toObject().value("type").toString());
+
+		VariantConfigData.append(jsArr.at(i).toObject().toVariantMap());
+	}
+
+	jsArr = fmtConfig.value("video").toArray();
+	for (int i = 0; i < jsArr.size(); i++) 
+	{
+		VecVideoFormat.append(jsArr.at(i).toObject().value("type").toString());
+
+		VariantConfigData.append(jsArr.at(i).toObject().toVariantMap());
+	}
+
+	return true;
 }
 
-AVTools::~AVTools()
+QStringList AVTools::AudioFormatList()
 {
-
+	return QStringList::fromVector(VecAudioFormat);
 }
 
-bool AVTools::run()
+QStringList AVTools::VideoFormatList()
 {
-    if (!_demux.Open("D:/documents/OneDrive/video/QQÊÓÆµ¸ãÇ®.mp4"))
-        return false;
-
-    _demux.Start(this);
-
-//    if (!_audioDecoder.Open(_demux))
-//        return false;
-//    
-//    int sample_rate;
-//    AVChannelLayout ch_layout;
-//    AVSampleFormat sample_fmt;
-//    _audioDecoder.GetSrcParameter(sample_rate, ch_layout, sample_fmt);
-//
-//    _audioDecoder.SetSwrContext(ch_layout, sample_fmt, sample_rate);
-	
-    return true;
+	return QStringList::fromVector(VecVideoFormat);
 }
 
-bool AVTools::DemuxPacket(AVPacket* pkt, int type)
+QVariantMap AVTools::ParamData(const QString& szKey)
 {
-    if (type == AVMEDIA_TYPE_AUDIO) {
-
-    }
-    else if (type == AVMEDIA_TYPE_VIDEO) {
-
-    }
-    return false;
+	for (int i=0; i<VariantConfigData.size(); i++)
+	{
+		QVariantMap var = VariantConfigData.at(i).toMap();
+		if (var.value("type").toString() == szKey)
+		{
+			return var;
+		}
+	}
+	return QVariantMap();
 }

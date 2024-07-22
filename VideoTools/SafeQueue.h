@@ -40,6 +40,9 @@ public:
 
 	T Front() {
 		std::lock_guard<std::mutex> lock(_mut);
+		if (_qdata.empty())
+			return nullptr;
+
 		return _qdata.front();
 	}
 

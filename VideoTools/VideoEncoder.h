@@ -1,13 +1,5 @@
 #pragma once
-#include "Common.h"
-
-class IEncoderEvent
-{
-public:
-	virtual bool VideoEvent(AVPacket* pkt) = 0;
-
-	virtual bool AudioEvent(AVPacket* pkt, int64_t pts) = 0;
-};
+#include "Remultiplexer.h"
 
 class CVideoEncoder
 {
@@ -15,26 +7,25 @@ public:
 	CVideoEncoder();
 	~CVideoEncoder();
 
-	bool Init(AVFormatContext* outFmtCtx, enum AVCodecID codec_id, int width, int height);
+	AVCodecContext* Init(enum AVCodecID codec_id, int width, int height);
 
-	void Start(IEncoderEvent* pEvt);
+	void Start(IRemuxEvent* pEvt);
 
-	void PushFrame(AVFrame* srcFrame);
+	void Close();
 
-	void Release();
+	void SendFrame(AVFrame* srcFrame);
 
-	AVRational GetTimeBase();
-
-	uint64_t GetIndex();
-
-private:
-	void OnWork();
+protected:
+	void Work();
 
 private:
-	IEncoderEvent* m_pEvent = nullptr;
 	AVCodecContext* m_pCodecCtx = nullptr;
-	AVStream* m_pStream = nullptr;
+	SwsContext*		m_pSwsCtx = nullptr;
+
+	IRemuxEvent* m_pRemuxEvt = nullptr;
+
 	SafeQueue<AVFrame*> m_videoDataQueue;
+
 	uint64_t m_pts = 0;
 
 	bool m_bRun = false;

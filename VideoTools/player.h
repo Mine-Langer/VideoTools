@@ -1,12 +1,11 @@
 #pragma once
-#include "Demultiplexer.h"
-#include "AudioDecoder.h"
-#include "VideoDecoder.h"
-#include "DxAudioPlayer.h"
-#include "FilterVideo.h"
-#include "avSync.h"
 
-class CPlayer :public IDemuxEvent, public IDecoderEvent
+// #include "DxAudioPlayer.h"
+// #include "FilterVideo.h"
+// #include "avSync.h"
+#include "Common.h"
+
+class CPlayer 
 {
 public:
 	CPlayer();
@@ -14,11 +13,12 @@ public:
 
 	bool Open(const char* szInput);
 
-	void SetView(HWND hWnd);
+	void SetView(HWND hWnd, int w, int h);
 
 	void SetAudioSpec(int sample_rate, AVChannelLayout ch_layout, int samples);
 
-	void Start();
+	void StartPlay();
+	void StartRender();
 
 	void Stop();
 
@@ -31,32 +31,27 @@ public:
 	void SendAudioFrame(AVFrame* frame);
 	void SendVideoFrame(AVFrame* frame);
 
-	void PlayAudio();
-
 	void CalcImageView(SDL_Rect rect);
 
-private:
-	void OnPlayProc();
-	void OnRenderProc();
+protected:
+	// 计算显示矩形区域
+	void CalcDisplayRect(int x, int y, int scrWidth, int scrHeight, int picWidth, int picHeight, AVRational pic_sar);
 
+
+private:	 
+	void OnRenderProc(); // 渲染图像线程
+
+	// 播放音频回调函数
 	static void	OnAudioCallback(void* userdata, Uint8* stream, int len);
 
 
 private:
-	virtual bool DemuxPacket(AVPacket* pkt, int type) override;
-
-	virtual void CleanPacket() override;
-
-	virtual bool VideoEvent(AVFrame* frame) override;
-
-	virtual bool AudioEvent(AVFrame* frame) override;
 
 private:
-	CDemultiplexer	m_demux;
-	CAudioDecoder	m_audioDecoder;
-	CVideoDecoder	m_videoDecoder;
-	DxAudioPlayer	m_dxAudio;
-	CFilterVideo	m_filter;
+// 	CDemultiplexer	m_demux;
+// 	CAudioDecoder	m_audioDecoder;
+// 	CVideoDecoder	m_videoDecoder;
+// 	CFilterVideo	m_filter;
 
 	SDL_Window*		m_pWindow = nullptr;
 	SDL_Renderer*	m_pRender = nullptr;
@@ -64,6 +59,9 @@ private:
 	SDL_Rect		m_rect;
 	SDL_AudioSpec	m_audioSpec;
 	AVSync			m_avSync;
+
+	int m_scrWidth;
+	int m_scrHeight;
 
 	SafeQueue<AVFrame*> m_audioFrameQueue;
 	SafeQueue<AVFrame*> m_videoFrameQueue;
@@ -73,5 +71,6 @@ private:
 
 	std::thread m_tPlay;
 	std::thread m_tRender;
+
 };
 

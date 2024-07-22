@@ -30,6 +30,7 @@ extern "C"
 #include "libsdl/SDL.h"
 }
 
+
 #pragma comment (lib, "avcodec.lib")
 #pragma comment (lib, "avdevice.lib")
 #pragma comment (lib, "avfilter.lib")
@@ -37,18 +38,27 @@ extern "C"
 #pragma comment (lib, "avutil.lib")
 #pragma comment (lib, "swresample.lib")
 #pragma comment (lib, "swscale.lib")
-#pragma comment (lib, "SDL2.lib")
 
-#include "SafeQueue.h"
-
-#include <thread>
-#include <iostream>
-#include <string>
-#include <mutex>
-#include <queue>
-#include <tchar.h>
 
 #include <windows.h>
+#include <errno.h>
+#include <limits.h>
+#include <tchar.h>
+#include <stdlib.h>
+#include <cstdio>
+#include <time.h>
+#include <atomic>
+#include <climits>
+#include <string>
+#include <vector>
+#include <queue>
+#include <chrono>
+#include <cstdint>
+#include <thread>
+#include <cassert>
+#include <cmath>
+
+
 #ifdef _DEBUG
 #define HL_PRINT(...) { char szText[1024]={0}; sprintf_s(szText, 1024, __VA_ARGS__); OutputDebugStringA(szText); }
 #else
@@ -66,3 +76,11 @@ extern "C"
 
 enum AVType { TAudio, TVideo, TAll };
 
+// 标识录音类型
+#define SOUNDCARD  1
+#define MICROPHONE 2
+
+
+#include "SafeQueue.h"
+#include "AVFrame.h"
+#include "avSync.h"

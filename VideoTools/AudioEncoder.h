@@ -1,6 +1,5 @@
 #pragma once
-#include "Common.h"
-#include "VideoEncoder.h"
+#include "Remultiplexer.h"
 
 class CAudioEncoder
 {
@@ -8,43 +7,44 @@ public:
 	CAudioEncoder();
 	~CAudioEncoder();
 
-	bool InitAudio(AVFormatContext* formatCtx, AVCodecID codecId,
-		AVSampleFormat sampleFmt=AV_SAMPLE_FMT_FLTP,int sampleRate=44100,int bitRate=96000);
+	static CAudioEncoder* CreateObject();
 
-	void Start(IEncoderEvent* pEvt);
+	void Close();
 
-	void Release();
+	AVCodecContext* Init(AVCodecID CodecId, AVSampleFormat SampleFmt=AV_SAMPLE_FMT_FLTP, int SampleRate=44100, int BitRate=128000);
 
-	AVRational GetTimeBase();
+	void Start(IRemuxEvent* pEvt);
 
-	bool PushFrame(AVFrame* frame);
+	// ≈‰÷√“Ù∆µ÷ÿ≤…—˘
+	bool SetResampler();
 
-	int GetIndex();
+	void PushFrameToFIFO(uint8_t* pBuf, int BufSize);
+	void PushFrameToFIFO(CAVFrame* frame);
+	void PushFrameToFIFO(AVFrame* frame);
 
-private:
-	void OnWork();
+	double GetTimebase() const;
 
-	bool PushFrameToFifo(AVFrame* frame);
-
-	bool ReadPacketFromFifo();
+protected:
+	void Work();
 
 	AVFrame* AllocOutputFrame(int nbSize);
 
-private:
-	IEncoderEvent* m_pEvent = nullptr;
-	AVCodecContext* m_pCodecCtx = nullptr;
-	AVStream* m_pStream = nullptr;
+	void Cleanup();
 
-	AVAudioFifo* m_pAudioFifo = nullptr;
-	uint8_t** m_convertBuffer = nullptr;
+private:
+	AVCodecContext* m_pCodecCtx = nullptr;
+	AVAudioFifo*	m_pAudioFifo = nullptr;
+	SwrContext*		m_pSwrCtx = nullptr;
+
+	IRemuxEvent* m_pRemuxEvt = nullptr;
 
 	int m_nbSamples = 0;
+	int64_t m_frameIndex = 0;
 
-	SafeQueue<AVFrame*> m_pAudioQueue;
 	bool m_bFinished = false;
-	int m_frameIndex = 0;
 
 	bool m_bRun = false;
 	std::thread m_thread;
+	std::mutex m_audioMutex;
 };
 

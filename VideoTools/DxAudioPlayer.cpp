@@ -1,4 +1,5 @@
 #include "DxAudioPlayer.h"
+#if 0
 #pragma comment (lib, "winmm.lib")
 #pragma comment (lib, "dsound.lib")
 #pragma comment (lib, "dxguid.lib")
@@ -122,3 +123,4 @@ void DxAudioPlayer::OnPlayProc()
 		m_pSecondBuff->Unlock(pvAudioPtr1, dwAudioBytes1, pvAudioPtr2, dwAudioBytes2);
 	}
 }
+#endif

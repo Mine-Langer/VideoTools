@@ -2,7 +2,6 @@
 
 CVideoDecoder::CVideoDecoder()
 {
-
 }
 
 CVideoDecoder::~CVideoDecoder()
@@ -10,187 +9,58 @@ CVideoDecoder::~CVideoDecoder()
 
 }
 
-bool CVideoDecoder::Open(const char* szInput)
+bool CVideoDecoder::Open(const std::string& szFile)
 {
-#if 0
-	if (!m_demux.Open(szInput))
-		return false;
-
-	AVStream* pStream = m_demux.FormatContext()->streams[m_demux.VideoStreamIndex()];
-	if (!pStream)
-		return false;
-
-	if (!(m_pCodecCtx = avcodec_alloc_context3(nullptr)))
-		return false;
-
-	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
-		return false;
-
-	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
-	if (!pCodec)
-		return false;
-
-	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
-		return false;
-
-	m_pCodecCtx->pkt_timebase = pStream->time_base;
-
-	m_srcWidth = m_pCodecCtx->width / 2 * 2;
-	m_srcHeight = m_pCodecCtx->height / 2 * 2;
-	m_srcFormat = m_pCodecCtx->pix_fmt;
-#endif
 	return true;
 }
 
-bool CVideoDecoder::Open(CDemultiplexer* pDemux)
+bool CVideoDecoder::Open(CDemultiplexer& demux)
 {
-	AVStream* pStream = pDemux->FormatContext()->streams[pDemux->VideoStreamIndex()];
-	if (!pStream)
-		return false;
+	AVStream* pStream = demux.GetFormatCtx()->streams[demux.GetVideoIdx()];
 
-	if (!(m_pCodecCtx = avcodec_alloc_context3(nullptr)))
-		return false;
-
+	m_pCodecCtx = avcodec_alloc_context3(nullptr);
 	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
 		return false;
 
 	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
-	if (!pCodec)
-		return false;
+	if (!pCodec) return false;
 
 	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
 		return false;
 
-	m_pCodecCtx->time_base = pStream->time_base;
-	m_pCodecCtx->pkt_timebase = pStream->time_base;
 	m_timebase = av_q2d(pStream->time_base);
-
-	m_srcWidth = m_pCodecCtx->width / 2 * 2;
-	m_srcHeight = m_pCodecCtx->height / 2 * 2;
-	m_srcFormat = m_pCodecCtx->pix_fmt;
+	m_duration = m_timebase * (pStream->duration * 1.0);
+	m_rate = av_q2d(pStream->avg_frame_rate);
 
 	return true;
 }
 
-bool CVideoDecoder::OpenScreen(int posX, int posY, int sWidth, int sHeight)
+void CVideoDecoder::Start(IDecoderEvent* pEvt)
 {
-#if 0
-	char szTemp[32] = { 0 };
-	AVDictionary* options = nullptr;
-	av_dict_set(&options, "framerate", "25", 0);
-	av_dict_set(&options, "capture_mouse_clicks", "0", 0);
-	av_dict_set(&options, "offset_x", itoa(posX, szTemp, 10), 0);
-	av_dict_set(&options, "offset_y", itoa(posY, szTemp, 10), 0);
-	sprintf(szTemp, "%dx%d", sWidth, sHeight);
-	av_dict_set(&options, "video_size", szTemp, 0);
+	m_DecoderEvt = pEvt;
 
-	const AVInputFormat* ifmt = av_find_input_format("gdigrab");
-	if (ifmt == nullptr)
-		return false;
-
-	if (!m_demux.Open("desktop", ifmt, &options))
-		return false;
-
-	AVStream* pStream = m_demux.FormatContext()->streams[m_demux.VideoStreamIndex()];
-	if (!pStream)
-		return false;
-
-	if (!(m_pCodecCtx = avcodec_alloc_context3(nullptr)))
-		return false;
-
-	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
-		return false;
-
-	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
-	if (!pCodec)
-		return false;
-
-	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
-		return false;
-
-	m_srcWidth = m_pCodecCtx->width / 2 * 2;
-	m_srcHeight = m_pCodecCtx->height / 2 * 2;
-	m_srcFormat = m_pCodecCtx->pix_fmt;
-#endif
-	return true;
-}
-
-bool CVideoDecoder::OpenCamera()
-{
-#if 0
-	const AVInputFormat* ifmt = av_find_input_format("vfwcap");
-	if (ifmt == nullptr)
-		return false;
-
-	if (!m_demux.Open("0", ifmt, nullptr))
-		return false;
-
-	AVStream* pStream = m_demux.FormatContext()->streams[m_demux.VideoStreamIndex()];
-	if (!pStream)
-		return false;
-
-	if (!(m_pCodecCtx = avcodec_alloc_context3(nullptr)))
-		return false;
-
-	if (0 > avcodec_parameters_to_context(m_pCodecCtx, pStream->codecpar))
-		return false;
-
-	const AVCodec* pCodec = avcodec_find_decoder(m_pCodecCtx->codec_id);
-	if (!pCodec)
-		return false;
-
-	if (0 > avcodec_open2(m_pCodecCtx, pCodec, nullptr))
-		return false;
-
-	m_srcWidth = m_pCodecCtx->width / 2 * 2;
-	m_srcHeight = m_pCodecCtx->height / 2 * 2;
-	m_srcFormat = m_pCodecCtx->pix_fmt;
-#endif
-	return true;
-}
-
-bool CVideoDecoder::Start(IDecoderEvent* pEvt)
-{
-	if (!(m_pEvent = pEvt))
-		return false;
-	
 	m_bRun = true;
-	m_state = Started;
-	m_thread = std::thread(&CVideoDecoder::OnDecodeFunction, this);
-
-	return true;
+	m_thread = std::thread(&CVideoDecoder::Work, this);
 }
 
-void CVideoDecoder::Stop()
+void CVideoDecoder::Close()
 {
-	m_state = Stopped;
+	m_bRun = false;
 	if (m_thread.joinable())
 		m_thread.join();
-}
 
-void CVideoDecoder::SendPacket(AVPacket* pkt)
-{	
-	m_srcVPktQueue.MaxSizePush(pkt, &m_bRun);
-}
-
-void CVideoDecoder::Clear()
-{
-	while (!m_srcVPktQueue.Empty())
+	while (true)
 	{
 		AVPacket* pkt = nullptr;
-		m_srcVPktQueue.Pop(pkt);
-		if (pkt)
-			av_packet_free(&pkt);
-	}
-}
-
-void CVideoDecoder::Release()
-{
-	if (m_pCodecCtx)
-	{
-		avcodec_close(m_pCodecCtx);
-		avcodec_free_context(&m_pCodecCtx);
-		m_pCodecCtx = nullptr;
+		if (m_pktQueue.Pop(pkt))
+		{
+			if (pkt)
+				av_packet_free(&pkt);
+		}
+		else
+		{
+			break;
+		}
 	}
 
 	if (m_pSwsCtx)
@@ -199,137 +69,110 @@ void CVideoDecoder::Release()
 		m_pSwsCtx = nullptr;
 	}
 
-	Clear();
+	if (m_pCodecCtx)
+	{
+		avcodec_close(m_pCodecCtx);
+		avcodec_free_context(&m_pCodecCtx);
+		m_pCodecCtx = nullptr;
+	}
 }
 
-bool CVideoDecoder::SetSwsConfig(SDL_Rect* rect, int w, int h, enum AVPixelFormat pix_fmt /*= AV_PIX_FMT_NONE*/)
+bool CVideoDecoder::SendPacket(AVPacket* pkt)
 {
-	float ratio = m_srcWidth * 1.0 / (m_srcHeight * 1.0);
+	AVPacket* tpkt = nullptr;
+	if (pkt)
+		tpkt = av_packet_clone(pkt);
 
-	int width = (w == -1 ? m_srcWidth : w);
-	int height = (h == -1 ? m_srcHeight : h);
-	m_swsFormat = (pix_fmt == AV_PIX_FMT_NONE ? AV_PIX_FMT_YUV420P : pix_fmt);
-
-	m_swsWidth = width / 2 * 2;
-	m_swsHeight = m_swsWidth * 1.0 / ratio;
-	if (m_swsHeight > height)
-		m_swsWidth = height * ratio;
-
-	m_pSwsCtx = sws_getContext(m_srcWidth, m_srcHeight, m_srcFormat,
-		m_swsWidth, m_swsHeight, m_swsFormat, SWS_BICUBIC, nullptr, nullptr, nullptr);
-	if (!m_pSwsCtx)
-		return false;
-	
-	if (rect)
-	{
-		rect->x = (width - m_swsWidth) / 2;
-		rect->y = (height - m_swsHeight) / 2;
-		rect->w = m_swsWidth;
-		rect->h = m_swsHeight;
-	}
+	m_pktQueue.MaxSizePush(tpkt, &m_bRun);
 
 	return true;
 }
 
-void CVideoDecoder::GetSrcParameter(int& srcWidth, int& srcHeight, enum AVPixelFormat& srcFormat)
+bool CVideoDecoder::InitSwsContext(int w, int h, enum AVPixelFormat pix_fmt)
 {
-	srcWidth = m_pCodecCtx->width;
-	srcHeight = m_pCodecCtx->height;
-	srcFormat = m_pCodecCtx->pix_fmt;
+	m_swsWidth = w == -1 ? m_pCodecCtx->width : w;
+	m_swsHeight = h == -1 ? m_pCodecCtx->height : h;
+	m_swsPixFmt = pix_fmt == AV_PIX_FMT_NONE ? m_pCodecCtx->pix_fmt : pix_fmt;
+
+	m_pSwsCtx = sws_getContext(m_pCodecCtx->width, m_pCodecCtx->height, m_pCodecCtx->pix_fmt,
+		m_swsWidth, m_swsHeight, m_swsPixFmt, SWS_BICUBIC, nullptr, nullptr, nullptr);
+	if (!m_pSwsCtx)
+		return false;
+
+	return true;
 }
 
-void CVideoDecoder::GetSrcRational(AVRational& sampleRatio, AVRational& timebase)
+double CVideoDecoder::GetTimebase() const
 {
-	sampleRatio = m_pCodecCtx->sample_aspect_ratio;
-	timebase = m_pCodecCtx->time_base;
+	return m_timebase;
 }
 
-double CVideoDecoder::Timebase()
+void CVideoDecoder::Work()
 {
-	return m_timebase; 
-}
-
-AVFrame* CVideoDecoder::ConvertFrame(AVFrame* frame)
-{
-	AVFrame* swsFrame = av_frame_alloc();
-	swsFrame->format = m_swsFormat;
-	swsFrame->width = m_swsWidth;
-	swsFrame->height = m_swsHeight;
-	if (0 > av_frame_get_buffer(swsFrame, 0))
-	{
-		av_frame_free(&swsFrame);
-		return nullptr;
-	}
-
-	int h = sws_scale(m_pSwsCtx, frame->data, frame->linesize, 0, m_srcHeight, swsFrame->data, swsFrame->linesize);
-
-	swsFrame->pts = frame->pts;
-	swsFrame->best_effort_timestamp = frame->pts;
-
-	return swsFrame;
-}
-
-void CVideoDecoder::OnDecodeFunction()
-{
-	int error = 0;
-	AVPacket* packet = nullptr;
+	int ret = 0;
+	AVPacket* pkt = nullptr;
 	AVFrame* srcFrame = av_frame_alloc();
 
-	while (m_state != Stopped && m_bRun)
+	while (m_bRun)
 	{
-		if (m_state == Paused)
-			std::this_thread::sleep_for(std::chrono::milliseconds(20));
-		else
+		if (m_pktQueue.Pop(pkt))
 		{
-			if (!m_srcVPktQueue.Pop(packet))
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			if (pkt == nullptr)
+			{
+				if (m_DecoderEvt) m_DecoderEvt->VideoEvent(nullptr, nullptr);
+				m_bRun = false;
+			}
 			else
 			{
-				if (packet == nullptr) { // 结束标志	
-					printf("video decoder overed.\n");
-					m_pEvent->VideoEvent(nullptr);
+				if (0 > avcodec_send_packet(m_pCodecCtx, pkt))
+				{
+					m_bRun = false;
+					av_packet_free(&pkt);
 					break;
 				}
 				else
 				{
-					error = avcodec_send_packet(m_pCodecCtx, packet);
-					if (error < 0)
+					// 解码器解码得到原始YUV帧
+					while (ret = avcodec_receive_frame(m_pCodecCtx, srcFrame), m_bRun)
 					{
-						av_packet_free(&packet);
-						continue;
+						if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+							break;
+						else if (ret < 0)
+							m_bRun = false;
+						else if (ret == 0)
+						{
+							AVFrame* dstFrame = av_frame_alloc();
+							dstFrame->format = m_swsPixFmt;
+							dstFrame->width = m_swsWidth;
+							dstFrame->height = m_swsHeight;
+							if (0 > av_frame_get_buffer(dstFrame, 0))
+							{
+								av_frame_free(&dstFrame);
+								m_bRun = false;
+								break;
+							}
+							sws_scale(m_pSwsCtx, srcFrame->data, srcFrame->linesize, 0, m_pCodecCtx->height, dstFrame->data, dstFrame->linesize);
+
+							dstFrame->pts = srcFrame->pts;
+							dstFrame->best_effort_timestamp = srcFrame->pts;
+
+							if (m_DecoderEvt)
+								m_DecoderEvt->VideoEvent(dstFrame, nullptr);
+
+							av_frame_free(&dstFrame);
+							av_frame_unref(srcFrame);
+						}
 					}
-
-					error = avcodec_receive_frame(m_pCodecCtx, srcFrame);
-					if (error < 0)
-					{
-						av_packet_free(&packet);
-						continue;
-					}
-
-					AVFrame* cvtFrame = ConvertFrame(srcFrame);
-
-					//printf("video decoder a frame: pts(%lld)\n", cvtFrame->pts);
-					m_pEvent->VideoEvent(cvtFrame);
-					
-					av_frame_unref(srcFrame);
-					av_packet_free(&packet);
 				}
+				av_packet_free(&pkt);		
 			}
 		}
+		else
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}	
 	}
+
 	av_frame_free(&srcFrame);
-
-	Release();
+	printf("Video Image Data Decode overed.......\n");
 }
-
-bool CVideoDecoder::WaitFinished()
-{
-	if (m_thread.joinable())
-		m_thread.join();
-
-	Release();
-
-	return true;
-}
-
-

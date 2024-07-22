@@ -1,4 +1,5 @@
 #pragma once
+#if 0
 #include <Windows.h>
 #include <tchar.h>
 #include <dsound.h>
@@ -48,3 +49,4 @@ private:
 	SafeQueue<PCM_BUF> m_pcmQueue;
 };
 
+#endif

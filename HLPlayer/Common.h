@@ -2,7 +2,7 @@
 
 extern "C"
 {
-#include "SDL.h"
+//#include "SDL.h"
 #include "libavformat/avformat.h"
 #include "libavformat/avio.h"
 #include "libavcodec/avcodec.h"
