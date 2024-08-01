@@ -31,7 +31,7 @@ public:
 	void SendAudioFrame(AVFrame* frame);
 	void SendVideoFrame(AVFrame* frame);
 
-	void CalcImageView(SDL_Rect rect);
+	void CalcImageView(SDL_Rect rect, AVFrame* frame);
 
 protected:
 	// 计算显示矩形区域

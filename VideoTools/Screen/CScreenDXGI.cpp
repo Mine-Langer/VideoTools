@@ -1,9 +1,10 @@
 #include "CScreenDXGI.h"
+#include <dxgi1_5.h>
 #pragma comment(lib,"d3d11.lib")
 
-CScreenDXGI::CScreenDXGI()
+CScreenDXGI::CScreenDXGI(int type, int width, int height): CScreenRecoder(type, width, height)
 {
-
+	Init();
 }
 
 CScreenDXGI::~CScreenDXGI()
@@ -126,11 +127,11 @@ bool CScreenDXGI::InitDevice()
 		if (FAILED(hr))
 		{
 			// Device creation success, no need to loop anymore
-			return true;
+			return false;
 		}
 	}
 
-	return false;
+	return true;
 }
 
 bool CScreenDXGI::InitDuplication(int idx)
@@ -162,17 +163,18 @@ bool CScreenDXGI::InitDuplication(int idx)
 		return false;
 
 	// QI for Output 1
-	IDXGIOutput1* DxgiOutput1 = nullptr;
-	hr = DxgiOutput->QueryInterface(__uuidof(DxgiOutput1), reinterpret_cast<void**>(&DxgiOutput1));
+	IDXGIOutput5* DxgiOutput5 = nullptr;
+	hr = DxgiOutput->QueryInterface(__uuidof(DxgiOutput5), reinterpret_cast<void**>(&DxgiOutput5));
 	DxgiOutput->Release();
 	DxgiOutput = nullptr;
 	if (FAILED(hr))
 		return false;
 
 	// Create desktop duplication
-	hr = DxgiOutput1->DuplicateOutput(m_pDevice, &m_pDeskDupl);
-	DxgiOutput1->Release();
-	DxgiOutput1 = nullptr;
+	const DXGI_FORMAT formats[] = { DXGI_FORMAT_B8G8R8A8_UNORM };
+	hr = DxgiOutput5->DuplicateOutput1(m_pDevice, 0, ARRAYSIZE(formats), formats, &m_pDeskDupl);
+	DxgiOutput5->Release();
+	DxgiOutput5 = nullptr;
 	if (FAILED(hr))
 	{
 		if (hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE)

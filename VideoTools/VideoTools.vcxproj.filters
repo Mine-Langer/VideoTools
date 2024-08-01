@@ -55,7 +55,7 @@
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FilterVideo.cpp">
+    <ClCompile Include="VideoFilter.cpp">
       <Filter>视频滤镜</Filter>
     </ClCompile>
     <ClCompile Include="OptionSelectWnd.cpp">
@@ -73,7 +73,7 @@
     <ClCompile Include="CaptureViewWidget.cpp">
       <Filter>屏幕录像</Filter>
     </ClCompile>
-    <ClCompile Include="hlcapture.cpp">
+    <ClCompile Include="CaptureWidget.cpp">
       <Filter>屏幕录像</Filter>
     </ClCompile>
     <ClCompile Include="AVTextureBar.cpp">
@@ -91,9 +91,6 @@
     <ClCompile Include="AudioEncoder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AudioRecorder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="AVFrame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -101,9 +98,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VideoEncoder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoRecorder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Demultiplexer.cpp">
@@ -131,7 +125,16 @@
       <Filter>格式转换</Filter>
     </ClCompile>
     <ClCompile Include="VideoSynthesis.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>视频合成</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioFilter.cpp">
+      <Filter>视频滤镜</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioRecorder.cpp">
+      <Filter>屏幕录像</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoRecorder.cpp">
+      <Filter>屏幕录像</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -153,7 +156,7 @@
     <ClInclude Include="avSync.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FilterVideo.h">
+    <ClInclude Include="VideoFilter.h">
       <Filter>视频滤镜</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -168,9 +171,6 @@
     <ClInclude Include="AudioEncoder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AudioRecorder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AVFrame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -178,9 +178,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="VideoEncoder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VideoRecorder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Demultiplexer.h">
@@ -208,7 +205,16 @@
       <Filter>格式转换</Filter>
     </ClInclude>
     <ClInclude Include="VideoSynthesis.h">
-      <Filter>Header Files</Filter>
+      <Filter>视频合成</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioFilter.h">
+      <Filter>视频滤镜</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioRecorder.h">
+      <Filter>屏幕录像</Filter>
+    </ClInclude>
+    <ClInclude Include="VideoRecorder.h">
+      <Filter>屏幕录像</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -230,7 +236,7 @@
     <QtMoc Include="CaptureViewWidget.h">
       <Filter>屏幕录像</Filter>
     </QtMoc>
-    <QtMoc Include="hlcapture.h">
+    <QtMoc Include="CaptureWidget.h">
       <Filter>屏幕录像</Filter>
     </QtMoc>
     <QtMoc Include="FormatConversion.h">
@@ -265,7 +271,7 @@
     <QtUic Include="Forms\CompositeView.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="Forms\hlcapture.ui">
+    <QtUic Include="Forms\CaptureView.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="Forms\optionSelect.ui">

@@ -12,12 +12,15 @@ CVideoRecorder::~CVideoRecorder()
 
 }
 
-bool CVideoRecorder::Init(int type)
+bool CVideoRecorder::Init(int type, int width, int height)
 {
+	m_width = width;
+	m_height = height;
+
 	if (type == 1)
-		m_pScreen = new CScreenDXGI();
+		m_pScreen = new CScreenDXGI(type, m_width, m_height);
 	else if (type == 2)
-		m_pScreen = new CScreenGDI();
+		m_pScreen = new CScreenGDI(type, m_width, m_height);
 	else if (type == 3)
 	{
 
@@ -31,6 +34,9 @@ bool CVideoRecorder::Init(int type)
 
 void CVideoRecorder::Start()
 {
+	m_remux.Open("test.mp4", false, true, m_width, m_height);
+	m_remux.Start(this);
+
 	m_bRun = true;
 	m_thread = std::thread(&CVideoRecorder::Work, this);
 }
@@ -40,6 +46,8 @@ void CVideoRecorder::Stop()
 	m_bRun = false;
 	if (m_thread.joinable())
 		m_thread.join();
+
+	m_remux.Close();
 
 	if (m_pScreen)
 	{
@@ -56,5 +64,12 @@ void CVideoRecorder::Work()
 	while (m_bRun)
 	{
 		m_pScreen->GetFrame(m_pRgbaBuffer, m_imageSize, timestamp);
+		m_remux.SendRGBData(m_pRgbaBuffer);
+		std::this_thread::sleep_for(std::chrono::milliseconds(40));
 	}
+}
+
+void CVideoRecorder::ProgressValue(int second_time)
+{
+
 }

@@ -40,6 +40,36 @@ void CRemultiplexer::Cleanup()
 	}
 }
 
+AVFrame* CRemultiplexer::convertRGBToYUV(AVFrame* rgbFrame)
+{
+	if (!m_pSwsCtx) 
+	{
+		m_pSwsCtx = sws_getContext(
+			rgbFrame->width, rgbFrame->height, (AVPixelFormat)rgbFrame->format,
+			rgbFrame->width, rgbFrame->height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
+	}
+
+	AVFrame* yuvFrame = av_frame_alloc();
+	if (!yuvFrame) {
+		fprintf(stderr, "Could not allocate YUV frame\n");
+		return NULL;
+	}
+
+	yuvFrame->format = AV_PIX_FMT_YUV420P;
+	yuvFrame->width = rgbFrame->width;
+	yuvFrame->height = rgbFrame->height;
+
+	if (av_frame_get_buffer(yuvFrame, 32) < 0) {
+		fprintf(stderr, "Could not allocate YUV frame buffer\n");
+		av_frame_free(&yuvFrame);
+		return NULL;
+	}
+
+	sws_scale(m_pSwsCtx, rgbFrame->data, rgbFrame->linesize, 0, rgbFrame->height, yuvFrame->data, yuvFrame->linesize);
+
+	return yuvFrame;
+}
+
 bool CRemultiplexer::Open(const std::string& strFile, bool aEnable, bool vEnable, int width, int height)
 {
 	m_VideoEnable = vEnable;
@@ -67,9 +97,16 @@ bool CRemultiplexer::Open(const std::string& strFile, bool aEnable, bool vEnable
 
 		if (pOutFormat->flags & AVFMT_GLOBALHEADER)
 			pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+		// ´´½¨RGB AVFrame»º³åÇø
+		m_pRGBFrame = av_frame_alloc();
+		m_pRGBFrame->format = AV_PIX_FMT_RGB24;
+		m_pRGBFrame->width = width;
+		m_pRGBFrame->height = height;
+		av_frame_get_buffer(m_pRGBFrame, 32);
 	}
 
-	if (m_AudioEnable || pOutFormat->audio_codec)
+	if (m_AudioEnable && pOutFormat->audio_codec)
 	{
 		AVCodecContext* pCodecCtx = m_pAudioEncode->Init(pOutFormat->audio_codec);
 		if (!pCodecCtx)
@@ -101,9 +138,9 @@ void CRemultiplexer::Start(ITranscodeProgress* pEvt)
 {
 	m_pTransEvent = pEvt;
 
-	m_pAudioEncode->Start(this);
+	if (m_AudioEnable) m_pAudioEncode->Start(this);
 
-	m_pImageEncode->Start(this);
+	if (m_VideoEnable) { m_pImageEncode->Start(this); m_pImageEncode->SetStreams(m_pVideoStream); }
 
 	m_bRun = true;
 	m_thread = std::thread(&CRemultiplexer::Work, this);
@@ -131,14 +168,18 @@ void CRemultiplexer::Close()
 
 	if (m_pAudioEncode)
 	{
-		delete m_pAudioEncode;
-		m_pAudioEncode = nullptr;
+		m_pAudioEncode->Close();
 	}
 
 	if (m_pImageEncode)
 	{
-		delete m_pImageEncode;
-		m_pImageEncode = nullptr;
+		m_pImageEncode->Close();
+	}
+
+	if (m_pSwsCtx)
+	{
+		sws_freeContext(m_pSwsCtx);
+		m_pSwsCtx = nullptr;
 	}
 
 	if (m_pFormatCtx)
@@ -147,6 +188,11 @@ void CRemultiplexer::Close()
 		avformat_free_context(m_pFormatCtx);
 		m_pFormatCtx = nullptr;
 	}
+}
+
+void CRemultiplexer::Stop()
+{
+
 }
 
 void CRemultiplexer::SetAudioResampler()
@@ -174,6 +220,17 @@ void CRemultiplexer::SendVideoFrame(AVFrame* frame)
 	m_pImageEncode->SendFrame(frame);
 }
 
+void CRemultiplexer::SendRGBData(uint8_t* rgbData)
+{
+	for (int i = 0; i < m_pRGBFrame->height; i++)
+	{
+		memcpy(m_pRGBFrame->data[0] + i * m_pRGBFrame->linesize[0], rgbData + i * m_pRGBFrame->width * 3, m_pRGBFrame->width * 3);
+	}
+	AVFrame* pYuvFrame = convertRGBToYUV(m_pRGBFrame);
+	m_pImageEncode->SendFrame(pYuvFrame);
+	av_frame_free(&pYuvFrame);
+}
+
 void CRemultiplexer::RemuxEvent(AVPacket* pkt, int nType, int64_t pts)
 {
 	int ret = 0;
@@ -193,8 +250,7 @@ void CRemultiplexer::RemuxEvent(AVPacket* pkt, int nType, int64_t pts)
 		if (pkt)
 		{
 			tpkt = av_packet_clone(pkt);
-		//	av_packet_rescale_ts(tpkt, m_VideoTimeBase, m_pVideoStream->time_base);
-			tpkt->stream_index = m_pVideoStream->index;
+			//	av_packet_rescale_ts(tpkt, m_VideoTimeBase, m_pVideoStream->time_base);
 		}
 		m_videoPacket.MaxSizePush(tpkt, &m_bRun);
 	}
@@ -242,8 +298,11 @@ void CRemultiplexer::Work()
 		{
 			if (pkt_v)
 			{
-				av_packet_rescale_ts(pkt_v, m_VideoTimeBase, m_pVideoStream->time_base);
+				//av_packet_rescale_ts(pkt_v, m_VideoTimeBase, m_pVideoStream->time_base);
+				//pkt_v->pts = pkt_v->dts;
+				printf("video timestamp: %lld. dpts:%lld, dur:%lld\r\n", pkt_v->pts, pkt_v->dts, pkt_v->duration);
 				av_interleaved_write_frame(m_pFormatCtx, pkt_v);
+				//av_write_frame(m_pFormatCtx, pkt_v);
 				av_packet_free(&pkt_v);
 			}
 			else

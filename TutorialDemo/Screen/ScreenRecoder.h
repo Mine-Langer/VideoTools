@@ -14,8 +14,8 @@ protected:
 	int64_t getCurTimestamp();
 
 protected:
-	int m_width;
-	int m_height;
+	int m_width = 1920;
+	int m_height = 1080;
 
 };
 

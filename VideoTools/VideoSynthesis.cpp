@@ -31,8 +31,10 @@ void CVideoSynthesis::BindShowWindow(HWND hWnd, int width, int height)
 
 void CVideoSynthesis::Start()
 {
-//	m_thread = std::thread(&CVideoSynthesis::Work, this);
+	m_bRun = true;
+	m_thread = std::thread(&CVideoSynthesis::Work, this);
 	m_vthread = std::thread(&CVideoSynthesis::Work_Video, this);
+	//m_vthread2 = std::thread(&CVideoSynthesis::Work_Video2, this);
 }
 
 void CVideoSynthesis::Work()
@@ -63,12 +65,23 @@ void CVideoSynthesis::Work()
 
 void CVideoSynthesis::Work_Video()
 {
+	int width, height;
+	AVPixelFormat pix_fmt;
+	AVRational sampleRatio;
+	AVRational timebase;
 	for (int i = 0; i < m_vecImageList.size(); i++)
 	{
 		m_demux_image.Open(m_vecImageList[i]);
 
 		m_videoDecoder.Open(m_demux_image);
+		m_videoDecoder.GetSrcContext(width, height, pix_fmt, sampleRatio, timebase);
 		m_videoDecoder.InitSwsContext();
+
+		// 初始化水印资源
+		m_videoFilter.InitWaterMask();
+		sampleRatio = { 1, 1 };
+		timebase = { 1, 25 };
+		m_videoFilter.Init(width, height, pix_fmt, sampleRatio, timebase);
 
 		m_demux_image.Start(this);
 		m_videoDecoder.Start(this);
@@ -76,6 +89,7 @@ void CVideoSynthesis::Work_Video()
 		m_player.StartRender();
 	}
 }
+
 
 void CVideoSynthesis::DuxPacket(AVPacket* _data, int _type)
 {
@@ -85,7 +99,7 @@ void CVideoSynthesis::DuxPacket(AVPacket* _data, int _type)
 	}
 	else if (_type == AVMEDIA_TYPE_VIDEO)
 	{
-		m_videoDecoder.SendPacket(_data);
+		m_videoDecoder.SendPacket(_data);		
 	}
 }
 
@@ -104,7 +118,10 @@ void CVideoSynthesis::VideoEvent(AVFrame* _img, class CVideoDecoder* _decoder)
 {
 	if (_img)
 	{
-		_img->sample_aspect_ratio;
-		m_player.SendVideoFrame(_img);
+		bool bRet = false;
+		AVFrame* cvtFrame = m_videoFilter.Convert(_img, bRet);
+		m_player.SendVideoFrame(cvtFrame);
+		if (cvtFrame && bRet)
+			av_frame_free(&cvtFrame);
 	}
 }

@@ -4,6 +4,7 @@
 #include "VideoDecoder.h"
 #include "AudioDecoder.h"
 #include "player.h"
+#include "VideoFilter.h"
 
 /**
  *  ”∆µ∫œ≥…
@@ -28,6 +29,7 @@ public:
 protected:
 	void Work();
 	void Work_Video();
+	void Work_Video2();
 
 
 protected:
@@ -47,6 +49,8 @@ private:
 	CDemultiplexer	m_demux_image;
 	CVideoDecoder	m_videoDecoder;
 
+	CVideoFilter	m_videoFilter;
+
 	CPlayer			m_player;
 
 
@@ -55,7 +59,11 @@ private:
 	std::vector<std::string>	m_vecVideoList;
 	std::vector<std::string>	m_vecAudioList;
 
+	SafeQueue<AVPacket*> m_VideoDataQueue;
+
+	bool m_bRun = false;
 	std::thread m_thread;
 	std::thread m_vthread;
+	std::thread m_vthread2;
 };
 

@@ -232,7 +232,6 @@ void CAudioEncoder::Cleanup()
 	
 	if (m_pCodecCtx)
 	{
-		avcodec_close(m_pCodecCtx);
 		avcodec_free_context(&m_pCodecCtx);
 		m_pCodecCtx = nullptr;
 	}

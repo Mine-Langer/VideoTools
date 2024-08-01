@@ -5,7 +5,7 @@
 class CScreenFFmpeg : public CScreenRecoder
 {
 public:
-	CScreenFFmpeg();
+	CScreenFFmpeg(int type, int width, int height);
 	~CScreenFFmpeg();
 
 protected:

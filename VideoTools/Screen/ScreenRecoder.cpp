@@ -1,7 +1,7 @@
 #include "ScreenRecoder.h"
 #include <chrono>
 
-CScreenRecoder::CScreenRecoder()
+CScreenRecoder::CScreenRecoder(int type, int width, int height): m_type(type), m_width(width), m_height(height)
 {
 
 }

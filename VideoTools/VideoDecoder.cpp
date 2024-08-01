@@ -102,6 +102,15 @@ bool CVideoDecoder::InitSwsContext(int w, int h, enum AVPixelFormat pix_fmt)
 	return true;
 }
 
+void CVideoDecoder::GetSrcContext(int& w, int& h, AVPixelFormat& pix_fmt, AVRational& sampleRatio, AVRational& timebase)
+{
+	w = m_pCodecCtx->width;
+	h = m_pCodecCtx->height;
+	pix_fmt = m_pCodecCtx->pix_fmt;
+	sampleRatio = m_pCodecCtx->sample_aspect_ratio;
+	timebase = m_pCodecCtx->time_base;
+}
+
 double CVideoDecoder::GetTimebase() const
 {
 	return m_timebase;
@@ -141,6 +150,8 @@ void CVideoDecoder::Work()
 							m_bRun = false;
 						else if (ret == 0)
 						{
+//							if (m_DecoderEvt)
+//								m_DecoderEvt->VideoEvent(srcFrame, nullptr);
 							AVFrame* dstFrame = av_frame_alloc();
 							dstFrame->format = m_swsPixFmt;
 							dstFrame->width = m_swsWidth;

@@ -17,7 +17,7 @@ private slots:
 
 private:
 	Ui::AVMainWnd ui;
-	class HLCapture* m_capture; //录屏
+	class QCaptureWidget* m_capture; //录屏
 	class CompositeView* m_compositeView; // 合成
 	class QFormatConversion* m_conversion; // 视频格式转换
 	class QFormatConversion* m_audioConvert;// 音频格式转换

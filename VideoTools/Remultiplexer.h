@@ -30,6 +30,8 @@ public:
 
 	void Close();
 
+	void Stop();
+
 	void SetAudioResampler();
 
 
@@ -37,6 +39,7 @@ public:
 	void SendAudioFrame(CAVFrame* frame);
 	void SendAudioFrame(AVFrame* frame);
 	void SendVideoFrame(AVFrame* frame);
+	void SendRGBData(uint8_t* rgbData);
 
 protected:
 	virtual void RemuxEvent(AVPacket* pkt, int nType, int64_t pts) override;
@@ -48,6 +51,8 @@ protected:
 
 	void Cleanup();
 
+	AVFrame* convertRGBToYUV(AVFrame* rgbFrame);
+
 private:
 	AVFormatContext* m_pFormatCtx = nullptr;
 	ITranscodeProgress* m_pTransEvent = nullptr;
@@ -56,10 +61,12 @@ private:
 	class CVideoEncoder* m_pImageEncode = nullptr;
 	AVStream* m_pAudioStream = nullptr;
 	AVStream* m_pVideoStream = nullptr;
+	SwsContext* m_pSwsCtx = nullptr;
 
 	AVRational m_AudioTimeBase;
 	AVRational m_VideoTimeBase;
 
+	AVFrame* m_pRGBFrame = nullptr;
 	SafeQueue<CAVFrame*> m_AudioData;
 	SafeQueue<CAVFrame*> m_VideoData;
 

@@ -1,13 +1,14 @@
 <RCC>
-  <qresource prefix="/HLCapture">
-    <file>res/pause.png</file>
-    <file>res/play.png</file>
-    <file>res/frame.png</file>
-    <file>res/music.png</file>
-    <file>res/logo.png</file>
-  </qresource>
-  <qresource prefix="/AvTools">
-    <file>res/format.json</file>
-    <file>res/style.qss</file>
-  </qresource>
+    <qresource prefix="/HLCapture">
+        <file>res/pause.png</file>
+        <file>res/play.png</file>
+        <file>res/frame.png</file>
+        <file>res/music.png</file>
+        <file>res/logo.png</file>
+        <file>res/watermask.png</file>
+    </qresource>
+    <qresource prefix="/AvTools">
+        <file>res/format.json</file>
+        <file>res/style.qss</file>
+    </qresource>
 </RCC>

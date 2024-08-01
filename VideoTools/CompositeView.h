@@ -4,6 +4,7 @@
 #include "AVTextureBar.h"
 #include "player.h"
 #include "VideoSynthesis.h"
+#include "VideoFilter.h"
 
 namespace Ui { class CompositeView; };
 
@@ -39,6 +40,7 @@ private:
 	// Composite m_composite;
 	CPlayer	m_player;
 	CVideoSynthesis m_videoSynthesis;
+	CVideoFilter	m_videoFilter;
 
 	int m_comType = 0;
 

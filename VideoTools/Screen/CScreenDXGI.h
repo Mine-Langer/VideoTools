@@ -6,7 +6,7 @@
 class CScreenDXGI : public CScreenRecoder
 {
 public:
-	CScreenDXGI();
+	CScreenDXGI(int type, int width, int height);
 	~CScreenDXGI();
 
 

@@ -2,7 +2,7 @@
 #pragma comment (lib, "gdiplus.lib")
 
 
-CScreenGDI::CScreenGDI()
+CScreenGDI::CScreenGDI(int type, int width, int height): CScreenRecoder(type, width, height)
 {
 	Init();
 }

@@ -18,6 +18,8 @@ public:
 
 	bool InitSwsContext(int w=-1, int h=-1, enum AVPixelFormat pix_fmt=AV_PIX_FMT_NONE);
 
+	void GetSrcContext(int& w, int& h, AVPixelFormat& pix_fmt, AVRational& sampleRatio, AVRational& timebase);
+
 	double GetTimebase() const;
 
 protected:

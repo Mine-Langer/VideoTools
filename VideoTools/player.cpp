@@ -57,7 +57,7 @@ void CPlayer::SetView(HWND hWnd, int w, int h)
 		m_pWindow = SDL_CreateWindowFrom(hWnd);
 
 	if (!m_pRender)
-		m_pRender = SDL_CreateRenderer(m_pWindow, -1, 0);
+		m_pRender = SDL_CreateRenderer(m_pWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
 	m_scrWidth = w;
 	m_scrHeight = h;
@@ -148,7 +148,7 @@ void CPlayer::SendVideoFrame(AVFrame* frame)
 }
 
 
-void CPlayer::CalcImageView(SDL_Rect rect)
+void CPlayer::CalcImageView(SDL_Rect rect, AVFrame* frame)
 {
 	if (memcmp(&rect, &m_rect, sizeof(SDL_Rect)) != 0)
 	{
@@ -156,13 +156,13 @@ void CPlayer::CalcImageView(SDL_Rect rect)
 		if (m_pTexture)
 		{
 			SDL_DestroyTexture(m_pTexture);
-			m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
+			m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, frame->width, frame->height);
 		}
 	}
 	else
 	{
 		if (!m_pTexture)
-			m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, m_rect.w, m_rect.h);
+			m_pTexture = SDL_CreateTexture(m_pRender, SDL_PIXELFORMAT_IYUV, SDL_TEXTUREACCESS_STREAMING, frame->width, frame->height);
 	}
 }
 
@@ -197,7 +197,7 @@ void CPlayer::OnRenderProc()
 	AVFrame* pFrame = nullptr;
 	while (m_bRun)
 	{
-		pFrame = m_videoFrameQueue.Front();
+		m_videoFrameQueue.Pop(pFrame);
 		if (!pFrame) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(40));
 			continue;
@@ -206,10 +206,12 @@ void CPlayer::OnRenderProc()
 		if (pFrame)
 		{
 			CalcDisplayRect(0, 0, m_scrWidth, m_scrHeight, pFrame->width, pFrame->height, pFrame->sample_aspect_ratio);
-			CalcImageView(m_rect);
+			CalcImageView(m_rect, pFrame);
 
 			SDL_UpdateYUVTexture(m_pTexture, nullptr, pFrame->data[0], pFrame->linesize[0],
 				pFrame->data[1], pFrame->linesize[1], pFrame->data[2], pFrame->linesize[2]);
+			SDL_RenderSetViewport(m_pRender, &m_rect);
+
 			SDL_RenderClear(m_pRender);
 			SDL_RenderCopy(m_pRender, m_pTexture, nullptr, &m_rect);
 #if 0

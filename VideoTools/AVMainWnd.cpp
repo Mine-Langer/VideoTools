@@ -1,5 +1,5 @@
 #include "AVMainWnd.h"
-#include "hlcapture.h"
+#include "CaptureWidget.h"
 #include "CompositeView.h"
 #include "FormatConversion.h"
 #include "AVTools.h"
@@ -17,7 +17,7 @@ AVMainWnd::AVMainWnd(QWidget *parent)
 
 	connect(ui.ListFunctionsWnd, &QListWidget::currentItemChanged, this, &AVMainWnd::OnFunctionsItemChanged);
 
-	m_capture = new HLCapture(this);
+	m_capture = new QCaptureWidget(this);
 	m_compositeView = new CompositeView(this);
 	m_conversion = new QFormatConversion(this, TVideo);
 	m_audioConvert = new QFormatConversion(this, TAudio);

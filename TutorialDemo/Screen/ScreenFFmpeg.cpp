@@ -149,7 +149,6 @@ void CScreenFFmpeg::Release()
 	}
 
 	if (m_CodecCtx) {
-		avcodec_close(m_CodecCtx);
 		avcodec_free_context(&m_CodecCtx);
 		m_CodecCtx = nullptr;
 		m_Index = -1;

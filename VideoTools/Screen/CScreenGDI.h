@@ -8,7 +8,7 @@
 class CScreenGDI : public CScreenRecoder
 {
 public:
-	CScreenGDI();
+	CScreenGDI(int type, int width, int height);
 	~CScreenGDI();
 
 

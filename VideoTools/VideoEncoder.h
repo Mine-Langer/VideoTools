@@ -15,12 +15,15 @@ public:
 
 	void SendFrame(AVFrame* srcFrame);
 
+	void SetStreams(AVStream* pStream);
+
 protected:
 	void Work();
 
 private:
 	AVCodecContext* m_pCodecCtx = nullptr;
 	SwsContext*		m_pSwsCtx = nullptr;
+	AVStream*		m_pStream = nullptr;
 
 	IRemuxEvent* m_pRemuxEvt = nullptr;
 

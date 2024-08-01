@@ -107,6 +107,7 @@
   <ItemGroup>
     <ClCompile Include="AudioDecoder.cpp" />
     <ClCompile Include="AudioEncoder.cpp" />
+    <ClCompile Include="AudioFilter.cpp" />
     <ClCompile Include="AudioRecorder.cpp" />
     <ClCompile Include="AVFrame.cpp" />
     <ClCompile Include="AVTextureBar.cpp" />
@@ -116,10 +117,10 @@
     <ClCompile Include="CompositeView.cpp" />
     <ClCompile Include="Demultiplexer.cpp" />
     <ClCompile Include="DxAudioPlayer.cpp" />
-    <ClCompile Include="hlcapture.cpp" />
+    <ClCompile Include="CaptureWidget.cpp" />
     <ClCompile Include="OptionSelectWnd.cpp" />
     <ClCompile Include="player.cpp" />
-    <ClCompile Include="FilterVideo.cpp" />
+    <ClCompile Include="VideoFilter.cpp" />
     <ClCompile Include="FormatConversion.cpp" />
     <ClCompile Include="qvideoinfo.cpp" />
     <ClCompile Include="Remultiplexer.cpp" />
@@ -141,6 +142,7 @@
   <ItemGroup>
     <ClInclude Include="AudioDecoder.h" />
     <ClInclude Include="AudioEncoder.h" />
+    <ClInclude Include="AudioFilter.h" />
     <ClInclude Include="AudioRecorder.h" />
     <ClInclude Include="AVFrame.h" />
     <ClInclude Include="avSync.h" />
@@ -163,10 +165,10 @@
     <QtMoc Include="CompositeView.h" />
     <ClInclude Include="DxAudioPlayer.h" />
     <QtMoc Include="OptionSelectWnd.h" />
-    <QtMoc Include="hlcapture.h" />
+    <QtMoc Include="CaptureWidget.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="AVTools.h" />
-    <ClInclude Include="FilterVideo.h" />
+    <ClInclude Include="VideoFilter.h" />
     <QtMoc Include="FormatConversion.h" />
     <QtMoc Include="qvideoinfo.h" />
     <ClInclude Include="resource.h" />
@@ -190,7 +192,7 @@
     <QtUic Include="Forms\AudioConvert.ui" />
     <QtUic Include="Forms\AVMainWnd.ui" />
     <QtUic Include="Forms\CompositeView.ui" />
-    <QtUic Include="Forms\hlcapture.ui" />
+    <QtUic Include="Forms\CaptureView.ui" />
     <QtUic Include="Forms\optionSelect.ui" />
     <QtUic Include="Forms\FormatConversion.ui" />
     <QtUic Include="Forms\qvideoinfo.ui" />

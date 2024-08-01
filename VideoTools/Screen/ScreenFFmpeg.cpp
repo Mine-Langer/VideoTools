@@ -1,6 +1,6 @@
 #include "ScreenFFmpeg.h"
 
-CScreenFFmpeg::CScreenFFmpeg()
+CScreenFFmpeg::CScreenFFmpeg(int type, int width, int height): CScreenRecoder(type, width, height)
 {
 	Init();
 }

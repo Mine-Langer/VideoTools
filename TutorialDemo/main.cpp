@@ -3,6 +3,10 @@
 #include "RecordTest.h"
 #include "Transcode.h"
 #include "AudioRecorder.h"
+#include "Common.h"
+#include "VideoRecorder.h"
+
+void StartEncoder();
 
 int _tmain(int argc, const TCHAR* argv[])
 {
@@ -11,7 +15,12 @@ int _tmain(int argc, const TCHAR* argv[])
 	ar.Start(nullptr);
 #endif
 
-#if 1
+	CVideoRecorder vRecord;
+	StartEncoder();
+	vRecord.Init(2);
+	vRecord.Start();
+
+#if 0
 	{
 		RecordTest record;
 		record.Open(SOUNDCARD);
